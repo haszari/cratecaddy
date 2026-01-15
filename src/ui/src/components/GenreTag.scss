@@ -3,6 +3,7 @@
   background: orange;
   margin: 0.2em;
   border-radius: 0.3em;
+  display: inline-block;
 
   .GenreTag-count {
     margin-left: 0.25em;
@@ -10,4 +11,30 @@
     font-style: italic;
     opacity: 0.4;
   }
+
+  &.GenreTag-heading {
+    background: none;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    text-align: center;
+    font-size: 2.5em !important;
+  }
 }
+
+.GenreTag-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
+  .GenreTag {
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      background: darkorange;
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+

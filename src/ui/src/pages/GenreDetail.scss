@@ -1,0 +1,53 @@
+.GenreDetail {
+  padding: 2em;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 2em;
+    padding: 0.5em 1em;
+    background: #f0f0f0;
+    border-radius: 0.3em;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: #e0e0e0;
+    }
+  }
+
+  .genre-heading-container {
+    text-align: center;
+    margin: 2em 0;
+
+    .GenreTag {
+      background: linear-gradient(135deg, orange, darkorange);
+      color: white;
+      font-weight: bold;
+      padding: 1em;
+      display: inline-block;
+      border-radius: 0.5em;
+    }
+  }
+
+  .song-count {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin: 1em 0 2em 0;
+  }
+
+  h3 {
+    margin-top: 2em;
+    margin-bottom: 1em;
+    color: #333;
+  }
+}
+
+.genres-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}

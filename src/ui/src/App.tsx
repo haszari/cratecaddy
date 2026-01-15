@@ -1,6 +1,8 @@
 import './App.scss';
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import GenreTagWithCount from './components/GenreTag';
+import GenreDetail from './pages/GenreDetail';
 
 interface Song {
   _id?: string;
@@ -51,7 +53,7 @@ function GenreTagCloud({ tags }: { tags: Record<string, TagInfo> }) {
   );
 }
 
-function App() {
+function HomePage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [tags, setTags] = useState<Record<string, TagInfo>>({});
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div className="HomePage">
       <h1>Crate Caddy</h1>
       {loading && <p>Loading songs...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -100,6 +102,17 @@ function App() {
       <GenreTagCloud tags={main} />
       <GenreTagCloud tags={fringe} />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/genre/:genreName" element={<GenreDetail />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
