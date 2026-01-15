@@ -1,0 +1,50 @@
+[
+  {
+    "trackId": "sample-1",
+    "name": "Deep Vibes",
+    "artist": "Luna Echo",
+    "genres": ["Deep", "House", "Techno"],
+    "album": "Night Sessions",
+    "label": "Sonic Waves"
+  },
+  {
+    "trackId": "sample-2",
+    "name": "Pop Dreams",
+    "artist": "Bright Horizon",
+    "genres": ["Pop", "Synth", "Electronic"],
+    "album": "Future Sounds",
+    "label": "Modern Beats"
+  },
+  {
+    "trackId": "sample-3",
+    "name": "House Energy",
+    "artist": "Pulse Motion",
+    "genres": ["House", "Deep", "Groove"],
+    "album": "Dancing Through Time",
+    "label": "Rhythm Records"
+  },
+  {
+    "trackId": "sample-4",
+    "name": "Techno Nights",
+    "artist": "Digital Soul",
+    "genres": ["Techno", "Industrial", "Deep"],
+    "album": "Electric Dreams",
+    "label": "Underground Sound"
+  },
+  {
+    "trackId": "sample-5",
+    "name": "Synth Wave",
+    "artist": "Neon Dreams",
+    "genres": ["Synth", "Electronic", "Pop"],
+    "album": "Retro Future",
+    "label": "Wave Productions"
+  },
+  {
+    "trackId": "sample-6",
+    "name": "Groove Master",
+    "artist": "Rhythm Kings",
+    "genres": ["Groove", "House", "Funk"],
+    "album": "Feel the Beat",
+    "label": "Funky Records"
+  }
+]

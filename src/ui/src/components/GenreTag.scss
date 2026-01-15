@@ -1,0 +1,13 @@
+.GenreTag {
+  padding: 0.2em 0.3em;
+  background: orange;
+  margin: 0.2em;
+  border-radius: 0.3em;
+
+  .GenreTag-count {
+    margin-left: 0.25em;
+    font-size: 70%;
+    font-style: italic;
+    opacity: 0.4;
+  }
+}

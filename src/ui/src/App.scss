@@ -1,0 +1,13 @@
+.App {
+  text-align: center;
+  margin: 2em;
+}
+
+.TagCloud {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  margin: 2em 0;
+}
