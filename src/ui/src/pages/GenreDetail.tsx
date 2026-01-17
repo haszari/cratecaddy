@@ -5,10 +5,11 @@ import '../pages/GenreDetail.scss';
 
 interface Song {
   _id?: string;
-  trackId?: string;
-  name: string;
+  title: string;
   artist: string;
   genres: string[];
+  bpm?: number;
+  rating?: number;
 }
 
 interface TagInfo {
@@ -50,20 +51,31 @@ function GenreTagCloud({ tags }: { tags: Record<string, TagInfo> }) {
 }
 
 function SongTable({ songs }: { songs: Song[] }) {
+  const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+  const formatRating = (rating: number | undefined) => {
+    if (rating === undefined) return '—';
+    return rating === Math.round(rating) ? Math.round(rating).toString() : rating.toFixed(1);
+  };
+
   return (
     <table>
       <thead>
         <tr>
-          <th>Track</th>
           <th>Artist</th>
+          <th>Title</th>
+          <th>BPM</th>
+          <th>Rating</th>
           <th>Genres</th>
         </tr>
       </thead>
       <tbody>
-        {songs.map((song) => (
-          <tr key={song._id || song.trackId}>
-            <td>{song.name}</td>
+        {sortedSongs.map((song) => (
+          <tr key={song._id}>
             <td>{song.artist}</td>
+            <td>{song.title}</td>
+            <td>{song.bpm || '—'}</td>
+            <td>{formatRating(song.rating)}</td>
             <td>
               <div className="genres-cell">
                 {song.genres.map((genre) => (

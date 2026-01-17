@@ -6,10 +6,11 @@ import GenreDetail from './pages/GenreDetail';
 
 interface Song {
   _id?: string;
-  trackId?: string;
-  name: string;
+  title: string;
   artist: string;
   genres: string[];
+  bpm?: number;
+  rating?: number;
 }
 
 interface TagInfo {

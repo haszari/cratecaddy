@@ -12,7 +12,7 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 
 ### Start
 
-- `docker-compose up --build` - Start MongoDB and API server (from project root)
+- `docker-compose up --build -d` - Start MongoDB and API server (from project root)
 - `cd src/ui && npm run dev` - Start Vite frontend dev server (in another terminal)
 
 ### Stop
@@ -26,8 +26,8 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 
 ### Import data
 
-- `cd src/api && npm run import` - Import Rekordbox XML library from `src/data/rekordbox.xml`
-- `cd src/api && npm run import /path/to/file.xml` - Import from custom path
+- `cd src/api && npm run import:applemusic` - Import Apple Music XML library from `src/data/Library.xml`
+- `cd src/api && npm run import:applemusic /path/to/file.xml` - Import from custom path
 
 ## Testing
 

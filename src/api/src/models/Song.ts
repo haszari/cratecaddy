@@ -1,26 +1,34 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export interface IAppleMusicSource {
+  trackType?: string;
+  isProtected?: boolean;
+  isAppleMusic?: boolean;
+}
+
+export interface IAppleMusicMetadata {
+  id: string;
+  persistentId: string;
+  dateAdded?: Date;
+  dateModified?: Date;
+  dateLastPlayed?: Date;
+  source?: IAppleMusicSource;
+}
+
 export interface ISong extends Document {
-  trackId: string;
-  name: string;
+  title: string;
   artist: string;
   album: string;
   genres: string[];
-  composer: string;
-  grouping: string;
-  remixer: string;
-  label: string;
-  tonality: string;
-  kind: string;
-  totalTime: number;
-  year: number;
-  bpm: number;
-  bitRate: number;
-  sampleRate: number;
-  playCount: number;
-  rating: number;
-  dateAdded: Date;
-  location: string;
+  grouping: string[];
+  bpm?: number;
+  fileSize?: number;
+  duration?: number; // in milliseconds
+  year?: number;
+  appleMusic: IAppleMusicMetadata;
+  bitRate?: number;
+  rating?: number; // 0-5 scale (can be fractional)
+  filePath?: string;
   lastImportDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -28,20 +36,16 @@ export interface ISong extends Document {
 
 const songSchema = new Schema<ISong>(
   {
-    trackId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
-    name: {
+    title: {
       type: String,
       required: true,
       trim: true,
+      index: true,
     },
     artist: {
       type: String,
       trim: true,
+      index: true,
     },
     album: {
       type: String,
@@ -52,62 +56,49 @@ const songSchema = new Schema<ISong>(
       default: [],
       index: true,
     },
-    composer: {
-      type: String,
-      trim: true,
-    },
     grouping: {
-      type: String,
-      trim: true,
-    },
-    remixer: {
-      type: String,
-      trim: true,
-    },
-    label: {
-      type: String,
-      trim: true,
-    },
-    tonality: {
-      type: String,
-      trim: true,
-    },
-    kind: {
-      type: String,
-      trim: true,
-    },
-    totalTime: {
-      type: Number,
-      default: 0,
-    },
-    year: {
-      type: Number,
-      default: 0,
+      type: [String],
+      default: [],
     },
     bpm: {
       type: Number,
-      default: 0,
+    },
+    fileSize: {
+      type: Number,
+    },
+    duration: {
+      type: Number, // milliseconds
+    },
+    year: {
+      type: Number,
+    },
+    appleMusic: {
+      id: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+      },
+      persistentId: {
+        type: String,
+        required: true,
+      },
+      dateAdded: Date,
+      dateModified: Date,
+      dateLastPlayed: Date,
+      source: {
+        trackType: String,
+        isProtected: Boolean,
+        isAppleMusic: Boolean,
+      },
     },
     bitRate: {
       type: Number,
-      default: 0,
-    },
-    sampleRate: {
-      type: Number,
-      default: 0,
-    },
-    playCount: {
-      type: Number,
-      default: 0,
     },
     rating: {
-      type: Number,
-      default: 0,
+      type: Number, // 0-5 scale (can be fractional)
     },
-    dateAdded: {
-      type: Date,
-    },
-    location: {
+    filePath: {
       type: String,
       trim: true,
     },
