@@ -2,6 +2,8 @@
 
 Music metadata exploration tool: React SPA frontend, Express API, and MongoDB database for indexing and discovering your music collection through genre tags.
 
+🤖 *Warning: LLM agents helped build this thing - do not use for club gigs, weddings probably ok* 🚨
+
 ## Architecture
 
 - **src/ui/** - Vite + React SPA displaying genre tag clouds from the API
@@ -36,33 +38,7 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 - Genre statistics: `http://localhost:3000/api/songs/stats/genres`
 - Frontend: `http://localhost:5173`
 
-## Database schema
-
-Songs are stored with genres as an array for efficient indexing and aggregation. Import scripts perform incremental upserts by `trackId`, so re-importing updates existing songs and adds new ones without duplicates.
-
-**To import your Rekordbox library:**
-1. Export your library as XML from Rekordbox (File → Export Collection → save as `src/data/rekordbox.xml`)
-2. Run: `cd src/api && npm run import`
-
-**Filename:** The import script looks for `src/data/rekordbox.xml` by default. To specify a different file: `npm run import /path/to/custom.xml`
-
-**Schema:**
-
-```typescript
-{
-  trackId: "unique-id",        // Unique identifier from source (e.g., Rekordbox)
-  name: "Song Name",
-  artist: "Artist Name",
-  genres: ["House", "Deep"],   // Array for fast queries and tag cloud generation
-  album: "Album Name",
-  bpm: 128,
-  tonality: "Dm",
-  // ... additional metadata
-  lastImportDate: Date          // Timestamp of last import
-}
-```
-
-## Production
+## Production build / run - tbc, work in progress
 
 Currently UI and API are built separately:
 
