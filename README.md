@@ -8,7 +8,7 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 
 - **src/ui/** - Vite + React SPA displaying genre tag clouds from the API
 - **src/api/** - Express TypeScript server with Mongoose models, CRUD endpoints at `/api/songs`
-- **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
+  - **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
 
 ## Development
 
