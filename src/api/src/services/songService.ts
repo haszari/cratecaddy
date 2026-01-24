@@ -1,11 +1,27 @@
 import { Song, ISong, ISource } from '../models/Song.js';
 
 /**
- * Normalize text for fuzzy matching
- * - Trim whitespace
- * - Convert to lowercase
- * - Remove/replace punctuation
- * - Normalize unicode characters
+ * Normalize artist and title for database matching
+ * - Combine artist + title with space
+ * - Trim whitespace, convert to lowercase
+ * - Remove "original mix" (case-insensitive)
+ * - Remove punctuation using unicode-aware regex (keeps letters, numbers, whitespace)
+ * - Normalize whitespace
+ */
+export function normalizeArtistTitle(artist: string, title: string): string {
+  if (!artist || !title) return '';
+  
+  return `${artist} ${title}`
+    .trim()
+    .toLowerCase()
+    .replace(/\boriginal mix\b/g, '') // Remove "original mix"
+    .replace(/[^\p{Letter}\p{Number}\s]/gu, '') // Keep letters, numbers, whitespace (unicode-aware)
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+
+/**
+ * Legacy function for backward compatibility - use normalizeArtistTitle instead
  */
 export function normalizeText(text: string): string {
   if (!text) return '';
@@ -27,7 +43,7 @@ export class SongService {
   }
 
   /**
-   * Find matching song using fuzzy matching on artist, title, and duration
+   * Find matching song using database-level normalization
    * @param artist - Artist name
    * @param title - Song title
    * @param duration - Duration in milliseconds (optional)
@@ -38,18 +54,15 @@ export class SongService {
     title: string,
     duration?: number
   ): Promise<ISong | null> {
-    const normalizedArtist = normalizeText(artist);
-    const normalizedTitle = normalizeText(title);
+    const normalizedArtistTitle = normalizeArtistTitle(artist, title);
 
-    if (!normalizedArtist || !normalizedTitle) {
+    if (!normalizedArtistTitle) {
       return null;
     }
 
-    // Fetch candidates - use case-insensitive regex for initial filtering
-    // Then filter in memory for exact normalized match
+    // Build query with exact match on normalized field
     const query: any = {
-      artist: { $regex: normalizedArtist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' },
-      title: { $regex: normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' },
+      artistTitleNormalized: normalizedArtistTitle,
     };
 
     // Add duration matching if provided (within ±2000ms tolerance)
@@ -66,26 +79,15 @@ export class SongService {
       return null;
     }
 
-    // Filter to exact normalized matches
-    const matches = candidates.filter((song) => {
-      const songArtist = normalizeText(song.artist || '');
-      const songTitle = normalizeText(song.title || '');
-      return songArtist === normalizedArtist && songTitle === normalizedTitle;
-    });
-
-    if (matches.length === 0) {
-      return null;
-    }
-
     // If duration provided, prefer exact match, otherwise return first match
     if (duration && duration > 0) {
-      const exactMatch = matches.find(
+      const exactMatch = candidates.find(
         (song) => song.duration && Math.abs(song.duration - duration) < 1000
       );
       if (exactMatch) return exactMatch;
     }
 
-    return matches[0];
+    return candidates[0];
   }
 
   /**
@@ -188,7 +190,11 @@ export class SongService {
     if (existing) {
       // Merge with existing song
       const merged = this.mergeSongData(existing, songData, source);
-      return await Song.findByIdAndUpdate(existing._id, merged, { new: true });
+      const updated = await Song.findByIdAndUpdate(existing._id, merged, { new: true });
+      if (!updated) {
+        throw new Error(`Failed to update song with id ${existing._id}`);
+      }
+      return updated;
     } else {
       // Create new song
       const newSong = new Song({

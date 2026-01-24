@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { normalizeArtistTitle } from '../services/songService.js';
 
 export interface ISource {
   sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
@@ -21,6 +22,7 @@ export interface ISong extends Document {
   year?: number;
   key?: string; // Musical key (e.g., "Am", "G", "F#m")
   rating?: number; // 0-5 scale (can be fractional)
+  artistTitleNormalized: string; // Normalized artist + title for fast matching
   sources: ISource[];
   createdAt: Date;
   updatedAt: Date;
@@ -102,6 +104,12 @@ const songSchema = new Schema<ISong>(
     rating: {
       type: Number, // 0-5 scale (can be fractional)
     },
+    artistTitleNormalized: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+    },
     sources: {
       type: [sourceSchema],
       default: [],
@@ -113,6 +121,14 @@ const songSchema = new Schema<ISong>(
 );
 
 // Compound index for matching: normalized artist + title + duration
-songSchema.index({ artist: 1, title: 1, duration: 1 });
+songSchema.index({ artistTitleNormalized: 1, duration: 1 });
+
+// Pre-save middleware to auto-populate artistTitleNormalized
+songSchema.pre('save', function(next) {
+  if (this.isModified('artist') || this.isModified('title') || this.isNew) {
+    this.artistTitleNormalized = normalizeArtistTitle(this.artist, this.title);
+  }
+  next();
+});
 
 export const Song = mongoose.model<ISong>('Song', songSchema);

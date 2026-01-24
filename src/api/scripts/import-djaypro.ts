@@ -23,7 +23,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ISource } from '../src/models/Song.js';
-import { songService } from '../src/services/songService.js';
+import { songService, normalizeArtistTitle } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
@@ -140,6 +140,7 @@ const importSongs = async (csvPath: string) => {
         bpm,
         duration,
         key: key || undefined,
+        artistTitleNormalized: normalizeArtistTitle(artist, title),
       };
 
       // Check if song already exists (by matching)
