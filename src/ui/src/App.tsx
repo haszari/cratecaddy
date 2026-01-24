@@ -11,6 +11,7 @@ interface Song {
   genres: string[];
   bpm?: number;
   rating?: number;
+  key?: string;
 }
 
 interface TagInfo {

@@ -10,6 +10,7 @@ interface Song {
   genres: string[];
   bpm?: number;
   rating?: number;
+  key?: string;
 }
 
 interface TagInfo {
@@ -65,6 +66,7 @@ function SongTable({ songs }: { songs: Song[] }) {
           <th>Artist</th>
           <th>Title</th>
           <th>BPM</th>
+          <th>Key</th>
           <th>Rating</th>
           <th>Genres</th>
         </tr>
@@ -75,6 +77,7 @@ function SongTable({ songs }: { songs: Song[] }) {
             <td>{song.artist}</td>
             <td>{song.title}</td>
             <td>{song.bpm || '—'}</td>
+            <td>{song.key || '—'}</td>
             <td>{formatRating(song.rating)}</td>
             <td>
               <div className="genres-cell">
