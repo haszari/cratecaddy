@@ -72,8 +72,9 @@ interface ISong extends Document {
   grouping: string[];
   bpm?: number;
   year?: number;
-  key?: string; // NEW
-  rating?: number;
+  key?: string; // Musical key (e.g., "Am", "G", "F#m")
+  rating?: number; // 0-5 scale (can be fractional)
+  artistTitleNormalized: string; // NEW: Normalized artist + title for fast matching
   sources: ISource[]; // NEW - replaces filePath, fileSize, bitRate, appleMusic
   createdAt: Date;
   updatedAt: Date;
@@ -84,22 +85,24 @@ interface ISong extends Document {
 
 ### 2.1 Matching Principles
 
-**Primary Match Criteria** (all three required):
-1. **Artist** - Normalized (trim, lowercase, remove punctuation)
-2. **Title** - Normalized (trim, lowercase, remove punctuation)
-3. **Duration** - Within 1-2 seconds tolerance (±1000-2000ms)
+**Primary Match Criteria** (both required):
+1. **artistTitleNormalized** - Pre-computed normalized string combining artist + title
+2. **Duration** - Within 1-2 seconds tolerance (±1000-2000ms)
 
-**Fuzzy Matching Rules**:
-- **Text normalization**: 
+**Database-Level Normalization**:
+- **artistTitleNormalized field**: Contains normalized artist + title string
+- **Normalization rules**: 
   - Trim whitespace
   - Convert to lowercase
-  - Remove/replace punctuation (keep essential characters)
+  - Remove punctuation (including &, -, etc.)
+  - Remove common suffixes like "original mix", "radio edit"
   - Normalize unicode characters
-- **Duration matching**:
-  - Exact match preferred
-  - ±1000ms (1 second) tolerance for primary match
-  - ±2000ms (2 seconds) tolerance for secondary match
-  - Rare to get clashes with same artist+title but different duration
+  - Store as single string for fast exact matching
+- **Indexing**: Compound index on `{ artistTitleNormalized: 1, duration: 1 }`
+
+**Future Enhancement**:
+- Field designed to support semantic/ranked search using language models
+- Can be enhanced with embeddings or similarity scores while maintaining exact match fallback
 
 ### 2.2 Matching Function
 
@@ -108,16 +111,65 @@ interface ISong extends Document {
 **Function**: `findMatchingSong(artist: string, title: string, duration: number): Promise<ISong | null>`
 
 **Algorithm**:
-1. Normalize artist and title
+1. Generate normalized search key: `normalizeArtistTitle(artist, title)`
 2. Query songs where:
-   - Normalized artist matches
-   - Normalized title matches
-   - Duration is within ±2000ms
+   - `artistTitleNormalized` equals normalized search key
+   - `duration` is within ±2000ms
 3. Return best match (prefer exact duration match)
 4. If no match found, return null (create new song)
 
-**Normalization Function**: `normalizeText(text: string): string`
-- Trim, lowercase, remove punctuation, normalize whitespace
+**Normalization Function**: `normalizeArtistTitle(artist: string, title: string): string`
+- Combine artist + title with space separator
+- Trim whitespace, convert to lowercase
+- Remove punctuation: `&`, `-`, `()`, `[]`, etc.
+- Remove common suffix "original mix" (case-insensitive, word boundary)
+- Normalize unicode characters
+- Remove extra whitespace
+- Return single string for database comparison
+
+**Implementation**:
+```typescript
+export function normalizeArtistTitle(artist: string, title: string): string {
+  if (!artist || !title) return '';
+  
+  return `${artist} ${title}`
+    .trim()
+    .toLowerCase()
+    .replace(/\boriginal mix\b/g, '') // Remove "original mix"
+    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+```
+
+**Normalization Examples**:
+- `"Markus Homm & Benny Grauer"` + `"Bergmassiv (Stephan Zovsky Remix)"`
+  → `"markus homm benny grauer bergmassiv stefan zovsky remix"`
+- `"Artist-Name"` + `"Song Title (Original Mix)"`
+  → `"artist name song title"`
+- `"DJ Haszari"` + `"Kip Kapsalon (Twisted Ambient Version)"`
+  → `"dj haszari kip kapsalon twisted ambient version"`
+
+**Database Schema Addition**:
+```typescript
+// In song schema
+artistTitleNormalized: {
+  type: String,
+  required: true,
+  index: true, // Single field index
+}
+
+// Compound index for optimal performance
+songSchema.index({ artistTitleNormalized: 1, duration: 1 });
+```
+
+**Pre-save Middleware**:
+```typescript
+songSchema.pre('save', function(next) {
+  this.artistTitleNormalized = normalizeArtistTitle(this.artist, this.title);
+  next();
+});
+```
 
 ## 3. Merge Operations
 
@@ -225,15 +277,27 @@ When matching an existing song:
 ## 6. Technical Considerations
 
 ### 6.1 Matching Performance
-- **Indexes**: Create indexes on normalized artist and title fields
-- **Query optimization**: Use compound index on (normalizedArtist, normalizedTitle, duration)
-- **Caching**: Consider caching normalized values
+- **Indexing**: Compound index on `{ artistTitleNormalized: 1, duration: 1 }`
+- **Query optimization**: Single database query with exact match on normalized field
+- **Performance**: O(log n) lookup vs O(n) with regex matching
+- **Scalability**: Pre-computed normalization eliminates runtime text processing
 
 ### 6.2 Data Migration
-- **Existing data**: Need migration script to:
-  - Move filePath/fileSize/bitRate to sources[] array
-  - Convert appleMusic to source entry
-  - Normalize existing songs for matching
+- **Existing data**: No migration required - system is being implemented from scratch
+- **New deployments**: `artistTitleNormalized` field will be populated automatically via pre-save middleware
+
+### 6.4 Testing Strategy
+- **Unit tests**: Test `normalizeArtistTitle` function with various inputs
+- **Integration tests**: Test matching with known duplicate songs (e.g., "Markus Homm & Benny Grauer" examples)
+- **Edge case testing**: Songs with "original mix" variations, punctuation differences
+- **Performance testing**: Compare query times before/after implementation
+- **Regression testing**: Ensure existing merge operations still work correctly
+
+**Test Cases**:
+- "Markus Homm & Benny Grauer" vs "Markus Homm and Benny Grauer"
+- "Song Title (Original Mix)" vs "Song Title"
+- "Artist-Name" vs "Artist Name"
+- Unicode characters and special characters
 
 ### 6.3 Edge Cases
 - **Same song, different durations**: Use closest match within tolerance
@@ -262,11 +326,10 @@ When matching an existing song:
 
 ### New Files:
 - `src/api/scripts/import-djaypro.ts` - dJay Pro CSV importer
-- `src/api/scripts/migrate-to-sources.ts` - Migration script for existing data
 
 ### Modified Files:
-- `src/api/src/models/Song.ts` - Complete schema refactor (sources array, add key)
-- `src/api/src/services/songService.ts` - Add matching and merge logic
+- `src/api/src/models/Song.ts` - Complete schema refactor (sources array, add key, add artistTitleNormalized field)
+- `src/api/src/services/songService.ts` - Add matching and merge logic with database-level normalization
 - `src/api/scripts/import-apple-music.ts` - Refactor to use new schema and matching
 - `src/api/scripts/import-rekordbox.ts` - Refactor to use new schema and matching, extract key
 - `README.md` - Document new structure and import commands
@@ -278,7 +341,9 @@ When matching an existing song:
 - [ ] Song schema refactored with sources[] array
 - [ ] File-specific fields moved from top-level to sources array
 - [ ] Musical key field added to song schema
-- [ ] Fuzzy matching implemented on artist, title, and duration
+- [ ] artistTitleNormalized field added to song schema with compound index
+- [ ] Database-level normalization implemented with pre-save middleware
+- [ ] Fuzzy matching replaced with exact normalized field matching
 - [ ] Songs are correctly matched across different import sources
 - [ ] Same song with different file types creates single record with multiple sources
 - [ ] Keys can be imported from Rekordbox library
