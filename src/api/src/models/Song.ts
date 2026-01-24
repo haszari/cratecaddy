@@ -1,38 +1,62 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IAppleMusicSource {
-  trackType?: string;
-  isProtected?: boolean;
-  isAppleMusic?: boolean;
-}
-
-export interface IAppleMusicMetadata {
-  id: string;
-  persistentId: string;
-  dateAdded?: Date;
-  dateModified?: Date;
-  dateLastPlayed?: Date;
-  source?: IAppleMusicSource;
+export interface ISource {
+  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  filePath?: string;
+  fileSize?: number;
+  bitRate?: number;
+  fileType?: string;
+  sourceMetadata?: Record<string, any>;
+  lastImportDate: Date;
 }
 
 export interface ISong extends Document {
   title: string;
   artist: string;
   album: string;
+  duration?: number; // in milliseconds - used for matching
   genres: string[];
   grouping: string[];
   bpm?: number;
-  fileSize?: number;
-  duration?: number; // in milliseconds
   year?: number;
-  appleMusic: IAppleMusicMetadata;
-  bitRate?: number;
+  key?: string; // Musical key (e.g., "Am", "G", "F#m")
   rating?: number; // 0-5 scale (can be fractional)
-  filePath?: string;
-  lastImportDate: Date;
+  sources: ISource[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const sourceSchema = new Schema<ISource>(
+  {
+    sourceType: {
+      type: String,
+      required: true,
+      enum: ['applemusic', 'rekordbox', 'djaypro', 'local'],
+    },
+    filePath: {
+      type: String,
+      trim: true,
+    },
+    fileSize: {
+      type: Number,
+    },
+    bitRate: {
+      type: Number,
+    },
+    fileType: {
+      type: String,
+      trim: true,
+    },
+    sourceMetadata: {
+      type: Schema.Types.Mixed,
+    },
+    lastImportDate: {
+      type: Date,
+      default: () => new Date(),
+    },
+  },
+  { _id: false }
+);
 
 const songSchema = new Schema<ISong>(
   {
@@ -51,6 +75,10 @@ const songSchema = new Schema<ISong>(
       type: String,
       trim: true,
     },
+    duration: {
+      type: Number, // milliseconds - used for matching
+      index: true,
+    },
     genres: {
       type: [String],
       default: [],
@@ -63,53 +91,28 @@ const songSchema = new Schema<ISong>(
     bpm: {
       type: Number,
     },
-    fileSize: {
-      type: Number,
-    },
-    duration: {
-      type: Number, // milliseconds
-    },
     year: {
       type: Number,
     },
-    appleMusic: {
-      id: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true,
-      },
-      persistentId: {
-        type: String,
-        required: true,
-      },
-      dateAdded: Date,
-      dateModified: Date,
-      dateLastPlayed: Date,
-      source: {
-        trackType: String,
-        isProtected: Boolean,
-        isAppleMusic: Boolean,
-      },
-    },
-    bitRate: {
-      type: Number,
+    key: {
+      type: String,
+      trim: true,
+      index: true,
     },
     rating: {
       type: Number, // 0-5 scale (can be fractional)
     },
-    filePath: {
-      type: String,
-      trim: true,
-    },
-    lastImportDate: {
-      type: Date,
-      default: () => new Date(),
+    sources: {
+      type: [sourceSchema],
+      default: [],
     },
   },
   {
     timestamps: true,
   }
 );
+
+// Compound index for matching: normalized artist + title + duration
+songSchema.index({ artist: 1, title: 1, duration: 1 });
 
 export const Song = mongoose.model<ISong>('Song', songSchema);
