@@ -12,6 +12,20 @@ interface Song {
   bpm?: number;
   rating?: number;
   key?: string;
+  sources: ISource[];
+}
+
+interface ISource {
+  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  filePath?: string;
+  fileSize?: number;
+  bitRate?: number;
+  fileType?: string;
+  sourceMetadata?: {
+    isAppleMusic?: boolean;
+    [key: string]: unknown;
+  };
+  lastImportDate: Date;
 }
 
 interface TagInfo {

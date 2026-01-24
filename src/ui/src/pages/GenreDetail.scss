@@ -44,6 +44,15 @@
     margin-bottom: 1em;
     color: #333;
   }
+
+  table {
+    th, td {
+      &:nth-child(6) { // Sources column
+        width: 80px; // Fixed width for icons
+        text-align: center;
+      }
+    }
+  }
 }
 
 .genres-cell {

@@ -1,0 +1,26 @@
+.sources-icons {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+  
+  .icon-wrapper {
+    display: inline-block;
+    cursor: help;
+    
+    &:hover .cloud-icon,
+    &:hover .lossless-icon {
+      opacity: 1;
+    }
+  }
+  
+  .cloud-icon {
+    color: #666; // Will inherit text color in themes
+    opacity: 0.8;
+  }
+  
+  .lossless-icon {
+    color: #666; // Will inherit text color in themes
+    opacity: 0.8;
+  }
+}
