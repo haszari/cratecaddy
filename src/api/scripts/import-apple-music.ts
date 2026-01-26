@@ -23,7 +23,8 @@ import plist from 'plist';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { Song } from '../src/models/Song.js';
+import { ISource } from '../src/models/Song.js';
+import { songService, normalizeArtistTitle } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
@@ -127,6 +128,7 @@ const importSongs = async (xmlPath: string) => {
       const bitRate = trackData['Bit Rate'] ? parseInt(String(trackData['Bit Rate']), 10) || undefined : undefined;
       const rating = convertRating(trackData['Rating']);
       const location = trackData['Location'];
+      const fileType = trackData['Kind'] || undefined;
       const dateAdded = trackData['Date Added'] instanceof Date ? trackData['Date Added'] : undefined;
       const dateModified = trackData['Date Modified'] instanceof Date ? trackData['Date Modified'] : undefined;
       const dateLastPlayed = trackData['Play Date UTC'] instanceof Date ? trackData['Play Date UTC'] : undefined;
@@ -134,40 +136,47 @@ const importSongs = async (xmlPath: string) => {
       const isProtected = trackData['Protected'] === true;
       const isAppleMusic = trackData['Track Type'] === 'Remote';
 
-      const songData = {
-        appleMusic: {
+      // Create source object
+      const source: ISource = {
+        sourceType: 'applemusic',
+        filePath: location,
+        fileSize,
+        bitRate,
+        fileType,
+        sourceMetadata: {
           id: trackId,
           persistentId,
           dateAdded,
           dateModified,
           dateLastPlayed,
-          source: {
-            trackType,
-            isProtected,
-            isAppleMusic,
-          },
+          trackType,
+          isProtected,
+          isAppleMusic,
         },
+        lastImportDate: new Date(),
+      };
+
+      // Create song data (song-level fields only)
+      const songData = {
         title: name,
-        artist,
         album,
         genres,
         grouping,
         bpm: bpm || undefined,
-        fileSize,
         duration: totalTime,
         year: year || undefined,
-        bitRate: bitRate || undefined,
         rating: rating || undefined,
-        filePath: location,
+        artistTitleNormalized: normalizeArtistTitle(artist, name),
       };
 
-      const result = await Song.findOneAndUpdate(
-        { 'appleMusic.id': trackId },
-        { ...songData, lastImportDate: new Date() },
-        { upsert: true, new: true }
-      );
+      // Check if song already exists (by matching)
+      const existing = await songService.findMatchingSong(artist, name, totalTime);
+      const isNew = !existing;
 
-      if (result.createdAt === result.updatedAt) {
+      // Upsert with merge
+      await songService.upsertSongWithMerge(artist, name, totalTime, songData, source);
+
+      if (isNew) {
         imported++;
       } else {
         updated++;

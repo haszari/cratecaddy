@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import GenreTagWithCount from '../components/GenreTag';
+import { SourcesIcons } from '../components/SourcesIcons';
 import '../pages/GenreDetail.scss';
 
 interface Song {
@@ -10,6 +11,21 @@ interface Song {
   genres: string[];
   bpm?: number;
   rating?: number;
+  key?: string;
+  sources: ISource[];
+}
+
+interface ISource {
+  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  filePath?: string;
+  fileSize?: number;
+  bitRate?: number;
+  fileType?: string;
+  sourceMetadata?: {
+    isAppleMusic?: boolean;
+    [key: string]: unknown;
+  };
+  lastImportDate: Date;
 }
 
 interface TagInfo {
@@ -65,7 +81,9 @@ function SongTable({ songs }: { songs: Song[] }) {
           <th>Artist</th>
           <th>Title</th>
           <th>BPM</th>
+          <th>Key</th>
           <th>Rating</th>
+          <th>Sources</th>
           <th>Genres</th>
         </tr>
       </thead>
@@ -75,7 +93,11 @@ function SongTable({ songs }: { songs: Song[] }) {
             <td>{song.artist}</td>
             <td>{song.title}</td>
             <td>{song.bpm || '—'}</td>
+            <td>{song.key || '—'}</td>
             <td>{formatRating(song.rating)}</td>
+            <td>
+              <SourcesIcons sources={song.sources} />
+            </td>
             <td>
               <div className="genres-cell">
                 {song.genres.map((genre) => (

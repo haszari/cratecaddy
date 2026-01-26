@@ -9,8 +9,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src --ext .ts",
-    "import:rekordbox:deprecated": "tsx scripts/import-rekordbox.ts",
-    "import:applemusic": "tsx scripts/import-apple-music.ts"
+    "import:rekordbox": "tsx scripts/import-rekordbox.ts",
+    "import:applemusic": "tsx scripts/import-apple-music.ts",
+    "import:djaypro": "tsx scripts/import-djaypro.ts",
+    "query:db": "tsx scripts/query-db.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

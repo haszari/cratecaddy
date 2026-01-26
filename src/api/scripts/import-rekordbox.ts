@@ -6,7 +6,8 @@ import { parseStringPromise } from 'xml2js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { Song } from '../src/models/Song.js';
+import { ISource } from '../src/models/Song.js';
+import { songService, normalizeArtistTitle } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
@@ -81,36 +82,62 @@ const importSongs = async (xmlPath: string) => {
         continue;
       }
 
-      const trackData = {
-        trackId: attrs.TrackID,
-        name: attrs.Name,
-        artist: attrs.Artist || '',
-        album: attrs.Album || '',
-        genres: parseGenres(attrs.Genre),
-        composer: attrs.Composer || '',
-        grouping: attrs.Grouping || '',
-        remixer: attrs.Remixer || '',
-        label: attrs.Label || '',
-        tonality: attrs.Tonality || '',
-        kind: attrs.Kind || '',
-        totalTime: parseInt(attrs.TotalTime || '0', 10),
-        year: parseInt(attrs.Year || '0', 10),
-        bpm: parseFloat(attrs.AverageBpm || '0'),
-        bitRate: parseInt(attrs.BitRate || '0', 10),
-        sampleRate: parseInt(attrs.SampleRate || '0', 10),
-        playCount: parseInt(attrs.PlayCount || '0', 10),
-        rating: parseInt(attrs.Rating || '0', 10),
-        dateAdded: attrs.DateAdded ? new Date(attrs.DateAdded) : new Date(),
-        location: attrs.Location || '',
+      const title = attrs.Name;
+      const artist = attrs.Artist || '';
+      const album = attrs.Album || '';
+      const genres = parseGenres(attrs.Genre);
+      const grouping = attrs.Grouping ? [attrs.Grouping] : [];
+      const tonality = attrs.Tonality || '';
+      const fileType = attrs.Kind || '';
+      const totalTime = parseInt(attrs.TotalTime || '0', 10) || undefined;
+      const year = attrs.Year ? parseInt(attrs.Year, 10) || undefined : undefined;
+      const bpm = attrs.AverageBpm ? parseFloat(attrs.AverageBpm) || undefined : undefined;
+      const bitRate = attrs.BitRate ? parseInt(attrs.BitRate, 10) || undefined : undefined;
+      const rating = attrs.Rating ? parseInt(attrs.Rating, 10) || undefined : undefined;
+      const location = attrs.Location || '';
+      const dateAdded = attrs.DateAdded ? new Date(attrs.DateAdded) : undefined;
+
+      // Create source object
+      const source: ISource = {
+        sourceType: 'rekordbox',
+        filePath: location,
+        bitRate,
+        fileType,
+        sourceMetadata: {
+          trackId: attrs.TrackID,
+          location,
+          dateAdded,
+          composer: attrs.Composer,
+          remixer: attrs.Remixer,
+          label: attrs.Label,
+          sampleRate: attrs.SampleRate ? parseInt(attrs.SampleRate, 10) : undefined,
+          playCount: attrs.PlayCount ? parseInt(attrs.PlayCount, 10) : undefined,
+        },
+        lastImportDate: new Date(),
       };
 
-      const result = await Song.findOneAndUpdate(
-        { trackId: trackData.trackId },
-        { ...trackData, lastImportDate: new Date() },
-        { upsert: true, new: true }
-      );
+      // Create song data (song-level fields only)
+      const songData = {
+        title,
+        album,
+        genres,
+        grouping,
+        bpm,
+        duration: totalTime,
+        year,
+        key: tonality || undefined, // Extract key from Tonality field
+        rating,
+        artistTitleNormalized: normalizeArtistTitle(artist, title),
+      };
 
-      if (result.createdAt === result.updatedAt) {
+      // Check if song already exists (by matching)
+      const existing = await songService.findMatchingSong(artist, title, totalTime);
+      const isNew = !existing;
+
+      // Upsert with merge
+      await songService.upsertSongWithMerge(artist, title, totalTime, songData, source);
+
+      if (isNew) {
         imported++;
       } else {
         updated++;
