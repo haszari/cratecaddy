@@ -28,8 +28,11 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 
 ### Import data
 
-- `cd src/api && npm run import:applemusic` - Import Apple Music XML library from `src/data/Library.xml`
-- `cd src/api && npm run import:applemusic /path/to/file.xml` - Import from custom path
+- `cd src/api && npm run import:applemusic src/data/Library.xml`
+- `cd src/api && npm run import:rekordbox src/data/rekordbox.xml`
+- `cd src/api && npm run import:djaypro src/data/dJayPro.csv`
+
+Import music library metadata from various formats. Song data is merged based on artist + title + duration.
 
 ## Testing
 
