@@ -26,6 +26,7 @@ services:
     environment:
       NODE_ENV: development
       MONGODB_URI: mongodb://mongodb:27017/cratecaddy
+      PORT: 3000
     depends_on:
       mongodb:
         condition: service_healthy

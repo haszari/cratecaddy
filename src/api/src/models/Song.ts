@@ -11,6 +11,13 @@ export interface ISource {
   lastImportDate: Date;
 }
 
+export interface ITokens {
+  artist: string; // Normalized artist
+  title: string; // Normalized title with variation info stripped
+  variation?: string; // Normalized variation string (e.g., "Jimbob")
+  variationType?: string; // Normalized variation type (e.g., "remix", "edit")
+}
+
 export interface ISong extends Document {
   title: string;
   artist: string;
@@ -24,6 +31,7 @@ export interface ISong extends Document {
   rating?: number; // 0-5 scale (can be fractional)
   artistTitleNormalized: string; // Normalized artist + title for fast matching
   sources: ISource[];
+  tokens: ITokens; // Sub-structure for normalized tokens
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,6 +63,30 @@ const sourceSchema = new Schema<ISource>(
     lastImportDate: {
       type: Date,
       default: () => new Date(),
+    },
+  },
+  { _id: false }
+);
+
+const tokensSchema = new Schema<ITokens>(
+  {
+    artist: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    variation: {
+      type: String,
+      trim: true,
+    },
+    variationType: {
+      type: String,
+      trim: true,
     },
   },
   { _id: false }
@@ -114,6 +146,10 @@ const songSchema = new Schema<ISong>(
       type: [sourceSchema],
       default: [],
     },
+    tokens: {
+      type: tokensSchema,
+      required: true,
+    },
   },
   {
     timestamps: true,
@@ -130,5 +166,40 @@ songSchema.pre('save', function(next) {
   }
   next();
 });
+
+// Pre-save middleware to auto-populate tokens
+songSchema.pre('save', function(next) {
+  if (this.isModified('artist') || this.isModified('title') || this.isNew) {
+    const { artist, title, variation, variationType } = normalizeTokens(this.artist, this.title);
+    this.tokens = { artist, title, variation, variationType };
+  }
+  next();
+});
+
+// Helper function to normalize tokens
+function normalizeTokens(artist: string, title: string): ITokens {
+  // Normalize artist
+  const normalizedArtist = artist.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+
+  // Normalize title and extract variation info
+  const variationMatch = title.match(/\(([^)]+)\)|-\s*([^\-]+)$/i);
+  const variation = variationMatch ? variationMatch[1] || variationMatch[2] : undefined;
+  const variationType = variation ? extractVariationType(variation) : undefined;
+  const normalizedTitle = title
+    .toLowerCase()
+    .replace(/\(([^)]+)\)|-\s*([^\-]+)$/i, '')
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return { artist: normalizedArtist, title: normalizedTitle, variation, variationType };
+}
+
+// Helper function to extract variation type
+function extractVariationType(variation: string): string | undefined {
+  const variationKeywords = ['remix', 'edit', 'version', 'radio', 'mix'];
+  const lowerVariation = variation.toLowerCase();
+  return variationKeywords.find(keyword => lowerVariation.includes(keyword));
+}
 
 export const Song = mongoose.model<ISong>('Song', songSchema);

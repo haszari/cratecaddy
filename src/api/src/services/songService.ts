@@ -232,4 +232,75 @@ export class SongService {
   }
 }
 
+/**
+ * Backfill tokens for existing songs in the database
+ */
+export async function backfillTokens(): Promise<void> {
+  const songs = await Song.find();
+
+  for (const song of songs) {
+    const { artist, title } = song;
+    const { artist: normalizedArtist, title: normalizedTitle, variation, variationType } = normalizeTokens(artist, title);
+
+    song.tokens = { artist: normalizedArtist, title: normalizedTitle, variation, variationType };
+    await song.save();
+  }
+}
+
+/**
+ * Normalize tokens for a song
+ */
+export function normalizeTokens(artist: string, title: string, duration?: number) {
+  const normalizedArtist = artist.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+
+  // Extract variations using regex for brackets () and [] and delimiters
+  const variationMatches = [...title.matchAll(/\(([^)]+)\)|\[([^\]]+)\]|-\s*([^\-]+)$/gi)];
+  const variations = variationMatches.map(match => {
+    const rawVariation = match[1] || match[2] || match[3];
+    const normalizedVariation = rawVariation
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, '')
+      .trim();
+    const variationType = extractVariationType(rawVariation);
+    return { variation: normalizedVariation, type: variationType };
+  });
+
+  // Remove variations from the title
+  const normalizedTitle = title
+    .toLowerCase()
+    .replace(/\(([^)]+)\)|\[([^\]]+)\]|-\s*([^\-]+)$/gi, '')
+    .replace(/[^a-z0-9 ]/g, '')
+    .trim();
+
+  return { artist: normalizedArtist, title: normalizedTitle, variations, duration };
+}
+
+/**
+ * Extract variation type from a variation string
+ */
+function extractVariationType(variation: string): string | undefined {
+  if (!variation) return undefined;
+
+  const variationKeywords = ['remix', 'edit', 'version', 'radio', 'mix', 'feat', 'featuring', 'ft', 'retouch'];
+  const lowerVariation = variation.toLowerCase();
+
+  for (const keyword of variationKeywords) {
+    if (lowerVariation.includes(keyword)) {
+      // Normalize 'ft', 'feat', and 'featuring' to 'featuring'
+      if (['ft', 'feat', 'featuring'].includes(keyword)) {
+        return 'featuring';
+      }
+      return keyword;
+    }
+  }
+
+  return undefined;
+}
+
 export const songService = new SongService();
+
+export async function triggerBackfill(): Promise<void> {
+  console.log('Starting backfill of tokens for all songs...');
+  await backfillTokens();
+  console.log('Backfill complete.');
+}

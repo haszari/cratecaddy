@@ -51,3 +51,13 @@ Currently UI and API are built separately:
 4. Run API server on a Node.js host with MongoDB connection
 
 **Future:** A Docker Compose setup could containerize both the built UI and API in production for simplified deployment.
+
+## Backfill Tokens
+
+To backfill tokens for all songs in the database via the API, run the following command:
+
+```bash
+npm run api-backfill-tokens
+```
+
+This will send a request to the API endpoint to process all songs and populate the `tokens` field for each song. Ensure the server is running before executing this command.

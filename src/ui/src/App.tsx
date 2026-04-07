@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import GenreTagWithCount from './components/GenreTag';
 import GenreDetail from './pages/GenreDetail';
+import SongDetail from './pages/SongDetail';
 
 interface Song {
   _id?: string;
@@ -69,6 +70,18 @@ function GenreTagCloud({ tags }: { tags: Record<string, TagInfo> }) {
   );
 }
 
+function SongList({ songs }: { songs: Song[] }) {
+  return (
+    <ul>
+      {songs.map((song) => (
+        <li key={song._id}>
+          <a href={`/song/${song._id}`}>{song.title} by {song.artist}</a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function HomePage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [tags, setTags] = useState<Record<string, TagInfo>>({});
@@ -79,7 +92,8 @@ function HomePage() {
     const fetchSongs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/songs');
+        const API_URL = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${API_URL}/api/songs`);
         if (!response.ok) {
           throw new Error('Failed to fetch songs');
         }
@@ -114,7 +128,12 @@ function HomePage() {
       <h1>Crate Caddy</h1>
       {loading && <p>Loading songs...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && <p>{songs.length} songs loaded</p>}
+      {!loading && !error && (
+        <>
+          <p>{songs.length} songs loaded</p>
+          <SongList songs={songs} />
+        </>
+      )}
       <GenreTagCloud tags={main} />
       <GenreTagCloud tags={fringe} />
     </div>
@@ -127,6 +146,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/genre/:genreName" element={<GenreDetail />} />
+        <Route path="/song/:id" element={<SongDetail />} />
       </Routes>
     </BrowserRouter>
   );

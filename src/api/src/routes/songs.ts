@@ -9,5 +9,6 @@ router.get('/:id', (req, res) => songController.getSongById(req, res));
 router.post('/', (req, res) => songController.createSong(req, res));
 router.put('/:id', (req, res) => songController.updateSong(req, res));
 router.delete('/:id', (req, res) => songController.deleteSong(req, res));
+router.post('/:id/compute-tokens', (req, res) => songController.computeTokens(req, res));
 
 export default router;

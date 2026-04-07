@@ -91,7 +91,9 @@ function SongTable({ songs }: { songs: Song[] }) {
         {sortedSongs.map((song) => (
           <tr key={song._id}>
             <td>{song.artist}</td>
-            <td>{song.title}</td>
+            <td>
+              <Link to={`/song/${song._id}`}>{song.title}</Link>
+            </td>
             <td>{song.bpm || '—'}</td>
             <td>{song.key || '—'}</td>
             <td>{formatRating(song.rating)}</td>
