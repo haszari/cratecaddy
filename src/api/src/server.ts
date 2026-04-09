@@ -7,7 +7,7 @@ import songRoutes from './routes/songs.js';
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.API_PORT || 3000;
 
 // Middleware
 app.use(cors());
