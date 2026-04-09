@@ -10,5 +10,10 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env': env, // Make env variables available in the app
     },
+    server: {
+      strictPort: true, // fail if our expected port is not available
+      port: env.UI_PORT,
+    },
   };
 });
+

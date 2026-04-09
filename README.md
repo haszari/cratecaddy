@@ -12,6 +12,14 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 
 ## Development
 
+### Setup
+Ports for API & web server are in .env files:
+
+- `src/.env` for docker compose => API server
+- `src/ui/.env` configures API URL (including port), and UI port
+
+These files are committed in repo, so configured out of the box, but can be edited/overridden.
+
 ### Start
 
 - `docker-compose up --build -d` - Start MongoDB and API server (from project root)
@@ -36,10 +44,10 @@ Import music library metadata from various formats. Song data is merged based on
 
 ## Testing
 
-- API health check: `http://localhost:3000/health`
-- All songs: `http://localhost:3000/api/songs`
-- Genre statistics: `http://localhost:3000/api/songs/stats/genres`
-- Frontend: `http://localhost:5173`
+- API health check: `http://localhost:7625/health`
+- All songs: `http://localhost:7625/api/songs`
+- Genre statistics: `http://localhost:7625/api/songs/stats/genres`
+- Frontend: `http://localhost:7626`
 
 ## Production build / run - tbc, work in progress
 
