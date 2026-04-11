@@ -60,10 +60,8 @@ const convertRating = (rating?: string | number): number | undefined => {
   return num / 20; // 0-100 scale to 0-5 scale
 };
 
-// Check if track has "DJing" in grouping
-const hasDJingGrouping = (grouping?: string): boolean => {
-  if (!grouping) return false;
-  return grouping.includes('DJing');
+const hasGrouping = (groupingText: string, testValue: string): boolean => {
+  return groupingText.includes(testValue);
 };
 
 const importSongs = async (xmlPath: string) => {
@@ -99,9 +97,14 @@ const importSongs = async (xmlPath: string) => {
         continue;
       }
 
-      // Filter by DJing grouping
       const groupingRawString = trackData['Grouping'];
-      if (!hasDJingGrouping(groupingRawString)) {
+      if (!groupingRawString) {
+        // Skip - no grouping value.
+        filtered++;
+        continue;
+      }
+      if (!hasGrouping(groupingRawString, 'DJing') && !hasGrouping(groupingRawString, 'Listening')) {
+        // Skip - no relevant tag.
         filtered++;
         continue;
       }
