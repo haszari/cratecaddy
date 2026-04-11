@@ -34,13 +34,27 @@ These files are committed in repo, so configured out of the box, but can be edit
 
 - `docker-compose down --volumes` - Stop containers and remove MongoDB volume
 
-### Import data
+### Import data from Apple Music
 
-- `cd src/api && npm run import:applemusic src/data/Library.xml`
-- `cd src/api && npm run import:rekordbox src/data/rekordbox.xml`
-- `cd src/api && npm run import:djaypro src/data/dJayPro.csv`
+Import music library metadata from Apple Music. 
 
-Import music library metadata from various formats. Song data is merged based on artist + title + duration.
+- In Apple Music: `File > Library > Export Library` - generates xml file. 
+- `cd src/api && npm run import:applemusic ~/Music/Music/Library.xml` to import xml file.
+
+This will import all song metadata with grouping containing `DJing` or `Listening`. 
+
+See [import-apple-music.ts](./src/api/scripts/import-apple-music.ts) for details.
+
+Song data is merged based on artist + title + duration, and import process updates database (can re-import multiple times safely - idempotent).
+
+#### experimental
+
+- `cd src/api && npm run import:rekordbox src/data/rekordbox.xml` 
+- `cd src/api && npm run import:djaypro src/data/dJayPro.csv` 
+
+Experimental import from other sources that include musical key data. As above, can be rerun, data is merged based on key song metadata. Source-specific metadata is stored separately in the mongodb record. 
+
+Not recommended or supported at present, cumbersome flow. 
 
 ## Testing
 
