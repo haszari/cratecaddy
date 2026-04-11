@@ -36,11 +36,17 @@ These files are committed in repo, so configured out of the box, but can be edit
 
 ### Import data
 
-- `cd src/api && npm run import:applemusic src/data/Library.xml`
-- `cd src/api && npm run import:rekordbox src/data/rekordbox.xml`
-- `cd src/api && npm run import:djaypro src/data/dJayPro.csv`
+Import music library metadata from various formats. 
 
-Import music library metadata from various formats. Song data is merged based on artist + title + duration.
+- `cd src/api && npm run import:applemusic src/data/Library.xml` 
+
+This will import all song metadata with grouping containing `DJing` or `Listening`. 
+
+Song data is merged based on artist + title + duration, and import process updates database (can re-import multiple times safely - idempotent).
+
+#### experimental
+- `cd src/api && npm run import:rekordbox src/data/rekordbox.xml` 
+- `cd src/api && npm run import:djaypro src/data/dJayPro.csv` 
 
 ## Testing
 
