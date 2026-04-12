@@ -1,105 +1,20 @@
 import './App.scss';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import GenreTagWithCount from './components/GenreTag';
+import { useSongs } from './hooks/useSongs';
+import { indexTags } from './utils/tagUtils';
+import { GenreTagCloud } from './components/GenreTagCloud';
 import GenreDetail from './pages/GenreDetail';
-
-interface Song {
-  _id?: string;
-  title: string;
-  artist: string;
-  genres: string[];
-  bpm?: number;
-  rating?: number;
-  key?: string;
-  sources: ISource[];
-}
-
-interface ISource {
-  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
-  filePath?: string;
-  fileSize?: number;
-  bitRate?: number;
-  fileType?: string;
-  sourceMetadata?: {
-    isAppleMusic?: boolean;
-    [key: string]: unknown;
-  };
-  lastImportDate: Date;
-}
-
-interface TagInfo {
-  count: number;
-}
-
-// Iterate through all songs,
-// extract genres from array field,
-// and index them in a map with tag count.
-function indexTags(songs: Song[]): Record<string, TagInfo> {
-  const tagsMap: Record<string, TagInfo> = {};
-  songs.forEach((song) => {
-    song.genres.forEach((genre) => {
-      const trimmedGenre = genre.trim();
-      if (trimmedGenre === '') return;
-      if (trimmedGenre in tagsMap) {
-        tagsMap[trimmedGenre].count += 1;
-      } else {
-        tagsMap[trimmedGenre] = { count: 1 };
-      }
-    });
-  });
-  return tagsMap;
-}
-
-function GenreTagCloud({ tags }: { tags: Record<string, TagInfo> }) {
-  const sortedTagKeys = Object.keys(tags).sort((a, b) => {
-    return a.localeCompare(b);
-  });
-
-  return (
-    <div className="TagCloud">
-      {sortedTagKeys.map((tag) => (
-        <GenreTagWithCount
-          key={tag}
-          tagText={tag}
-          tagCount={tags[tag].count}
-        />
-      ))}
-    </div>
-  );
-}
+import type { TagInfo } from './types';
 
 function HomePage() {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [tags, setTags] = useState<Record<string, TagInfo>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: songs, isLoading, error } = useSongs();
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        setLoading(true);
-        const API_URL = import.meta.env.VITE_API_URL;
-        const response = await fetch(`${API_URL}/api/songs`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch songs');
-        }
-        const data: Song[] = await response.json();
-        setSongs(data);
-        setTags(indexTags(data));
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching songs:', err);
-        setError('Failed to load songs from server');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const tags = useMemo(() => {
+    if (!songs) return {};
+    return indexTags(songs);
+  }, [songs]);
 
-    fetchSongs();
-  }, []);
-
-  // Split into major / common tags and lesser used tags.
   const main: Record<string, TagInfo> = {};
   const fringe: Record<string, TagInfo> = {};
   for (const [tagName, tagInfo] of Object.entries(tags)) {
@@ -113,9 +28,9 @@ function HomePage() {
   return (
     <div className="HomePage">
       <h1>Crate Caddy</h1>
-      {loading && <p>Loading songs...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && <p>{songs.length} songs loaded</p>}
+      {isLoading && <p>Loading songs...</p>}
+      {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
+      {!isLoading && !error && songs && <p>{songs.length} songs loaded</p>}
       <GenreTagCloud tags={main} />
       <GenreTagCloud tags={fringe} />
     </div>

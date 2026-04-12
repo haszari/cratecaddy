@@ -1,70 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useSongsByGenre } from '../hooks/useSongsByGenre';
+import { indexTags } from '../utils/tagUtils';
+import { GenreTagCloud } from '../components/GenreTagCloud';
 import GenreTagWithCount from '../components/GenreTag';
 import { SourcesIcons } from '../components/SourcesIcons';
 import '../pages/GenreDetail.scss';
-
-interface Song {
-  _id?: string;
-  title: string;
-  artist: string;
-  genres: string[];
-  bpm?: number;
-  rating?: number;
-  key?: string;
-  sources: ISource[];
-}
-
-interface ISource {
-  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
-  filePath?: string;
-  fileSize?: number;
-  bitRate?: number;
-  fileType?: string;
-  sourceMetadata?: {
-    isAppleMusic?: boolean;
-    [key: string]: unknown;
-  };
-  lastImportDate: Date;
-}
-
-interface TagInfo {
-  count: number;
-}
-
-function indexTags(songs: Song[]): Record<string, TagInfo> {
-  const tagsMap: Record<string, TagInfo> = {};
-  songs.forEach((song) => {
-    song.genres.forEach((genre) => {
-      const trimmedGenre = genre.trim();
-      if (trimmedGenre === '') return;
-      if (trimmedGenre in tagsMap) {
-        tagsMap[trimmedGenre].count += 1;
-      } else {
-        tagsMap[trimmedGenre] = { count: 1 };
-      }
-    });
-  });
-  return tagsMap;
-}
-
-function GenreTagCloud({ tags }: { tags: Record<string, TagInfo> }) {
-  const sortedTagKeys = Object.keys(tags).sort((a, b) => {
-    return a.localeCompare(b);
-  });
-
-  return (
-    <div className="TagCloud">
-      {sortedTagKeys.map((tag) => (
-        <GenreTagWithCount
-          key={tag}
-          tagText={tag}
-          tagCount={tags[tag].count}
-        />
-      ))}
-    </div>
-  );
-}
+import type { Song } from '../types';
 
 function SongTable({ songs }: { songs: Song[] }) {
   const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -120,46 +62,14 @@ export default function GenreDetail() {
   const { genreName } = useParams<{ genreName: string }>();
   const decodedGenre = genreName ? decodeURIComponent(genreName) : '';
 
-  const [allSongs, setAllSongs] = useState<Song[]>([]);
-  const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
-  const [tags, setTags] = useState<Record<string, TagInfo>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: filteredSongs, isLoading, error } = useSongsByGenre(genreName);
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        setLoading(true);
-        const API_URL = import.meta.env.VITE_API_URL;
-        const response = await fetch(`${API_URL}/api/songs`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch songs');
-        }
-        const data: Song[] = await response.json();
-        setAllSongs(data);
-
-        // Filter songs by genre
-        const filtered = data.filter((song) =>
-          song.genres.some(
-            (g) => g.trim().toLowerCase() === decodedGenre.toLowerCase()
-          )
-        );
-        setFilteredSongs(filtered);
-        const allTags = indexTags(filtered);
-        // Remove the current genre from the tags
-        delete allTags[decodedGenre];
-        setTags(allTags);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching songs:', err);
-        setError('Failed to load songs from server');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSongs();
-  }, [decodedGenre]);
+  const tags = useMemo(() => {
+    if (!filteredSongs) return {};
+    const allTags = indexTags(filteredSongs);
+    delete allTags[decodedGenre];
+    return allTags;
+  }, [filteredSongs, decodedGenre]);
 
   return (
     <div className="GenreDetail">
@@ -171,9 +81,9 @@ export default function GenreDetail() {
         <GenreTagWithCount tagText={decodedGenre} tagCount={0} isHeading={true} />
       </div>
 
-      {loading && <p>Loading songs...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && (
+      {isLoading && <p>Loading songs...</p>}
+      {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
+      {!isLoading && !error && filteredSongs && (
         <>
           <p className="song-count">{filteredSongs.length} songs with this tag</p>
 

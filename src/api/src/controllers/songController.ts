@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
-import { songService } from '../services/songService.js';
+import { songService, normalizeGenres } from '../services/songService.js';
 
 export class SongController {
   async getAllSongs(req: Request, res: Response) {
     try {
       const songs = await songService.getAllSongs();
-      res.json(songs);
+      const normalizedSongs = songs.map((song) => ({
+        ...song.toObject(),
+        genres: normalizeGenres(song.genres),
+      }));
+      res.json(normalizedSongs);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch songs' });
     }
@@ -18,7 +22,11 @@ export class SongController {
         res.status(404).json({ error: 'Song not found' });
         return;
       }
-      res.json(song);
+      const normalizedSong = {
+        ...song.toObject(),
+        genres: normalizeGenres(song.genres),
+      };
+      res.json(normalizedSong);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch song' });
     }
