@@ -21,6 +21,24 @@ export function normalizeArtistTitle(artist: string, title: string): string {
 }
 
 /**
+ * Normalize genres array
+ * - Trim whitespace from each genre
+ * - Remove empty strings
+ * - Remove duplicates (case-sensitive)
+ */
+export function normalizeGenres(genres: string[]): string[] {
+  const seen = new Set<string>();
+  return genres
+    .map((g) => g.trim())
+    .filter((g) => g !== '')
+    .filter((g) => {
+      if (seen.has(g)) return false;
+      seen.add(g);
+      return true;
+    });
+}
+
+/**
  * Legacy function for backward compatibility - use normalizeArtistTitle instead
  */
 export function normalizeText(text: string): string {

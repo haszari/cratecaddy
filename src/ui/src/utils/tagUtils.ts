@@ -13,5 +13,6 @@ export function indexTags(songs: Song[]): Record<string, TagInfo> {
       }
     });
   });
+
   return tagsMap;
 }
