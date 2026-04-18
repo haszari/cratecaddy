@@ -1,6 +1,7 @@
 import { SourcesIcons } from './SourcesIcons';
 import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
+import { Link } from 'react-router-dom';
 
 export default function SongTable({ songs }: { songs: Song[] }) {
   const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -26,7 +27,12 @@ export default function SongTable({ songs }: { songs: Song[] }) {
       <tbody>
         {sortedSongs.map((song) => (
           <tr key={song._id}>
-            <td>{song.artist}</td>
+            <td>
+              <Link
+                to={`/artist/${encodeURIComponent(song.artist)}`}
+                className="Artist-link"
+              >{song.artist}</Link>
+            </td>
             <td>{song.title}</td>
             <td>{song.bpm}</td>
             <td>{song.key}</td>
