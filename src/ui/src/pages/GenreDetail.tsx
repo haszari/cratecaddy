@@ -4,59 +4,8 @@ import { useSongsByGenre } from '../hooks/useSongsByGenre';
 import { indexTags } from '../utils/tagUtils';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import GenreTagWithCount from '../components/GenreTag';
-import { SourcesIcons } from '../components/SourcesIcons';
-import '../pages/GenreDetail.scss';
-import type { Song } from '../types';
-
-function SongTable({ songs }: { songs: Song[] }) {
-  const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
-  const formatRating = (rating: number | undefined) => {
-    if (rating === undefined) return '—';
-    return rating === Math.round(rating) ? Math.round(rating).toString() : rating.toFixed(1);
-  };
-
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>Artist</th>
-          <th>Title</th>
-          <th>BPM</th>
-          <th>Key</th>
-          <th>Rating</th>
-          <th>Sources</th>
-          <th>Genres</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sortedSongs.map((song) => (
-          <tr key={song._id}>
-            <td>{song.artist}</td>
-            <td>{song.title}</td>
-            <td>{song.bpm || '—'}</td>
-            <td>{song.key || '—'}</td>
-            <td>{formatRating(song.rating)}</td>
-            <td>
-              <SourcesIcons sources={song.sources} />
-            </td>
-            <td>
-              <div className="genres-cell">
-                {song.genres.map((genre) => (
-                  <GenreTagWithCount
-                    key={genre}
-                    tagText={genre}
-                    tagCount={0}
-                  />
-                ))}
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
+import './GenreDetail.scss';
+import SongTable from '../components/SongTable';
 
 export default function GenreDetail() {
   const { genreName } = useParams<{ genreName: string }>();
