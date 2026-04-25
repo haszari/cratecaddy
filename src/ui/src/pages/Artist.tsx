@@ -1,24 +1,23 @@
 import { useParams, Link } from 'react-router-dom';
 import { useMemo } from 'react';
-import { useSongsByGenre } from '../hooks/useSongsByGenre';
+import { useSongsByArtist } from '../hooks/useSongsByArtist';
 import { indexTags } from '../utils/tagUtils';
 import { GenreTagCloud } from '../components/GenreTagCloud';
-import GenreTagWithCount from '../components/GenreTag';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 
-export default function GenreDetail() {
-  const { genreName } = useParams<{ genreName: string }>();
-  const decodedGenre = genreName ? decodeURIComponent(genreName) : '';
+export default function Artist() {
+  const { artistName } = useParams<{ artistName: string }>();
+  const decodedArtist = artistName ? decodeURIComponent(artistName) : '';
 
-  const { data: filteredSongs, isLoading, error } = useSongsByGenre(genreName);
+  const { data: filteredSongs, isLoading, error } = useSongsByArtist(decodedArtist);
 
   const tags = useMemo(() => {
     if (!filteredSongs) return {};
     const allTags = indexTags(filteredSongs);
-    delete allTags[decodedGenre];
+    // delete allTags[decodedGenre];
     return allTags;
-  }, [filteredSongs, decodedGenre]);
+  }, [filteredSongs]);
 
   return (
     <div className="GenreDetail">
@@ -26,15 +25,15 @@ export default function GenreDetail() {
         ← Back
       </Link>
 
-      <div className="genre-heading-container">
+      {/* <div className="genre-heading-container">
         <GenreTagWithCount tagText={decodedGenre} tagCount={0} isHeading={true} />
-      </div>
+      </div> */}
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
       {!isLoading && !error && filteredSongs && (
         <>
-          <p className="song-count">{filteredSongs.length} songs with this tag</p>
+          <p className="song-count">{filteredSongs.length} songs by this artist</p>
 
           {Object.keys(tags).length > 0 && (
             <>
