@@ -18,9 +18,8 @@ interface SourcesIconsProps {
 }
 
 export function SourcesIcons({ sources }: SourcesIconsProps) {
-  // Show cloud icon if ALL sources are Apple Music streaming (no local files)
-  const isAllCloud = sources.length > 0 && sources.every(s => 
-    s.sourceMetadata?.isAppleMusic === true && !s.filePath
+  const isLocalFile = sources.length > 0 && sources.some(s => 
+    s.sourceMetadata?.isAppleMusic === false
   );
 
   // Show gem icon if ANY source has lossless format (lowercase matching, support AIF/AIFF)
@@ -54,7 +53,7 @@ export function SourcesIcons({ sources }: SourcesIconsProps) {
 
   return (
     <div className="sources-icons">
-      {isAllCloud && (
+      {!isLocalFile && (
         <div 
           className="icon-wrapper"
           title="Cloud only - Apple Music"
