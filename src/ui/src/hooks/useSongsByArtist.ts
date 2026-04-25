@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import { useSongs } from './useSongs';
 
-// Returns songs by artist or songs containing the artist in the title - fuzzy match for remixes.
+// Returns songs filtered by artist:
+// - fuzzy match
+// - artist in artist (e.g. includes combined artists)
+// - artist in title (e.g. remixes)
 export function useSongsByArtist(artist: string | undefined) {
   const { data: songs, isLoading, error, refetch } = useSongs();
 
@@ -9,7 +12,7 @@ export function useSongsByArtist(artist: string | undefined) {
     if (!songs || !artist) return [];
     const decodedArtist = decodeURIComponent(artist);
     return songs.filter((song) => 
-      song.artist === decodedArtist || 
+      song.artist.indexOf(decodedArtist) !== -1 ||
       song.title.indexOf(decodedArtist) !== -1
     );
   }, [songs, artist]);
