@@ -12,6 +12,7 @@ interface SongTableProps {
 }
 
 export default function SongTable({ songs, page, totalPages, totalCount, onPageChange }: SongTableProps) {
+  const showPagination = totalPages !== undefined && totalPages > 1;
   const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const formatRating = (rating: number | undefined) => {
@@ -64,26 +65,32 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
           ))}
         </tbody>
       </table>
-      {page !== undefined && totalPages !== undefined && totalPages > 1 && (
+      {page !== undefined && totalPages !== undefined && (
         <div className="pagination">
-          <button
-            disabled={page <= 1}
-            onClick={() => onPageChange?.(page - 1)}
-          >
-            ← Prev
-          </button>
+          {showPagination && (
+            <button
+              disabled={page <= 1}
+              onClick={() => onPageChange?.(page - 1)}
+            >
+              ← Prev
+            </button>
+          )}
           <div className="pagination-center">
             {totalCount !== undefined && (
               <span className="pagination-count">{totalCount} song{totalCount !== 1 ? 's' : ''}</span>
             )}
-            <span className="pagination-pages">Page {page} of {totalPages}</span>
+            {showPagination && (
+              <span className="pagination-pages">Page {page} of {totalPages}</span>
+            )}
           </div>
-          <button
-            disabled={page >= totalPages}
-            onClick={() => onPageChange?.(page + 1)}
-          >
-            Next →
-          </button>
+          {showPagination && (
+            <button
+              disabled={page >= totalPages}
+              onClick={() => onPageChange?.(page + 1)}
+            >
+              Next →
+            </button>
+          )}
         </div>
       )}
     </>

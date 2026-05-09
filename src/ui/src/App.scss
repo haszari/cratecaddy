@@ -13,7 +13,7 @@
 .pagination {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   margin: 1.5em 0;
 
@@ -26,6 +26,14 @@
     &:disabled {
       opacity: 0.4;
       cursor: default;
+    }
+
+    &:first-child {
+      margin-right: auto;
+    }
+
+    &:last-child {
+      margin-left: auto;
     }
   }
 }

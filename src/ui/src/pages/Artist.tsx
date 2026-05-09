@@ -102,6 +102,7 @@ export default function Artist() {
   );
 
   const songs = paginated?.data ?? [];
+  const hasTag = (genre: string) => filters.genreNot.includes(genre);
 
   return (
     <div className="GenreDetail">
