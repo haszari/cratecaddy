@@ -43,6 +43,12 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - UI uses SCSS (`.scss` files) — `sass-embedded` is a devDependency
 - Dockerfile `EXPOSE 3000` is misleading — actual port is `API_PORT` from `.env` (default 7625)
 - Docker compose mounts `./src/api/src:/app/src` for hot reload in the API container
+- Genre page URLs use `+` for AND (genre.all) and `,` for OR (genre.any): e.g. `/genre/Techno+Minimal` or `/genre/Techno,Deep`
+- Pills render orange for AND mode, blue for OR mode
+
+## Future scope
+
+- **OR-genre builder UI**: The current interface is built for drilling down via AND mode (clicking a tag adds it with `+`). We need a separate UI to build OR genre queries (perhaps a toggle or alternate tag-click mode) since the tag cloud `+` button is conceptually additive/AND.
 
 ## Style
 

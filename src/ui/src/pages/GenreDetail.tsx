@@ -15,8 +15,11 @@ export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
   const navigate = useNavigate();
 
+  const separator = genrePath && genrePath.includes(',') ? ',' : '+';
+  const isOrMode = separator === ',';
+
   const decodedGenres = genrePath
-    ? genrePath.split('+').map(decodeURIComponent).filter(Boolean)
+    ? genrePath.split(separator).map(decodeURIComponent).filter(Boolean)
     : [];
 
   const [page, setPage] = useState(1);
@@ -26,17 +29,17 @@ export default function GenreDetail() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, hasActiveFilters,
+    removeExclude, setBpmRange,
   } = useFilters();
 
-  const genreAllParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
+  const genreParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
   const shuffleParam = shuffleMode ? shuffleSeed : undefined;
 
   const extraParams = {
-    ...(genreAllParam && { 'genre.all': genreAllParam }),
+    ...(genreParam && (isOrMode ? { 'genre.any': genreParam } : { 'genre.all': genreParam })),
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
@@ -50,7 +53,7 @@ export default function GenreDetail() {
   });
 
   const { data: relatedStats } = useQuery({
-    queryKey: ['genreStats', genreAllParam, genreNotParam, bpmGteParam, bpmLteParam],
+    queryKey: ['genreStats', genreParam, isOrMode ? 'any' : 'all', genreNotParam, bpmGteParam, bpmLteParam],
     queryFn: () => fetchGenreStats(extraParams),
     enabled: decodedGenres.length > 0,
   });
@@ -69,10 +72,11 @@ export default function GenreDetail() {
     (genre: string) => {
       const lower = decodedGenres.map((g) => g.toLowerCase());
       if (lower.includes(genre.toLowerCase())) return;
-      const newPath = `/genre/${decodedGenres.map((g) => encodeURIComponent(g)).join('+')}+${encodeURIComponent(genre)}`;
+      const sep = isOrMode ? ',' : '+';
+      const newPath = `/genre/${decodedGenres.map((g) => encodeURIComponent(g)).join(sep)}${sep}${encodeURIComponent(genre)}`;
       navigate(newPath, { replace: false });
     },
-    [decodedGenres, navigate],
+    [decodedGenres, isOrMode, navigate],
   );
 
   const handleRemoveInclude = useCallback(
@@ -81,24 +85,23 @@ export default function GenreDetail() {
       if (remaining.length === 0) {
         navigate('/', { replace: false });
       } else {
-        const newPath = `/genre/${remaining.map((g) => encodeURIComponent(g)).join('+')}`;
+        const sep = isOrMode ? ',' : '+';
+        const newPath = `/genre/${remaining.map((g) => encodeURIComponent(g)).join(sep)}`;
         navigate(newPath, { replace: false });
       }
     },
-    [decodedGenres, navigate],
+    [decodedGenres, isOrMode, navigate],
   );
 
   const songs = paginated?.data ?? [];
-  const activeFilterLabels = [...filters.genreNot];
-  const hasActive = hasActiveFilters || decodedGenres.length > 0;
 
   return (
     <div className="GenreDetail">
-      <div className="and-genre-bar">
+      <div className="PageCriteria">
         {decodedGenres.map((genre) => (
           <span
             key={genre}
-            className="and-genre-pill"
+            className={`genre-pill${isOrMode ? ' genre-pill--or' : ' genre-pill--and'}`}
             onClick={() => handleRemoveInclude(genre)}
             title={`Remove ${genre}`}
           >
@@ -140,15 +143,11 @@ export default function GenreDetail() {
                 songs={songs}
                 page={paginated.page}
                 totalPages={paginated.totalPages}
+                totalCount={paginated.total}
                 onPageChange={setPage}
               />
             </>
           )}
-
-          <div className="page-footer">
-            {paginated.total} song{paginated.total !== 1 ? 's' : ''}
-            {activeFilterLabels.length > 0 && ' (filtered)'}
-          </div>
         </>
       )}
     </div>

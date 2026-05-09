@@ -43,7 +43,7 @@ export default function Artist() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, hasActiveFilters,
+    removeExclude, setBpmRange,
   } = useFilters();
 
   const genreAllParam = genreAll.length > 0 ? genreAll.join(',') : undefined;
@@ -102,11 +102,6 @@ export default function Artist() {
   );
 
   const songs = paginated?.data ?? [];
-  const hasTag = (genre: string) =>
-    genreAll.includes(genre) || filters.genreNot.includes(genre);
-
-  const activeFilterLabels = [...genreAll, ...filters.genreNot];
-  const hasActive = hasActiveFilters || genreAll.length > 0;
 
   return (
     <div className="GenreDetail">
@@ -115,11 +110,11 @@ export default function Artist() {
       </h2>
 
       {genreAll.length > 0 && (
-        <div className="and-genre-bar">
+        <div className="PageCriteria">
           {genreAll.map((genre) => (
             <span
               key={genre}
-              className="and-genre-pill"
+              className="genre-pill genre-pill--and"
               onClick={() => handleRemoveInclude(genre)}
               title={`Remove ${genre}`}
             >
@@ -164,15 +159,11 @@ export default function Artist() {
                 songs={songs}
                 page={paginated.page}
                 totalPages={paginated.totalPages}
+                totalCount={paginated.total}
                 onPageChange={setPage}
               />
             </>
           )}
-
-          <div className="page-footer">
-            {paginated.total} song{paginated.total !== 1 ? 's' : ''}
-            {activeFilterLabels.length > 0 && ' (filtered)'}
-          </div>
         </>
       )}
     </div>

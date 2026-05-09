@@ -7,10 +7,11 @@ interface SongTableProps {
   songs: Song[];
   page?: number;
   totalPages?: number;
+  totalCount?: number;
   onPageChange?: (page: number) => void;
 }
 
-export default function SongTable({ songs, page, totalPages, onPageChange }: SongTableProps) {
+export default function SongTable({ songs, page, totalPages, totalCount, onPageChange }: SongTableProps) {
   const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const formatRating = (rating: number | undefined) => {
@@ -71,7 +72,12 @@ export default function SongTable({ songs, page, totalPages, onPageChange }: Son
           >
             ← Prev
           </button>
-          <span>Page {page} of {totalPages}</span>
+          <div className="pagination-center">
+            {totalCount !== undefined && (
+              <span className="pagination-count">{totalCount} song{totalCount !== 1 ? 's' : ''}</span>
+            )}
+            <span className="pagination-pages">Page {page} of {totalPages}</span>
+          </div>
           <button
             disabled={page >= totalPages}
             onClick={() => onPageChange?.(page + 1)}

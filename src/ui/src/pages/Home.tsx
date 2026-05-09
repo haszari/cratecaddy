@@ -75,6 +75,10 @@ export default function Home() {
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
       />
+      <p className="home-help">
+        Combine genres with <code>+</code> (AND) or <code>,</code> (OR) — e.g.{' '}
+        <a href="/genre/BAM,Deep"><code>/genre/BAM,Deep</code></a> or <a href="/genre/BAM+Deep"><code>/genre/BAM+Deep</code></a>
+      </p>
       {isLoading && <p>Loading genres...</p>}
       {error && <p style={{ color: 'red' }}>Failed to load genres</p>}
       {!isLoading && stats && (
@@ -110,6 +114,7 @@ export default function Home() {
             songs={paginated.data}
             page={paginated.page}
             totalPages={paginated.totalPages}
+            totalCount={paginated.total}
             onPageChange={setPage}
           />
         </>

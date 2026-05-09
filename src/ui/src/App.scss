@@ -1,64 +1,73 @@
 .App {
   text-align: center;
-  margin: 2em;
-  padding-top: 4.5em;
+  padding: 3em 1em 1em;
 }
 
 .page-footer {
   text-align: center;
-  color: #999;
   font-size: 0.85em;
   padding: 1em 0;
   margin-top: 2em;
-  border-top: 1px solid #eee;
 }
 
 .pagination {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5em;
+  justify-content: space-between;
+  width: 100%;
   margin: 1.5em 0;
 
   button {
     padding: 0.3em 0.8em;
-    border: 1px solid #ccc;
     border-radius: 0.3em;
-    background: white;
     cursor: pointer;
     font-size: 0.85em;
-    color: #555;
-
-    &:hover:not(:disabled) {
-      background: #f0f0f0;
-    }
 
     &:disabled {
       opacity: 0.4;
       cursor: default;
     }
   }
+}
+
+.pagination-center {
+  display: flex;
+  gap: 0.75em;
+  align-items: center;
 
   span {
     font-size: 0.85em;
-    color: #888;
   }
 }
 
-.and-genre-bar {
+.home-help {
+  font-size: 0.8em;
+  margin: 0 0 1.5em;
+
+  code {
+    font-size: 0.95em;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.PageCriteria {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4em;
-  padding: 0.5em 0;
+  padding: 0 0 1em;
   flex-wrap: wrap;
 }
 
-.and-genre-pill {
+.genre-pill {
   display: inline-flex;
   align-items: center;
-  background: orange;
-  border-radius: 999px;
+  border-radius: 0.5em;
   padding: 0.3em 0.5em;
   font-size: 1.4em;
   font-weight: 600;
@@ -67,9 +76,24 @@
   transition: all 0.15s ease;
 
   &:hover {
-    background: #f44336;
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.genre-pill--and {
+  background: orange;
+
+  &:hover {
+    background: #f44336;
+  }
+}
+
+.genre-pill--or {
+  background: #2196f3;
+
+  &:hover {
+    background: #1565c0;
   }
 }
 
@@ -79,7 +103,6 @@
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: center;
-  margin: 2em 0;
 }
 
 .song-table-header {
@@ -101,22 +124,8 @@
     width: 2em;
     height: 2em;
     padding: 0;
-    border: 1px solid #ccc;
     border-radius: 0.3em;
-    background: white;
     cursor: pointer;
-    color: #666;
     transition: all 0.15s ease;
-
-    &:hover {
-      background: #f0f0f0;
-      color: #333;
-    }
-  }
-
-  .ShuffleControl-toggle--active {
-    background: #e3f2fd;
-    border-color: #90caf9;
-    color: #1976d2;
   }
 }
