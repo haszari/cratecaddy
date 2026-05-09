@@ -1,4 +1,6 @@
 import { Song, ISong, ISource } from '../models/Song.js';
+import { buildSongFilter, SongFilterParams } from '../helpers/buildSongFilter.js';
+import { parsePagination, PaginationParams } from '../helpers/pagination.js';
 
 /**
  * Normalize artist and title for database matching
@@ -246,6 +248,81 @@ export class SongService {
       { $sort: { _id: 1 } },
       { $project: { genre: '$_id', count: 1, _id: 0 } },
     ]);
+    return result;
+  }
+
+  async querySongs(params: {
+    filters: SongFilterParams;
+    pagination: PaginationParams;
+  }): Promise<{ data: ISong[]; page: number; limit: number; total: number; totalPages: number; shuffleSeed?: string }> {
+    const filter = buildSongFilter(params.filters);
+    const { page, limit, skip, shuffleSeed } = parsePagination(params.pagination);
+
+    if (shuffleSeed) {
+      const pipeline: any[] = [];
+      if (Object.keys(filter).length > 0) pipeline.push({ $match: filter });
+
+      const seedExpr = JSON.stringify(shuffleSeed);
+      const hashFn = `function(id) {
+        var hash = 0;
+        var s = ${seedExpr};
+        var str = id + s;
+        for (var i = 0; i < str.length; i++) {
+          hash = ((hash << 5) - hash) + str.charCodeAt(i);
+          hash = hash & hash;
+        }
+        return Math.abs(hash);
+      }`;
+
+      pipeline.push({
+        $addFields: {
+          _sortKey: { $function: { body: hashFn, args: [{ $toString: '$_id' }], lang: 'js' } },
+        },
+      });
+      pipeline.push({ $sort: { _sortKey: 1 } });
+      pipeline.push({ $skip: skip });
+      pipeline.push({ $limit: limit });
+
+      const [data, total] = await Promise.all([
+        Song.aggregate(pipeline),
+        Song.countDocuments(filter),
+      ]);
+
+      return { data, page, limit, total, totalPages: Math.ceil(total / limit), shuffleSeed };
+    }
+
+    const [data, total] = await Promise.all([
+      Song.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Song.countDocuments(filter),
+    ]);
+
+    return {
+      data,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getFilteredGenreStats(filters: SongFilterParams): Promise<
+    Array<{ genre: string; count: number }>
+  > {
+    const filter = buildSongFilter(filters);
+    const pipeline: any[] = [];
+
+    if (Object.keys(filter).length > 0) {
+      pipeline.push({ $match: filter });
+    }
+
+    pipeline.push(
+      { $unwind: '$genres' },
+      { $group: { _id: '$genres', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+      { $project: { genre: '$_id', count: 1, _id: 0 } },
+    );
+
+    const result = await Song.aggregate(pipeline);
     return result;
   }
 }

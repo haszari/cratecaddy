@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       strictPort: true, // fail if our expected port is not available
-      port: env.UI_PORT,
+      port: Number(env.UI_PORT),
     },
   };
 });

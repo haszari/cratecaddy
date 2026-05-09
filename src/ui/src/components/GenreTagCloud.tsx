@@ -3,9 +3,11 @@ import type { TagInfo } from '../types';
 
 interface GenreTagCloudProps {
   tags: Record<string, TagInfo>;
+  onInclude?: (genre: string) => void;
+  onExclude?: (genre: string) => void;
 }
 
-export function GenreTagCloud({ tags }: GenreTagCloudProps) {
+export function GenreTagCloud({ tags, onInclude, onExclude }: GenreTagCloudProps) {
   const sortedTagKeys = Object.keys(tags).sort((a, b) => {
     return a.localeCompare(b);
   });
@@ -17,6 +19,8 @@ export function GenreTagCloud({ tags }: GenreTagCloudProps) {
           key={tag}
           tagText={tag}
           tagCount={tags[tag].count}
+          onInclude={onInclude}
+          onExclude={onExclude}
         />
       ))}
     </div>

@@ -3,7 +3,14 @@ import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
 
-export default function SongTable({ songs }: { songs: Song[] }) {
+interface SongTableProps {
+  songs: Song[];
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+}
+
+export default function SongTable({ songs, page, totalPages, onPageChange }: SongTableProps) {
   const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const formatRating = (rating: number | undefined) => {
@@ -12,48 +19,67 @@ export default function SongTable({ songs }: { songs: Song[] }) {
   };
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Artist</th>
-          <th>Title</th>
-          <th>BPM</th>
-          <th>Key</th>
-          <th>Rating</th>
-          <th>Sources</th>
-          <th>Genres</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sortedSongs.map((song) => (
-          <tr key={song._id}>
-            <td>
-              <Link
-                to={`/artist/${encodeURIComponent(song.artist)}`}
-                className="Artist-link"
-              >{song.artist}</Link>
-            </td>
-            <td>{song.title}</td>
-            <td>{song.bpm}</td>
-            <td>{song.key}</td>
-            <td>{formatRating(song.rating)}</td>
-            <td>
-              <SourcesIcons sources={song.sources} />
-            </td>
-            <td>
-              <div className="genres-cell">
-                {song.genres.map((genre) => (
-                  <GenreTagWithCount
-                    key={genre}
-                    tagText={genre}
-                    tagCount={0}
-                  />
-                ))}
-              </div>
-            </td>
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th>Artist</th>
+            <th>Title</th>
+            <th>BPM</th>
+            <th>Key</th>
+            <th>Rating</th>
+            <th>Sources</th>
+            <th>Genres</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {sortedSongs.map((song) => (
+            <tr key={song._id}>
+              <td>
+                <Link
+                  to={`/artist/${encodeURIComponent(song.artist)}`}
+                  className="Artist-link"
+                >{song.artist}</Link>
+              </td>
+              <td>{song.title}</td>
+              <td>{song.bpm}</td>
+              <td>{song.key}</td>
+              <td>{formatRating(song.rating)}</td>
+              <td>
+                <SourcesIcons sources={song.sources} />
+              </td>
+              <td>
+                <div className="genres-cell">
+                  {song.genres.map((genre) => (
+                    <GenreTagWithCount
+                      key={genre}
+                      tagText={genre}
+                      tagCount={0}
+                    />
+                  ))}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {page !== undefined && totalPages !== undefined && totalPages > 1 && (
+        <div className="pagination">
+          <button
+            disabled={page <= 1}
+            onClick={() => onPageChange?.(page - 1)}
+          >
+            ← Prev
+          </button>
+          <span>Page {page} of {totalPages}</span>
+          <button
+            disabled={page >= totalPages}
+            onClick={() => onPageChange?.(page + 1)}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+    </>
   );
 }

@@ -1,17 +1,4 @@
 .GenreTag {
-  padding: 0.2em 0.3em;
-  background: orange;
-  margin: 0.2em;
-  border-radius: 0.3em;
-  display: inline-block;
-
-  .GenreTag-count {
-    margin-left: 0.25em;
-    font-size: 70%;
-    font-style: italic;
-    opacity: 0.4;
-  }
-
   &.GenreTag-heading {
     background: none;
     padding: 0.5em;
@@ -21,20 +8,58 @@
   }
 }
 
-.GenreTag-link {
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
+.GenreTag-pill {
+  display: inline-flex;
+  align-items: center;
+  background: orange;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.15em;
+  transition: all 0.2s ease;
 
-  .GenreTag {
-    transition: all 0.2s ease;
+  &:hover {
+    background: darkorange;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .GenreTag-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25em 0.35em;
+    border: none;
+    background: none;
     cursor: pointer;
+    color: rgba(0, 0, 0, 0.35);
+    transition: all 0.15s ease;
+    line-height: 1;
 
     &:hover {
-      background: darkorange;
-      transform: scale(1.05);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      color: white;
+    }
+
+    &.GenreTag-pill-btn-left:hover {
+      background: #f44336;
+    }
+
+    &.GenreTag-pill-btn-right:hover {
+      background: #4caf50;
+    }
+  }
+
+  .GenreTag-pill-label {
+    text-decoration: none;
+    color: inherit;
+    padding: 0.2em 0.15em;
+    cursor: pointer;
+    white-space: nowrap;
+
+    .GenreTag-count {
+      margin-left: 0.3em;
+      font-size: 70%;
+      font-style: italic;
+      opacity: 0.5;
     }
   }
 }
-

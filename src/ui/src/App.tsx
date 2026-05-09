@@ -11,7 +11,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/genre/:genreName" element={<GenreDetail />} />
+        <Route path="/genre/:genrePath" element={<GenreDetail />} />
         <Route path="/artist/:artistName" element={<Artist />} />
       </Routes>
     </BrowserRouter>

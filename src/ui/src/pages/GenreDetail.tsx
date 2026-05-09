@@ -1,49 +1,154 @@
-import { useParams, Link } from 'react-router-dom';
-import { useMemo } from 'react';
-import { useSongsByGenre } from '../hooks/useSongsByGenre';
-import { indexTags } from '../utils/tagUtils';
+import { useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useSongs } from '../hooks/useSongs';
+import { fetchGenreStats } from '../api/client';
+import { useFilters } from '../hooks/useFilters';
+import FilterBar from '../components/FilterBar';
+import ShuffleControl from '../components/ShuffleControl';
 import { GenreTagCloud } from '../components/GenreTagCloud';
-import GenreTagWithCount from '../components/GenreTag';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
+import type { TagInfo } from '../types';
 
 export default function GenreDetail() {
-  const { genreName } = useParams<{ genreName: string }>();
-  const decodedGenre = genreName ? decodeURIComponent(genreName) : '';
+  const { genrePath } = useParams<{ genrePath: string }>();
+  const navigate = useNavigate();
 
-  const { data: filteredSongs, isLoading, error } = useSongsByGenre(genreName);
+  const decodedGenres = genrePath
+    ? genrePath.split('+').map(decodeURIComponent).filter(Boolean)
+    : [];
 
-  const tags = useMemo(() => {
-    if (!filteredSongs) return {};
-    const allTags = indexTags(filteredSongs);
-    delete allTags[decodedGenre];
-    return allTags;
-  }, [filteredSongs, decodedGenre]);
+  const [page, setPage] = useState(1);
+  const [shuffleMode, setShuffleMode] = useState(true);
+  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random().toString(36).slice(2, 10));
+  const reshuffle = useCallback(() => setShuffleSeed(Math.random().toString(36).slice(2, 10)), []);
+
+  const {
+    filters, addExclude,
+    removeExclude, setBpmRange, hasActiveFilters,
+  } = useFilters();
+
+  const genreAllParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
+  const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
+  const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
+  const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
+  const shuffleParam = shuffleMode ? shuffleSeed : undefined;
+
+  const extraParams = {
+    ...(genreAllParam && { 'genre.all': genreAllParam }),
+    ...(genreNotParam && { 'genre.not': genreNotParam }),
+    ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
+    ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+  };
+
+  const { data: paginated, isLoading, error } = useSongs({
+    ...extraParams,
+    shuffle: shuffleParam,
+    page,
+    limit: 50,
+  });
+
+  const { data: relatedStats } = useQuery({
+    queryKey: ['genreStats', genreAllParam, genreNotParam, bpmGteParam, bpmLteParam],
+    queryFn: () => fetchGenreStats(extraParams),
+    enabled: decodedGenres.length > 0,
+  });
+
+  const relatedTags: Record<string, TagInfo> = {};
+  if (relatedStats) {
+    const lowerAndGenres = new Set(decodedGenres.map((g) => g.toLowerCase()));
+    for (const { genre, count } of relatedStats) {
+      if (!lowerAndGenres.has(genre.toLowerCase())) {
+        relatedTags[genre] = { count };
+      }
+    }
+  }
+
+  const handleAddInclude = useCallback(
+    (genre: string) => {
+      const lower = decodedGenres.map((g) => g.toLowerCase());
+      if (lower.includes(genre.toLowerCase())) return;
+      const newPath = `/genre/${decodedGenres.map((g) => encodeURIComponent(g)).join('+')}+${encodeURIComponent(genre)}`;
+      navigate(newPath, { replace: false });
+    },
+    [decodedGenres, navigate],
+  );
+
+  const handleRemoveInclude = useCallback(
+    (genre: string) => {
+      const remaining = decodedGenres.filter((g) => g.toLowerCase() !== genre.toLowerCase());
+      if (remaining.length === 0) {
+        navigate('/', { replace: false });
+      } else {
+        const newPath = `/genre/${remaining.map((g) => encodeURIComponent(g)).join('+')}`;
+        navigate(newPath, { replace: false });
+      }
+    },
+    [decodedGenres, navigate],
+  );
+
+  const songs = paginated?.data ?? [];
+  const activeFilterLabels = [...filters.genreNot];
+  const hasActive = hasActiveFilters || decodedGenres.length > 0;
 
   return (
     <div className="GenreDetail">
-      <Link to="/" className="back-link">
-        ← Back
-      </Link>
-
-      <div className="genre-heading-container">
-        <GenreTagWithCount tagText={decodedGenre} tagCount={0} isHeading={true} />
+      <div className="and-genre-bar">
+        {decodedGenres.map((genre) => (
+          <span
+            key={genre}
+            className="and-genre-pill"
+            onClick={() => handleRemoveInclude(genre)}
+            title={`Remove ${genre}`}
+          >
+            {genre}
+          </span>
+        ))}
       </div>
+
+      <FilterBar
+        genreNot={filters.genreNot}
+        bpmGte={filters.bpmGte}
+        bpmLte={filters.bpmLte}
+        onRemoveExclude={removeExclude}
+        onBpmChange={setBpmRange}
+      />
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
-      {!isLoading && !error && filteredSongs && (
+      {!isLoading && !error && paginated && (
         <>
-          <p className="song-count">{filteredSongs.length} songs with this tag</p>
+          {Object.keys(relatedTags).length > 0 && (
+            <GenreTagCloud
+              tags={relatedTags}
+              onInclude={handleAddInclude}
+              onExclude={addExclude}
+            />
+          )}
 
-          {Object.keys(tags).length > 0 && (
+          {songs.length > 0 && (
             <>
-              <h3>Related Tags</h3>
-              <GenreTagCloud tags={tags} />
+              <div className="song-table-header">
+                <ShuffleControl
+                  active={shuffleMode}
+                  onToggle={setShuffleMode}
+                  onReseed={reshuffle}
+                />
+              </div>
+              <SongTable
+                songs={songs}
+                page={paginated.page}
+                totalPages={paginated.totalPages}
+                onPageChange={setPage}
+              />
             </>
           )}
 
-          {filteredSongs.length > 0 && <SongTable songs={filteredSongs} />}
+          <div className="page-footer">
+            {paginated.total} song{paginated.total !== 1 ? 's' : ''}
+            {activeFilterLabels.length > 0 && ' (filtered)'}
+          </div>
         </>
       )}
     </div>

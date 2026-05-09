@@ -1,6 +1,76 @@
 .App {
   text-align: center;
   margin: 2em;
+  padding-top: 4.5em;
+}
+
+.page-footer {
+  text-align: center;
+  color: #999;
+  font-size: 0.85em;
+  padding: 1em 0;
+  margin-top: 2em;
+  border-top: 1px solid #eee;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 1.5em 0;
+
+  button {
+    padding: 0.3em 0.8em;
+    border: 1px solid #ccc;
+    border-radius: 0.3em;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85em;
+    color: #555;
+
+    &:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  span {
+    font-size: 0.85em;
+    color: #888;
+  }
+}
+
+.and-genre-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  padding: 0.5em 0;
+  flex-wrap: wrap;
+}
+
+.and-genre-pill {
+  display: inline-flex;
+  align-items: center;
+  background: orange;
+  border-radius: 999px;
+  padding: 0.3em 0.5em;
+  font-size: 1.4em;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f44336;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .TagCloud {
@@ -10,4 +80,43 @@
   align-items: baseline;
   justify-content: center;
   margin: 2em 0;
+}
+
+.song-table-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 0.5em;
+}
+
+.ShuffleControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 0.3em;
+    background: white;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f0f0f0;
+      color: #333;
+    }
+  }
+
+  .ShuffleControl-toggle--active {
+    background: #e3f2fd;
+    border-color: #90caf9;
+    color: #1976d2;
+  }
 }

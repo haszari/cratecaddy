@@ -25,3 +25,12 @@ export interface Song {
 export interface TagInfo {
   count: number;
 }
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  shuffleSeed?: string;
+}
