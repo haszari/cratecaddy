@@ -63,6 +63,12 @@
   }
 }
 
+.or-separator {
+  font-size: 0.3em;
+  font-style: italic;
+  color: #aaa;
+}
+
 .PageCriteria {
   display: flex;
   align-items: center;
@@ -98,10 +104,10 @@
 }
 
 .genre-pill--or {
-  background: #2196f3;
+  background: #78a850;
 
   &:hover {
-    background: #1565c0;
+    background: #5e853e;
   }
 }
 

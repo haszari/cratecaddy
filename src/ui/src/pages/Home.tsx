@@ -8,6 +8,7 @@ import FilterBar from '../components/FilterBar';
 import ShuffleControl from '../components/ShuffleControl';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
+import { withSearch } from '../utils/url';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function Home() {
 
   const handleAddInclude = useCallback(
     (genre: string) => {
-      navigate(`/genre/${encodeURIComponent(genre)}`, { replace: false });
+      navigate(withSearch(`/genre/${encodeURIComponent(genre)}`), { replace: false });
     },
     [navigate],
   );

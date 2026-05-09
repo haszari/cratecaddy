@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Fragment } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
@@ -10,6 +10,7 @@ import { GenreTagCloud } from '../components/GenreTagCloud';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
+import { withSearch } from '../utils/url';
 
 export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
@@ -74,7 +75,7 @@ export default function GenreDetail() {
       if (lower.includes(genre.toLowerCase())) return;
       const sep = isOrMode ? ',' : '+';
       const newPath = `/genre/${decodedGenres.map((g) => encodeURIComponent(g)).join(sep)}${sep}${encodeURIComponent(genre)}`;
-      navigate(newPath, { replace: false });
+      navigate(withSearch(newPath), { replace: false });
     },
     [decodedGenres, isOrMode, navigate],
   );
@@ -83,11 +84,11 @@ export default function GenreDetail() {
     (genre: string) => {
       const remaining = decodedGenres.filter((g) => g.toLowerCase() !== genre.toLowerCase());
       if (remaining.length === 0) {
-        navigate('/', { replace: false });
+        navigate(withSearch('/'), { replace: false });
       } else {
         const sep = isOrMode ? ',' : '+';
         const newPath = `/genre/${remaining.map((g) => encodeURIComponent(g)).join(sep)}`;
-        navigate(newPath, { replace: false });
+        navigate(withSearch(newPath), { replace: false });
       }
     },
     [decodedGenres, isOrMode, navigate],
@@ -98,15 +99,17 @@ export default function GenreDetail() {
   return (
     <div className="GenreDetail">
       <div className="PageCriteria">
-        {decodedGenres.map((genre) => (
-          <span
-            key={genre}
-            className={`genre-pill${isOrMode ? ' genre-pill--or' : ' genre-pill--and'}`}
+        {decodedGenres.map((genre, i) => (
+          <Fragment key={genre}>
+            {i > 0 && isOrMode && <span className="or-separator">or</span>}
+            <span
+              className={`genre-pill${isOrMode ? ' genre-pill--or' : ' genre-pill--and'}`}
             onClick={() => handleRemoveInclude(genre)}
             title={`Remove ${genre}`}
           >
             {genre}
           </span>
+          </Fragment>
         ))}
       </div>
 

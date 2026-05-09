@@ -44,7 +44,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - Dockerfile `EXPOSE 3000` is misleading — actual port is `API_PORT` from `.env` (default 7625)
 - Docker compose mounts `./src/api/src:/app/src` for hot reload in the API container
 - Genre page URLs use `+` for AND (genre.all) and `,` for OR (genre.any): e.g. `/genre/Techno+Minimal` or `/genre/Techno,Deep`
-- Pills render orange for AND mode, blue for OR mode
+- Pills render orange for AND mode, sage green for OR mode
 
 ## Future scope
 
