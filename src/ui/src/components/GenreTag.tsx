@@ -30,8 +30,10 @@ export default function GenreTagWithCount({
     );
   }
 
+  const hasButtons = !!(onInclude || onExclude);
+
   return (
-    <span className="GenreTag-pill" style={style}>
+    <span className={`GenreTag-pill${hasButtons ? ' GenreTag-pill--with-buttons' : ''}`} style={style}>
       {onExclude && (
         <button
           className="GenreTag-pill-btn GenreTag-pill-btn-left"
