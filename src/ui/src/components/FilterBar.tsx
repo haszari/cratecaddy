@@ -50,7 +50,7 @@ export default function FilterBar({
   return (
     <div className="FilterBar">
       <div className="FilterBar-section FilterBar-section-left">
-        <button className="FilterBar-home" onClick={() => navigate('/')} title="Home">
+        <button className="FilterBar-home iconButton" onClick={() => navigate('/')} title="Home">
           <House size={16} />
         </button>
         {onShuffleToggle && (
@@ -99,7 +99,7 @@ export default function FilterBar({
       <div className="FilterBar-section FilterBar-section-right">
         {genreNot.map((genre) => (
           <span key={`ex:${genre}`} className="FilterBar-chip FilterBar-chip-exclude">
-            -{genre}
+            {genre}
             <button onClick={() => onRemoveExclude(genre)} title="Remove">
               <X size={12} />
             </button>

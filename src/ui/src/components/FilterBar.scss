@@ -17,7 +17,7 @@
 
   .FilterBar-section-left {
     justify-content: flex-start;
-    gap: 0.3em;
+    gap: 0.6em;
   }
 
   .FilterBar-section-center {
@@ -26,20 +26,6 @@
 
   .FilterBar-section-right {
     justify-content: flex-end;
-  }
-
-  .FilterBar-home {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2em;
-    height: 2em;
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: 0.3em;
-    transition: all 0.15s ease;
   }
 
   .FilterBar-chip {

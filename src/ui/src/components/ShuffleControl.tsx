@@ -10,7 +10,7 @@ export default function ShuffleControl({ active, onToggle, onReseed }: ShuffleCo
   return (
     <span className="ShuffleControl">
       <button
-        className={`ShuffleControl-toggle ${active ? 'ShuffleControl-toggle--active' : ''}`}
+        className={`iconButton ShuffleControl-toggle ${active ? 'iconButton--active' : ''}`}
         onClick={() => onToggle(!active)}
         title={active ? 'Shuffle on — click to disable' : 'Shuffle off — click to enable'}
       >
@@ -18,7 +18,7 @@ export default function ShuffleControl({ active, onToggle, onReseed }: ShuffleCo
       </button>
       {active && (
         <button
-          className="ShuffleControl-reseed"
+          className="iconButton ShuffleControl-reseed"
           onClick={onReseed}
           title="New shuffle order"
         >
