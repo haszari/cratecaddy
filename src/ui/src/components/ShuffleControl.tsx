@@ -1,4 +1,4 @@
-import { Shuffle, Dice1 } from 'lucide-react';
+import { Shuffle, Dice5 } from 'lucide-react';
 
 interface ShuffleControlProps {
   active: boolean;
@@ -22,7 +22,7 @@ export default function ShuffleControl({ active, onToggle, onReseed }: ShuffleCo
           onClick={onReseed}
           title="New shuffle order"
         >
-          <Dice1 size={14} />
+          <Dice5 size={18} />
         </button>
       )}
     </span>
