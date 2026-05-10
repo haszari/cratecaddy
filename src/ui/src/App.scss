@@ -90,6 +90,20 @@ table thead th {
 
 thead .col-sources {
   opacity: 0;
+  font-size: 0;
+}
+
+.col-sources {
+  width: 20px;
+  text-align: center;
+  overflow: hidden;
+  color: #b3b3b3;
+}
+
+.col-sources .sources-icons {
+  gap: 0;
+  position: relative;
+  top: 2px;
 }
 
 .col-artist,

@@ -16,7 +16,7 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
   const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const formatRating = (rating: number | undefined) => {
-    if (rating === undefined) return '—';
+    if (rating === undefined) return '';
     return rating === Math.round(rating) ? Math.round(rating).toString() : rating.toFixed(1);
   };
 
