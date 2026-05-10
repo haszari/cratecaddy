@@ -98,11 +98,16 @@ export default function FilterBar({
 
       <div className="FilterBar-section FilterBar-section-right">
         {genreNot.map((genre) => (
-          <span key={`ex:${genre}`} className="FilterBar-chip FilterBar-chip-exclude">
+          <span
+            key={`ex:${genre}`}
+            className="FilterBar-chip FilterBar-chip-exclude"
+            onClick={() => onRemoveExclude(genre)}
+            title={`Remove ${genre}`}
+          >
             {genre}
-            <button onClick={() => onRemoveExclude(genre)} title="Remove">
+            <span className="FilterBar-chip-x">
               <X size={12} />
-            </button>
+            </span>
           </span>
         ))}
       </div>
