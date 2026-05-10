@@ -76,8 +76,11 @@ export default function Artist() {
 
   const relatedTags: Record<string, TagInfo> = {};
   if (relateStats) {
+    const lowerRequired = new Set(requiredGenres.map((g) => g.toLowerCase()));
     for (const { genre, count } of relateStats) {
-      relatedTags[genre] = { count };
+      if (!lowerRequired.has(genre.toLowerCase())) {
+        relatedTags[genre] = { count };
+      }
     }
   }
 
