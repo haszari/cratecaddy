@@ -4,7 +4,7 @@ import { fetchSongById, fetchGenreStats } from '../api/client';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 
-export default function SongDetail() {
+export default function Song() {
   const { id } = useParams<{ id: string }>();
   const { data: song, isLoading, error } = useQuery({
     queryKey: ['song', id],
