@@ -17,28 +17,24 @@ export default function BasePageCriteria({
   if (!hasArtists && !hasGenres) return null;
 
   return (
-    <>
+    <div className="PageCriteria">
       {hasArtists && artists.map((a) => (
         <h2 key={a} className="GenreTag GenreTag-heading" style={{ fontSize: '2.5em' }}>
           {a}
         </h2>
       ))}
-      {hasGenres && (
-        <div className="PageCriteria">
-          {genres.map((g, i) => (
-            <Fragment key={g.name}>
-              {i > 0 && g.mode === 'or' && <span className="or-separator">or</span>}
-              <span
-                className={`genre-pill${g.mode === 'or' ? ' genre-pill--or' : ' genre-pill--and'}`}
-                onClick={() => onRemoveGenre?.(g.name)}
-                title={`Remove ${g.name}`}
-              >
-                {g.name}
-              </span>
-            </Fragment>
-          ))}
-        </div>
-      )}
-    </>
+      {hasGenres && genres.map((g, i) => (
+        <Fragment key={g.name}>
+          {i > 0 && g.mode === 'or' && <span className="or-separator">or</span>}
+          <span
+            className={`genre-pill${g.mode === 'or' ? ' genre-pill--or' : ' genre-pill--and'}`}
+            onClick={() => onRemoveGenre?.(g.name)}
+            title={`Remove ${g.name}`}
+          >
+            {g.name}
+          </span>
+        </Fragment>
+      ))}
+    </div>
   );
 }

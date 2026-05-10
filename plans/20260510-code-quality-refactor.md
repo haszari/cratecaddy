@@ -94,7 +94,7 @@ interface BasePageCriteriaProps {
 
 #### Rendering logic
 
-The heading renders as a standalone `<h2>`. Pills are wrapped in `<div className="PageCriteria">` for flex-centered layout — this matches the previous page structure for both Artist and GenreDetail.
+All content renders inside a single `<div className="PageCriteria">` — the flex container centers both the heading and pills in one row.
 
 1. **If `artists` is non-empty**: renders each as `<h2 className="GenreTag-heading">` (styled like current Artist page heading, `fontSize: '2.5em'`). Multiple artists each get their own h2.
 2. **If `genres` is non-empty**: renders a `<div className="PageCriteria">` containing pills. For each genre:
@@ -140,8 +140,8 @@ Artist page — viewing artist "Luna Echo" with genre AND-filter "House":
 ```
 Renders (replacing Artist.tsx lines 109-126):
 ```html
-<h2 class="GenreTag GenreTag-heading" style="font-size: 2.5em">Luna Echo</h2>
 <div class="PageCriteria">
+  <h2 class="GenreTag GenreTag-heading" style="font-size: 2.5em">Luna Echo</h2>
   <span class="genre-pill genre-pill--and">House</span>
 </div>
 ```
