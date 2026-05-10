@@ -2,15 +2,6 @@
   padding: 0.25em;
   max-width: 1200px;
   margin: 0 auto;
-
-  table {
-    th, td {
-      &:nth-child(6) { // Sources column
-        width: 80px; // Fixed width for icons
-        text-align: center;
-      }
-    }
-  }
 }
 
 .genres-cell {

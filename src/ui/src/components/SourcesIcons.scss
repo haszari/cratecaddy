@@ -7,18 +7,5 @@
   .icon-wrapper {
     display: inline-block;
     cursor: help;
-
-    &:hover .cloud-icon,
-    &:hover .lossless-icon {
-      opacity: 1;
-    }
-  }
-
-  .cloud-icon {
-    opacity: 0.8;
-  }
-
-  .lossless-icon {
-    opacity: 0.8;
   }
 }

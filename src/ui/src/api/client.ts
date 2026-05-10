@@ -38,6 +38,16 @@ export async function fetchSongs(params?: ApiSongParams): Promise<PaginatedRespo
   return response.json();
 }
 
+export async function fetchSongById(id: string): Promise<Song> {
+  const response = await fetch(`${API_URL}/api/songs/${id}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch song: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function fetchGenreStats(params?: ApiGenreStatsParams): Promise<Array<{ genre: string; count: number }>> {
   const qs = params ? buildQueryString(params as ApiSongParams) : '';
   const response = await fetch(`${API_URL}/api/songs/stats/genres${qs}`);

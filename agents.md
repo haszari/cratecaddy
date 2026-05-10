@@ -52,6 +52,10 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 
 - **OR-genre builder UI**: The current interface is built for drilling down via AND mode (clicking a tag adds it with `+`). We need a separate UI to build OR genre queries (perhaps a toggle or alternate tag-click mode) since the tag cloud `+` button is conceptually additive/AND.
 
+## Best Practices
+
+- Use `<Link>` over `<button onClick={navigate(...)}>` for navigation elements so cmd-click opens in new tab.
+
 ## Style
 
 - Sentence case for all headings, labels, copy

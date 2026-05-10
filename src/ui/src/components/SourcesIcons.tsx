@@ -60,7 +60,6 @@ export function SourcesIcons({ sources }: SourcesIconsProps) {
         >
           <Cloud 
             size={16} 
-            className="cloud-icon" 
             aria-label="Cloud only - Apple Music"
           />
         </div>
@@ -72,7 +71,6 @@ export function SourcesIcons({ sources }: SourcesIconsProps) {
         >
           <Gem 
             size={16} 
-            className="lossless-icon" 
             aria-label={`Lossless available - ${getLosslessFormat()}`}
           />
         </div>

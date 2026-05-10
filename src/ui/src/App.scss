@@ -84,6 +84,77 @@
   padding: 0;
 }
 
+table thead th {
+  opacity: 0.5;
+}
+
+thead .col-sources {
+  opacity: 0;
+  font-size: 0;
+}
+
+.col-sources {
+  width: 20px;
+  text-align: center;
+  overflow: hidden;
+  color: #b3b3b3;
+}
+
+.col-sources .sources-icons {
+  gap: 0;
+  position: relative;
+  top: 2px;
+}
+
+.col-artist,
+.col-title,
+.col-genres,
+.col-rating {
+  text-align: left;
+}
+
+.col-rating {
+  padding: 0 0.3em;
+}
+
+.col-bpm,
+.col-key {
+  text-align: right;
+  padding: 0 0.3em;
+}
+
+.Artist-link {
+  font-weight: 700;
+}
+
+.Song-link {
+  font-style: italic;
+}
+
+.SongInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  padding: 0 0 1em;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+
+.SongInfo-title {
+  font-size: 2.5em;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.SongInfo-meta {
+  font-size: 1.5em;
+
+  .SongInfo-meta-bpm {
+    font-size: 0.46em;
+  }
+}
+
 .genre-pill {
   display: inline-flex;
   align-items: center;
@@ -143,6 +214,8 @@
   background: none;
   cursor: pointer;
   border-radius: 0.3em;
+  color: inherit;
+  text-decoration: none;
   transition: all 0.15s ease;
 
   &:hover {

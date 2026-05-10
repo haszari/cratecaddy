@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './FilterBar.scss';
 import { X, House } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
@@ -20,7 +20,6 @@ export default function FilterBar({
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
 }: FilterBarProps) {
-  const navigate = useNavigate();
   const [bpmMinStr, setBpmMinStr] = useState('');
   const [bpmMaxStr, setBpmMaxStr] = useState('');
 
@@ -50,9 +49,9 @@ export default function FilterBar({
   return (
     <div className="FilterBar">
       <div className="FilterBar-section FilterBar-section-left">
-        <button className="FilterBar-home iconButton" onClick={() => navigate('/')} title="Home">
+        <Link to="/" className="FilterBar-home iconButton" title="Home">
           <House size={16} />
-        </button>
+        </Link>
         {onShuffleToggle && (
           <ShuffleControl
             active={!!shuffleActive}
