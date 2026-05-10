@@ -42,6 +42,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - API tsconfig uses `moduleResolution: "node"` — imports need `.js` extension (e.g. `import './config/database.js'`)
 - UI tsconfig uses `moduleResolution: "bundler"` with `verbatimModuleSyntax: true` and `erasableSyntaxOnly: true` — requires `import type` for type-only imports, no `enum`/`namespace`
 - UI uses SCSS (`.scss` files) — `sass-embedded` is a devDependency
+- UI has a Vite alias `@cratecaddy-api` pointing to `src/api/src/helpers/` — used for sharing API param type definitions (`@cratecaddy-api/apiParams`)
 - Dockerfile `EXPOSE 3000` is misleading — actual port is `API_PORT` from `.env` (default 7625)
 - Docker compose mounts `./src/api/src:/app/src` for hot reload in the API container
 - Genre page URLs use `+` for AND (genre.all) and `,` for OR (genre.any): e.g. `/genre/Techno+Minimal` or `/genre/Techno,Deep`

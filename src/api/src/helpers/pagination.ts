@@ -1,8 +1,4 @@
-export interface PaginationParams {
-  page?: string;
-  limit?: string;
-  shuffle?: string;
-}
+import { ApiPaginationParams } from './apiParams.js';
 
 export interface PaginationResult {
   page: number;
@@ -15,9 +11,9 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
-function toPositiveInt(value: string | undefined, fallback: number): number {
+function toPositiveInt(value: string | number | undefined, fallback: number): number {
   if (value === undefined || value === null) return fallback;
-  const n = parseInt(value, 10);
+  const n = typeof value === 'number' ? Math.floor(value) : parseInt(value, 10);
   if (isNaN(n) || n < 1) return fallback;
   return n;
 }
@@ -26,7 +22,7 @@ function generateSeed(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export function parsePagination(query: PaginationParams): PaginationResult {
+export function parsePagination(query: ApiPaginationParams): PaginationResult {
   const page = toPositiveInt(query.page, DEFAULT_PAGE);
   const limit = Math.min(toPositiveInt(query.limit, DEFAULT_LIMIT), MAX_LIMIT);
   const skip = (page - 1) * limit;

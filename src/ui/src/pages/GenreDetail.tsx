@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
@@ -7,6 +7,7 @@ import { useFilters } from '../hooks/useFilters';
 import FilterBar from '../components/FilterBar';
 import ShuffleControl from '../components/ShuffleControl';
 import { GenreTagCloud } from '../components/GenreTagCloud';
+import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
@@ -98,20 +99,10 @@ export default function GenreDetail() {
 
   return (
     <div className="GenreDetail">
-      <div className="PageCriteria">
-        {decodedGenres.map((genre, i) => (
-          <Fragment key={genre}>
-            {i > 0 && isOrMode && <span className="or-separator">or</span>}
-            <span
-              className={`genre-pill${isOrMode ? ' genre-pill--or' : ' genre-pill--and'}`}
-            onClick={() => handleRemoveInclude(genre)}
-            title={`Remove ${genre}`}
-          >
-            {genre}
-          </span>
-          </Fragment>
-        ))}
-      </div>
+      <BasePageCriteria
+        genres={decodedGenres.map((g) => ({ name: g, mode: isOrMode ? 'or' : 'and' }))}
+        onRemoveGenre={handleRemoveInclude}
+      />
 
       <FilterBar
         genreNot={filters.genreNot}

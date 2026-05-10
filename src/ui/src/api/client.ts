@@ -1,35 +1,17 @@
 import type { Song, PaginatedResponse } from '../types';
+import type { ApiSongParams, ApiGenreStatsParams } from '@cratecaddy-api/apiParams';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export interface FetchSongsParams {
-  'genre.any'?: string;
-  'genre.all'?: string;
-  'genre.not'?: string;
-  genre?: string;
-  'artist.any'?: string;
-  'artist.all'?: string;
-  'artist.not'?: string;
-  artist?: string;
-  'bpm.gte'?: string;
-  'bpm.lte'?: string;
-  search?: string;
-  shuffle?: string;
-  page?: number;
-  limit?: number;
-}
-
-function buildQueryString(params: FetchSongsParams): string {
+function buildQueryString(params: ApiSongParams): string {
   const parts: string[] = [];
   const entries: [string, string | number | undefined][] = [
     ['genre.any', params['genre.any']],
     ['genre.all', params['genre.all']],
     ['genre.not', params['genre.not']],
-    ['genre', params.genre],
     ['artist.any', params['artist.any']],
     ['artist.all', params['artist.all']],
     ['artist.not', params['artist.not']],
-    ['artist', params.artist],
     ['bpm.gte', params['bpm.gte']],
     ['bpm.lte', params['bpm.lte']],
     ['search', params.search],
@@ -45,38 +27,24 @@ function buildQueryString(params: FetchSongsParams): string {
   return parts.length > 0 ? `?${parts.join('&')}` : '';
 }
 
-export async function fetchSongs(params?: FetchSongsParams): Promise<PaginatedResponse<Song>> {
+export async function fetchSongs(params?: ApiSongParams): Promise<PaginatedResponse<Song>> {
   const qs = params ? buildQueryString(params) : '';
   const response = await fetch(`${API_URL}/api/songs${qs}`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch songs: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
-export interface FetchGenreStatsParams {
-  'genre.any'?: string;
-  'genre.all'?: string;
-  'genre.not'?: string;
-  genre?: string;
-  'artist.any'?: string;
-  'artist.all'?: string;
-  'artist.not'?: string;
-  artist?: string;
-  'bpm.gte'?: string;
-  'bpm.lte'?: string;
-  search?: string;
-}
-
-export async function fetchGenreStats(params?: FetchGenreStatsParams): Promise<Array<{ genre: string; count: number }>> {
-  const qs = params ? buildQueryString(params as FetchSongsParams) : '';
+export async function fetchGenreStats(params?: ApiGenreStatsParams): Promise<Array<{ genre: string; count: number }>> {
+  const qs = params ? buildQueryString(params as ApiSongParams) : '';
   const response = await fetch(`${API_URL}/api/songs/stats/genres${qs}`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch genre stats: ${response.statusText}`);
   }
-  
+
   return response.json();
 }

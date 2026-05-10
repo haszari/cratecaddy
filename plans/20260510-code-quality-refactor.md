@@ -77,7 +77,7 @@ export function buildShuffleHashFunction(seed: string): string {
 
 Shared component that renders the base/"start condition" criteria at the top of detail pages — the terms from the URL route that define what the user is browsing. Named `BasePageCriteria` because additional filters (BPM range, genre exclusion, shuffle) build on top of this starting point.
 
-Items are rendered inline without a wrapping container — they flow naturally in the page, consistent with the existing approach where heading and pills sit directly in the page layout.
+Pills render inside a `<div className="PageCriteria">` to maintain the existing flex-centered layout (gap, flex-wrap, centering). The heading is rendered outside this wrapper as a standalone `<h2>`, matching the previous page structure.
 
 #### Props
 
@@ -94,10 +94,10 @@ interface BasePageCriteriaProps {
 
 #### Rendering logic
 
-Nothing is rendered inside a wrapper div — each piece of content is an individual React element or fragment. This keeps the component transparent in the page layout flow.
+The heading renders as a standalone `<h2>`. Pills are wrapped in `<div className="PageCriteria">` for flex-centered layout — this matches the previous page structure for both Artist and GenreDetail.
 
 1. **If `artists` is non-empty**: renders each as `<h2 className="GenreTag-heading">` (styled like current Artist page heading, `fontSize: '2.5em'`). Multiple artists each get their own h2.
-2. **If `genres` is non-empty**: renders pills using genre-pill classes. For each genre:
+2. **If `genres` is non-empty**: renders a `<div className="PageCriteria">` containing pills. For each genre:
    - AND mode → orange `.genre-pill--and` class
    - OR mode → sage green `.genre-pill--or` class; inserts `<span class="or-separator">or</span>` before each pill after the first
    - All pills are clickable (calls `onRemoveGenre(genre.name)`)
@@ -124,8 +124,10 @@ GenreDetail page — viewing `/genre/Techno+Minimal`:
 ```
 Renders (replacing GenreDetail.tsx lines 101-114):
 ```html
-<span class="genre-pill genre-pill--and">Techno</span>
-<span class="genre-pill genre-pill--and">Minimal</span>
+<div class="PageCriteria">
+  <span class="genre-pill genre-pill--and">Techno</span>
+  <span class="genre-pill genre-pill--and">Minimal</span>
+</div>
 ```
 
 Artist page — viewing artist "Luna Echo" with genre AND-filter "House":
@@ -139,7 +141,9 @@ Artist page — viewing artist "Luna Echo" with genre AND-filter "House":
 Renders (replacing Artist.tsx lines 109-126):
 ```html
 <h2 class="GenreTag GenreTag-heading" style="font-size: 2.5em">Luna Echo</h2>
-<span class="genre-pill genre-pill--and">House</span>
+<div class="PageCriteria">
+  <span class="genre-pill genre-pill--and">House</span>
+</div>
 ```
 
 Home page — not used. The home page shows all genres as a tag cloud, not a filter context header. No change needed.

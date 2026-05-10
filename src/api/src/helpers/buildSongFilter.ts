@@ -1,19 +1,8 @@
 import { FilterQuery } from 'mongoose';
 import { ISong } from '../models/Song.js';
+import { ApiFilterParams } from './apiParams.js';
 
-export interface SongFilterParams {
-  'genre.any'?: string;
-  'genre.all'?: string;
-  'genre.not'?: string;
-  genre?: string;
-  'artist.any'?: string;
-  'artist.all'?: string;
-  'artist.not'?: string;
-  artist?: string;
-  search?: string;
-  'bpm.gte'?: string;
-  'bpm.lte'?: string;
-}
+export type { ApiFilterParams as SongFilterParams };
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -66,10 +55,10 @@ function buildSearchCondition(term: string): FilterQuery<ISong> {
   };
 }
 
-export function buildSongFilter(params: SongFilterParams): FilterQuery<ISong> {
+export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
   const conditions: FilterQuery<ISong>[] = [];
 
-  const anyGenre = params['genre.any'] ?? params['genre'];
+  const anyGenre = params['genre.any'];
   if (anyGenre) {
     const vals = splitValues(anyGenre);
     if (vals.length > 0) conditions.push(buildAnyCondition('genres', vals));
@@ -85,10 +74,17 @@ export function buildSongFilter(params: SongFilterParams): FilterQuery<ISong> {
     if (vals.length > 0) conditions.push(buildNotCondition('genres', vals));
   }
 
-  const anyArtist = params['artist.any'] ?? params['artist'];
+  const anyArtist = params['artist.any'];
   if (anyArtist) {
     const vals = splitValues(anyArtist);
-    if (vals.length > 0) conditions.push(buildAnyCondition('artist', vals));
+    if (vals.length > 0) {
+      const escaped = vals.map((v) => escapeRegex(v));
+      const regexes = escaped.flatMap((v) => [
+        { artist: { $regex: v, $options: 'i' } },
+        { title: { $regex: v, $options: 'i' } },
+      ]);
+      conditions.push({ $or: regexes });
+    }
   }
   const allArtist = params['artist.all'];
   if (allArtist) {

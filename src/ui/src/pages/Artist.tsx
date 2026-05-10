@@ -7,6 +7,7 @@ import { useFilters } from '../hooks/useFilters';
 import FilterBar from '../components/FilterBar';
 import ShuffleControl from '../components/ShuffleControl';
 import { GenreTagCloud } from '../components/GenreTagCloud';
+import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
@@ -39,14 +40,14 @@ export default function Artist() {
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.random().toString(36).slice(2, 10));
   const reshuffle = useCallback(() => setShuffleSeed(Math.random().toString(36).slice(2, 10)), []);
 
-  const genreAll = splitCSV(searchParams.get('genre.all'));
+  const requiredGenres = splitCSV(searchParams.get('genre.all'));
 
   const {
     filters, addExclude,
     removeExclude, setBpmRange,
   } = useFilters();
 
-  const genreAllParam = genreAll.length > 0 ? genreAll.join(',') : undefined;
+  const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
@@ -54,7 +55,7 @@ export default function Artist() {
 
   const extraParams = {
     'artist.any': decodedArtist || undefined,
-    ...(genreAllParam && { 'genre.all': genreAllParam }),
+    ...(requiredGenresParam && { 'genre.all': requiredGenresParam }),
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
@@ -68,7 +69,7 @@ export default function Artist() {
   });
 
   const { data: relateStats } = useQuery({
-    queryKey: ['genreStats', decodedArtist, genreAllParam, genreNotParam, bpmGteParam, bpmLteParam],
+    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam],
     queryFn: () => fetchGenreStats(extraParams),
     enabled: !!decodedArtist,
   });
@@ -80,7 +81,7 @@ export default function Artist() {
     }
   }
 
-  const handleAddInclude = useCallback(
+  const handleAddRequired = useCallback(
     (genre: string) => {
       setSearchParams((prev) => {
         const current = splitCSV(prev.get('genre.all'));
@@ -91,7 +92,7 @@ export default function Artist() {
     [setSearchParams],
   );
 
-  const handleRemoveInclude = useCallback(
+  const handleRemoveRequired = useCallback(
     (genre: string) => {
       setSearchParams((prev) => {
         const current = splitCSV(prev.get('genre.all')).filter((g) => g !== genre);
@@ -106,24 +107,11 @@ export default function Artist() {
 
   return (
     <div className="GenreDetail">
-      <h2 className="GenreTag GenreTag-heading" style={{ fontSize: '2.5em' }}>
-        {decodedArtist}
-      </h2>
-
-      {genreAll.length > 0 && (
-        <div className="PageCriteria">
-          {genreAll.map((genre) => (
-            <span
-              key={genre}
-              className="genre-pill genre-pill--and"
-              onClick={() => handleRemoveInclude(genre)}
-              title={`Remove ${genre}`}
-            >
-              {genre}
-            </span>
-          ))}
-        </div>
-      )}
+      <BasePageCriteria
+        artists={[decodedArtist]}
+        genres={requiredGenres.map((g) => ({ name: g, mode: 'and' }))}
+        onRemoveGenre={handleRemoveRequired}
+      />
 
       <FilterBar
         genreNot={filters.genreNot}
@@ -142,7 +130,7 @@ export default function Artist() {
               tags={Object.fromEntries(
                 Object.entries(relatedTags).filter(([g]) => !hasTag(g))
               )}
-              onInclude={handleAddInclude}
+              onInclude={handleAddRequired}
               onExclude={addExclude}
             />
           )}

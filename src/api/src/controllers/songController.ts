@@ -1,20 +1,15 @@
 import { Request, Response } from 'express';
 import { songService, normalizeGenres } from '../services/songService.js';
-import { SongFilterParams } from '../helpers/buildSongFilter.js';
-import { PaginationParams } from '../helpers/pagination.js';
+import {
+  ApiFilterParams,
+  ApiPaginationParams,
+  FILTER_PARAM_KEYS,
+  PAGINATION_PARAM_KEYS,
+} from '../helpers/apiParams.js';
 
-const FILTER_KEYS: (keyof SongFilterParams)[] = [
-  'genre.any', 'genre.all', 'genre.not',
-  'artist.any', 'artist.all', 'artist.not',
-  'bpm.gte', 'bpm.lte',
-  'search',
-];
-
-const PAGINATION_KEYS: (keyof PaginationParams)[] = ['page', 'limit', 'shuffle'];
-
-function extractFilterParams(query: Record<string, unknown>): SongFilterParams {
-  const filters: SongFilterParams = {};
-  for (const key of FILTER_KEYS) {
+function extractFilterParams(query: Record<string, unknown>): ApiFilterParams {
+  const filters: ApiFilterParams = {};
+  for (const key of FILTER_PARAM_KEYS) {
     const val = query[key];
     if (typeof val === 'string') {
       filters[key] = val;
@@ -23,9 +18,9 @@ function extractFilterParams(query: Record<string, unknown>): SongFilterParams {
   return filters;
 }
 
-function extractPaginationParams(query: Record<string, unknown>): PaginationParams {
-  const pagination: PaginationParams = {};
-  for (const key of PAGINATION_KEYS) {
+function extractPaginationParams(query: Record<string, unknown>): ApiPaginationParams {
+  const pagination: ApiPaginationParams = {};
+  for (const key of PAGINATION_PARAM_KEYS) {
     const val = query[key];
     if (typeof val === 'string') {
       pagination[key] = val;

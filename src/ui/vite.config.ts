@@ -1,19 +1,23 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  // Load environment variables based on the current mode
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react()],
     define: {
-      'process.env': env, // Make env variables available in the app
+      'process.env': env,
+    },
+    resolve: {
+      alias: {
+        '@cratecaddy-api': path.resolve(__dirname, '../api/src/helpers'),
+      },
     },
     server: {
-      strictPort: true, // fail if our expected port is not available
+      strictPort: true,
       port: Number(env.UI_PORT),
     },
   };
 });
-
