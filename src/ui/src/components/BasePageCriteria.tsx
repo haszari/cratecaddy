@@ -19,9 +19,9 @@ export default function BasePageCriteria({
   return (
     <div className="PageCriteria">
       {hasArtists && artists.map((a) => (
-        <h2 key={a} className="GenreTag GenreTag-heading" style={{ fontSize: '2.5em' }}>
+        <span key={a} className="GenreTag GenreTag-heading PageCriteria-artist">
           {a}
-        </h2>
+        </span>
       ))}
       {hasGenres && genres.map((g, i) => (
         <Fragment key={g.name}>
