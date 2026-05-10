@@ -1,15 +1,45 @@
 import { Request, Response } from 'express';
 import { songService, normalizeGenres } from '../services/songService.js';
+import {
+  ApiFilterParams,
+  ApiPaginationParams,
+  FILTER_PARAM_KEYS,
+  PAGINATION_PARAM_KEYS,
+} from '../helpers/apiParams.js';
+
+function extractFilterParams(query: Record<string, unknown>): ApiFilterParams {
+  const filters: ApiFilterParams = {};
+  for (const key of FILTER_PARAM_KEYS) {
+    const val = query[key];
+    if (typeof val === 'string') {
+      filters[key] = val;
+    }
+  }
+  return filters;
+}
+
+function extractPaginationParams(query: Record<string, unknown>): ApiPaginationParams {
+  const pagination: ApiPaginationParams = {};
+  for (const key of PAGINATION_PARAM_KEYS) {
+    const val = query[key];
+    if (typeof val === 'string') {
+      pagination[key] = val;
+    }
+  }
+  return pagination;
+}
 
 export class SongController {
   async getAllSongs(req: Request, res: Response) {
     try {
-      const songs = await songService.getAllSongs();
-      const normalizedSongs = songs.map((song) => ({
-        ...song.toObject(),
-        genres: normalizeGenres(song.genres),
+      const filters = extractFilterParams(req.query as Record<string, unknown>);
+      const pagination = extractPaginationParams(req.query as Record<string, unknown>);
+      const result = await songService.querySongs({ filters, pagination });
+      const data = result.data.map((song: any) => ({
+        ...(song.toObject ? song.toObject() : song),
+        genres: normalizeGenres(song.genres || []),
       }));
-      res.json(normalizedSongs);
+      res.json({ ...result, data });
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch songs' });
     }
@@ -39,7 +69,7 @@ export class SongController {
         res.status(400).json({ error: 'Missing required fields' });
         return;
       }
-      const song = await songService.createSong({ name, artist, genres: genres || [] });
+      const song = await songService.createSong({ title: name, artist, genres: genres || [] });
       res.status(201).json(song);
     } catch (error) {
       res.status(500).json({ error: 'Failed to create song' });
@@ -74,7 +104,8 @@ export class SongController {
 
   async getGenreStats(req: Request, res: Response) {
     try {
-      const stats = await songService.getGenreStats();
+      const filters = extractFilterParams(req.query as Record<string, unknown>);
+      const stats = await songService.getFilteredGenreStats(filters);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch genre stats' });

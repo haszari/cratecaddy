@@ -1,4 +1,8 @@
 import { Song, ISong, ISource } from '../models/Song.js';
+import { buildSongFilter } from '../helpers/buildSongFilter.js';
+import { ApiFilterParams, ApiPaginationParams } from '../helpers/apiParams.js';
+import { parsePagination, PaginationResult } from '../helpers/pagination.js';
+import { buildShuffleHashFunction } from '../helpers/shuffleHash.js';
 
 /**
  * Normalize artist and title for database matching
@@ -10,13 +14,13 @@ import { Song, ISong, ISource } from '../models/Song.js';
  */
 export function normalizeArtistTitle(artist: string, title: string): string {
   if (!artist || !title) return '';
-  
+
   return `${artist} ${title}`
     .trim()
     .toLowerCase()
-    .replace(/\boriginal mix\b/g, '') // Remove "original mix"
-    .replace(/[^\p{Letter}\p{Number}\s]/gu, '') // Keep letters, numbers, whitespace (unicode-aware)
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/\boriginal mix\b/g, '')
+    .replace(/[^\p{Letter}\p{Number}\s]/gu, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -46,8 +50,8 @@ export function normalizeText(text: string): string {
   return text
     .trim()
     .toLowerCase()
-    .replace(/[^\w\s]/g, '') // Remove punctuation
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -78,12 +82,10 @@ export class SongService {
       return null;
     }
 
-    // Build query with exact match on normalized field
     const query: any = {
       artistTitleNormalized: normalizedArtistTitle,
     };
 
-    // Add duration matching if provided (within ±2000ms tolerance)
     if (duration && duration > 0) {
       query.duration = {
         $gte: duration - 2000,
@@ -97,7 +99,6 @@ export class SongService {
       return null;
     }
 
-    // If duration provided, prefer exact match, otherwise return first match
     if (duration && duration > 0) {
       const exactMatch = candidates.find(
         (song) => song.duration && Math.abs(song.duration - duration) < 1000
@@ -124,7 +125,6 @@ export class SongService {
       ...existing.toObject(),
     };
 
-    // Merge arrays (union - add new unique elements)
     if (incoming.genres) {
       const existingGenres = new Set(existing.genres || []);
       incoming.genres.forEach((g) => existingGenres.add(g));
@@ -137,7 +137,6 @@ export class SongService {
       merged.grouping = Array.from(existingGrouping);
     }
 
-    // Prefer new values for simple fields if provided
     if (incoming.bpm !== undefined && incoming.bpm !== null) {
       merged.bpm = incoming.bpm;
     }
@@ -151,7 +150,6 @@ export class SongService {
       merged.key = incoming.key;
     }
     if (incoming.duration !== undefined && incoming.duration !== null && incoming.duration > 0) {
-      // Prefer more precise duration (non-zero)
       if (!merged.duration || merged.duration === 0) {
         merged.duration = incoming.duration;
       }
@@ -160,10 +158,8 @@ export class SongService {
       merged.album = incoming.album;
     }
 
-    // Merge sources array
     const existingSources = [...(existing.sources || [])];
-    
-    // Check if source already exists (by sourceType + filePath or sourceMetadata.id)
+
     const sourceKey = newSource.sourceMetadata?.id || newSource.filePath;
     const existingIndex = existingSources.findIndex((s) => {
       if (s.sourceType === newSource.sourceType) {
@@ -174,10 +170,8 @@ export class SongService {
     });
 
     if (existingIndex >= 0) {
-      // Update existing source
       existingSources[existingIndex] = newSource;
     } else {
-      // Add new source
       existingSources.push(newSource);
     }
 
@@ -202,11 +196,9 @@ export class SongService {
     songData: Partial<ISong>,
     source: ISource
   ): Promise<ISong> {
-    // Try to find existing song
     const existing = await this.findMatchingSong(artist, title, duration);
 
     if (existing) {
-      // Merge with existing song
       const merged = this.mergeSongData(existing, songData, source);
       const updated = await Song.findByIdAndUpdate(existing._id, merged, { new: true });
       if (!updated) {
@@ -214,7 +206,6 @@ export class SongService {
       }
       return updated;
     } else {
-      // Create new song
       const newSong = new Song({
         ...songData,
         artist,
@@ -246,6 +237,71 @@ export class SongService {
       { $sort: { _id: 1 } },
       { $project: { genre: '$_id', count: 1, _id: 0 } },
     ]);
+    return result;
+  }
+
+  async querySongs(params: {
+    filters: ApiFilterParams;
+    pagination: ApiPaginationParams;
+  }): Promise<{ data: ISong[]; page: number; limit: number; total: number; totalPages: number; shuffleSeed?: string }> {
+    const filter = buildSongFilter(params.filters);
+    const { page, limit, skip, shuffleSeed } = parsePagination(params.pagination);
+
+    if (shuffleSeed) {
+      const pipeline: any[] = [];
+      if (Object.keys(filter).length > 0) pipeline.push({ $match: filter });
+
+      const hashFn = buildShuffleHashFunction(shuffleSeed);
+
+      pipeline.push({
+        $addFields: {
+          _sortKey: { $function: { body: hashFn, args: [{ $toString: '$_id' }], lang: 'js' } },
+        },
+      });
+      pipeline.push({ $sort: { _sortKey: 1 } });
+      pipeline.push({ $skip: skip });
+      pipeline.push({ $limit: limit });
+
+      const [data, total] = await Promise.all([
+        Song.aggregate(pipeline),
+        Song.countDocuments(filter),
+      ]);
+
+      return { data, page, limit, total, totalPages: Math.ceil(total / limit), shuffleSeed };
+    }
+
+    const [data, total] = await Promise.all([
+      Song.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Song.countDocuments(filter),
+    ]);
+
+    return {
+      data,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getFilteredGenreStats(filters: ApiFilterParams): Promise<
+    Array<{ genre: string; count: number }>
+  > {
+    const filter = buildSongFilter(filters);
+    const pipeline: any[] = [];
+
+    if (Object.keys(filter).length > 0) {
+      pipeline.push({ $match: filter });
+    }
+
+    pipeline.push(
+      { $unwind: '$genres' },
+      { $group: { _id: '$genres', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+      { $project: { genre: '$_id', count: 1, _id: 0 } },
+    );
+
+    const result = await Song.aggregate(pipeline);
     return result;
   }
 }

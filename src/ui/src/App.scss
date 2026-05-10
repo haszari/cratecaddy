@@ -1,6 +1,120 @@
 .App {
   text-align: center;
-  margin: 2em;
+  padding: 3em 1em 1em;
+}
+
+.page-footer {
+  text-align: center;
+  font-size: 0.85em;
+  padding: 1em 0;
+  margin-top: 2em;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 1.5em 0;
+
+  button {
+    padding: 0.3em 0.8em;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.85em;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    &:first-child {
+      margin-right: auto;
+    }
+
+    &:last-child {
+      margin-left: auto;
+    }
+  }
+}
+
+.pagination-center {
+  display: flex;
+  gap: 0.75em;
+  align-items: center;
+
+  span {
+    font-size: 0.85em;
+  }
+}
+
+.home-help {
+  font-size: 0.8em;
+  margin: 0 0 1.5em;
+
+  code {
+    font-size: 0.95em;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.or-separator {
+  font-size: 0.3em;
+  font-style: italic;
+  color: #aaa;
+}
+
+.PageCriteria {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  padding: 0 0 1em;
+  flex-wrap: wrap;
+}
+
+.PageCriteria-artist {
+  font-size: 2em;
+  font-weight: 700;
+  padding: 0;
+}
+
+.genre-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.5em;
+  padding: 0.3em 0.5em;
+  font-size: 1.4em;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.genre-pill--and {
+  background: orange;
+
+  &:hover {
+    background: #f44336;
+  }
+}
+
+.genre-pill--or {
+  background: #78a850;
+
+  &:hover {
+    background: #5e853e;
+  }
 }
 
 .TagCloud {
@@ -9,5 +123,45 @@
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: center;
-  margin: 2em 0;
+}
+
+.ShuffleControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  margin-left: 0.3em;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 0.3em;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+
+    svg {
+      stroke: orange;
+    }
+  }
+}
+
+.iconButton--active {
+  background: rgba(0, 0, 0, 0.1);
+
+  svg {
+    stroke: #78a850;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.14);
+  }
 }

@@ -9,11 +9,13 @@ import Artist from './pages/Artist';
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/genre/:genreName" element={<GenreDetail />} />
-        <Route path="/artist/:artistName" element={<Artist />} />
-      </Routes>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/genre/:genrePath" element={<GenreDetail />} />
+          <Route path="/artist/:artistName" element={<Artist />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }

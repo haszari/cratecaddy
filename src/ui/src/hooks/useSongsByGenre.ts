@@ -1,16 +1,11 @@
-import { useMemo } from 'react';
 import { useSongs } from './useSongs';
+import type { ApiSongParams } from '@cratecaddy-api/apiParams';
 
-export function useSongsByGenre(genre: string | undefined) {
-  const { data: songs, isLoading, error, refetch } = useSongs();
-
-  const filteredSongs = useMemo(() => {
-    if (!songs || !genre) return [];
-    const decodedGenre = decodeURIComponent(genre);
-    return songs.filter((song) =>
-      song.genres.some((g) => g.trim().toLowerCase() === decodedGenre.toLowerCase())
-    );
-  }, [songs, genre]);
-
-  return { data: filteredSongs, isLoading, error, refetch };
+export function useSongsByGenre(genre: string | undefined, page = 1) {
+  const decodedGenre = genre ? decodeURIComponent(genre) : undefined;
+  return useSongs({
+    'genre.any': decodedGenre,
+    page,
+    limit: 50,
+  } satisfies ApiSongParams);
 }

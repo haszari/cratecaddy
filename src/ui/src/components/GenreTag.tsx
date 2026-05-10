@@ -1,16 +1,21 @@
 import './GenreTag.scss';
 import { Link } from 'react-router-dom';
+import { Plus, Minus } from 'lucide-react';
 
 interface GenreTagWithCountProps {
   tagText: string;
   tagCount: number;
   isHeading?: boolean;
+  onInclude?: (genre: string) => void;
+  onExclude?: (genre: string) => void;
 }
 
 export default function GenreTagWithCount({
   tagText,
   tagCount,
   isHeading = false,
+  onInclude,
+  onExclude,
 }: GenreTagWithCountProps) {
   const popularity = tagCount > 0 ? Math.log(tagCount) : 0;
   const style = {
@@ -25,15 +30,35 @@ export default function GenreTagWithCount({
     );
   }
 
+  const hasButtons = !!(onInclude || onExclude);
+
   return (
-    <Link
-      to={`/genre/${encodeURIComponent(tagText)}`}
-      className="GenreTag-link"
-    >
-      <div className="GenreTag" style={style}>
+    <span className={`GenreTag-pill${hasButtons ? ' GenreTag-pill-withButtons' : ''}`} style={style}>
+      {onExclude && (
+        <button
+          className="GenreTag-pill-btn GenreTag-pill-btn-left"
+          onClick={(e) => { e.stopPropagation(); onExclude(tagText); }}
+          title="Exclude"
+        >
+          <Minus size={10} />
+        </button>
+      )}
+      <Link
+        to={`/genre/${encodeURIComponent(tagText)}`}
+        className="GenreTag-pill-label"
+      >
         {tagText}
-        <span className="GenreTag-count">{tagCount > 1 ? tagCount : ''}</span>
-      </div>
-    </Link>
+        {tagCount > 1 && <span className="GenreTag-count">{tagCount}</span>}
+      </Link>
+      {onInclude && (
+        <button
+          className="GenreTag-pill-btn GenreTag-pill-btn-right"
+          onClick={(e) => { e.stopPropagation(); onInclude(tagText); }}
+          title="Add to include (AND)"
+        >
+          <Plus size={10} />
+        </button>
+      )}
+    </span>
   );
 }
