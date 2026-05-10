@@ -5,8 +5,8 @@
 
   table {
     th, td {
-      &:nth-child(6) { // Sources column
-        width: 80px; // Fixed width for icons
+      &.col-sources {
+        width: 80px;
         text-align: center;
       }
     }

@@ -25,34 +25,34 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
       <table>
         <thead>
           <tr>
-            <th>Artist</th>
-            <th>Title</th>
-            <th>BPM</th>
-            <th>Key</th>
-            <th>Rating</th>
-            <th>Sources</th>
-            <th>Genres</th>
+            <th className="col-sources">Sources</th>
+            <th className="col-artist">Artist</th>
+            <th className="col-title">Title</th>
+            <th className="col-bpm">BPM</th>
+            <th className="col-key">Key</th>
+            <th className="col-rating">Rating</th>
+            <th className="col-genres">Genres</th>
           </tr>
         </thead>
         <tbody>
           {sortedSongs.map((song) => (
             <tr key={song._id}>
-              <td>
+              <td className="col-sources">
+                <SourcesIcons sources={song.sources} />
+              </td>
+              <td className="col-artist">
                 <Link
                   to={`/artist/${encodeURIComponent(song.artist)}`}
                   className="Artist-link"
                 >{song.artist}</Link>
               </td>
-              <td>
+              <td className="col-title">
                 <Link to={`/song/${song._id}`} className="Song-link">{song.title}</Link>
               </td>
-              <td>{song.bpm}</td>
-              <td>{song.key}</td>
-              <td>{formatRating(song.rating)}</td>
-              <td>
-                <SourcesIcons sources={song.sources} />
-              </td>
-              <td>
+              <td className="col-bpm">{song.bpm}</td>
+              <td className="col-key">{song.key}</td>
+              <td className="col-rating">{formatRating(song.rating)}</td>
+              <td className="col-genres">
                 <div className="genres-cell">
                   {song.genres.map((genre) => (
                     <GenreTagWithCount

@@ -88,26 +88,25 @@ table thead th {
   opacity: 0.5;
 }
 
-table thead th:nth-child(6) {
+thead .col-sources {
   opacity: 0;
 }
 
-table thead th:first-child,
-table thead th:nth-child(2),
-table thead th:nth-child(7),
-table tbody td:first-child,
-table tbody td:nth-child(2),
-table tbody td:nth-child(7) {
+.col-artist,
+.col-title,
+.col-genres,
+.col-rating {
   text-align: left;
 }
 
-table thead th:nth-child(3),
-table thead th:nth-child(4),
-table thead th:nth-child(5),
-table tbody td:nth-child(3),
-table tbody td:nth-child(4),
-table tbody td:nth-child(5) {
+.col-rating {
+  padding: 0 0.3em;
+}
+
+.col-bpm,
+.col-key {
   text-align: right;
+  padding: 0 0.3em;
 }
 
 .Artist-link {
