@@ -8,6 +8,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - `src/ui/` — Vite + React SPA, `main.tsx` is entrypoint
 - `src/tools/` — seed scripts (`seed-db.sh` + `sample-songs.json`)
 - `src/data/` — gitignored user data (import files, CSVs)
+- `plans/` — design documents and refactor plans (review before executing)
 - No root `package.json` — each sub-package is independent
 
 ## Commands (run from `src/api/` or `src/ui/`)
