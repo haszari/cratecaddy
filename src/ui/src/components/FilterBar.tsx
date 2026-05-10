@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './FilterBar.scss';
 import { X, House } from 'lucide-react';
+import ShuffleControl from './ShuffleControl';
 
 interface FilterBarProps {
   genreNot: string[];
@@ -9,11 +10,15 @@ interface FilterBarProps {
   bpmLte?: number;
   onRemoveExclude: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
+  shuffleActive?: boolean;
+  onShuffleToggle?: (active: boolean) => void;
+  onShuffleReseed?: () => void;
 }
 
 export default function FilterBar({
   genreNot, bpmGte, bpmLte,
   onRemoveExclude, onBpmChange,
+  shuffleActive, onShuffleToggle, onShuffleReseed,
 }: FilterBarProps) {
   const navigate = useNavigate();
   const [bpmMinStr, setBpmMinStr] = useState('');
@@ -48,6 +53,13 @@ export default function FilterBar({
         <button className="FilterBar-home" onClick={() => navigate('/')} title="Home">
           <House size={16} />
         </button>
+        {onShuffleToggle && (
+          <ShuffleControl
+            active={!!shuffleActive}
+            onToggle={onShuffleToggle}
+            onReseed={onShuffleReseed || (() => {})}
+          />
+        )}
       </div>
 
       <div className="FilterBar-section FilterBar-section-center">
@@ -55,7 +67,7 @@ export default function FilterBar({
           <span className="FilterBar-bpm">
             <input
               type="number"
-              placeholder="BPM min"
+              placeholder="min"
               value={bpmMinStr}
               onChange={(e) => setBpmMinStr(e.target.value)}
               onBlur={applyBpm}
@@ -66,7 +78,7 @@ export default function FilterBar({
             <span className="FilterBar-bpm-sep">–</span>
             <input
               type="number"
-              placeholder="BPM max"
+              placeholder="max"
               value={bpmMaxStr}
               onChange={(e) => setBpmMaxStr(e.target.value)}
               onBlur={applyBpm}
@@ -74,6 +86,7 @@ export default function FilterBar({
               min={0} max={999}
               className="FilterBar-bpm-input"
             />
+            <span className="FilterBar-bpm-label">bpm</span>
             {hasBpm && (
               <button className="FilterBar-bpm-clear" onClick={clearBpm} title="Clear BPM">
                 <X size={12} />

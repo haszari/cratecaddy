@@ -5,7 +5,6 @@ import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
 import { useFilters } from '../hooks/useFilters';
 import FilterBar from '../components/FilterBar';
-import ShuffleControl from '../components/ShuffleControl';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
@@ -122,12 +121,25 @@ export default function Artist() {
         bpmLte={filters.bpmLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        shuffleActive={shuffleMode}
+        onShuffleToggle={setShuffleMode}
+        onShuffleReseed={reshuffle}
       />
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
       {!isLoading && !error && paginated && (
         <>
+          {songs.length > 0 && (
+            <SongTable
+              songs={songs}
+              page={paginated.page}
+              totalPages={paginated.totalPages}
+              totalCount={paginated.total}
+              onPageChange={setPage}
+            />
+          )}
+
           {Object.keys(relatedTags).length > 0 && (
             <GenreTagCloud
               tags={Object.fromEntries(
@@ -136,25 +148,6 @@ export default function Artist() {
               onInclude={handleAddRequired}
               onExclude={addExclude}
             />
-          )}
-
-          {songs.length > 0 && (
-            <>
-              <div className="song-table-header">
-                <ShuffleControl
-                  active={shuffleMode}
-                  onToggle={setShuffleMode}
-                  onReseed={reshuffle}
-                />
-              </div>
-              <SongTable
-                songs={songs}
-                page={paginated.page}
-                totalPages={paginated.totalPages}
-                totalCount={paginated.total}
-                onPageChange={setPage}
-              />
-            </>
           )}
         </>
       )}

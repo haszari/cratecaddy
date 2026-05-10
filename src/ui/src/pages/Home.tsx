@@ -5,7 +5,6 @@ import { fetchGenreStats, fetchSongs } from '../api/client';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useFilters } from '../hooks/useFilters';
 import FilterBar from '../components/FilterBar';
-import ShuffleControl from '../components/ShuffleControl';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
@@ -75,6 +74,9 @@ export default function Home() {
         bpmLte={filters.bpmLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        shuffleActive={shuffleMode}
+        onShuffleToggle={toggleShuffle}
+        onShuffleReseed={reshuffle}
       />
       <p className="home-help">
         Combine genres with <code>+</code> (AND) or <code>,</code> (OR) — e.g.{' '}
@@ -103,22 +105,13 @@ export default function Home() {
         </>
       )}
       {hasActiveFilters && paginated && (
-        <>
-          <div className="song-table-header">
-            <ShuffleControl
-              active={shuffleMode}
-              onToggle={toggleShuffle}
-              onReseed={reshuffle}
-            />
-          </div>
-          <SongTable
-            songs={paginated.data}
-            page={paginated.page}
-            totalPages={paginated.totalPages}
-            totalCount={paginated.total}
-            onPageChange={setPage}
-          />
-        </>
+        <SongTable
+          songs={paginated.data}
+          page={paginated.page}
+          totalPages={paginated.totalPages}
+          totalCount={paginated.total}
+          onPageChange={setPage}
+        />
       )}
       {stats && (
         <div className="page-footer">
