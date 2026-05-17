@@ -106,7 +106,6 @@ const songSchema = new Schema<ISong>(
     },
     artistTitleNormalized: {
       type: String,
-      required: true,
       trim: true,
       index: true,
     },
@@ -123,8 +122,9 @@ const songSchema = new Schema<ISong>(
 // Compound index for matching: normalized artist + title + duration
 songSchema.index({ artistTitleNormalized: 1, duration: 1 });
 
-// Pre-save middleware to auto-populate artistTitleNormalized and normalize genres
-songSchema.pre('save', function(next) {
+// Pre-validate middleware to auto-populate artistTitleNormalized and normalize genres
+// Runs before validation so required checks pass
+songSchema.pre('validate', function(next) {
   if (this.isModified('artist') || this.isModified('title') || this.isNew) {
     this.artistTitleNormalized = normalizeArtistTitle(this.artist, this.title);
   }
