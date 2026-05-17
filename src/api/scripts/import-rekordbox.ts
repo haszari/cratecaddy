@@ -72,6 +72,7 @@ const importSongs = async (xmlPath: string) => {
     let imported = 0;
     let updated = 0;
     let skipped = 0;
+    let skippedNoArtist = 0;
 
     for (const track of tracks) {
       const attrs = track.$;
@@ -84,6 +85,12 @@ const importSongs = async (xmlPath: string) => {
 
       const title = attrs.Name;
       const artist = attrs.Artist || '';
+
+      // Skip tracks without artist (matching requires both artist and title)
+      if (!artist || artist.trim() === '') {
+        skippedNoArtist++;
+        continue;
+      }
       const album = attrs.Album || '';
       const genres = parseGenres(attrs.Genre);
       const grouping = attrs.Grouping ? [attrs.Grouping] : [];
@@ -147,8 +154,9 @@ const importSongs = async (xmlPath: string) => {
     console.log(`\nImport complete!`);
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
-    console.log(`  Skipped: ${skipped}`);
-    console.log(`  Total: ${imported + updated + skipped}`);
+    console.log(`  Skipped (no name): ${skipped}`);
+    console.log(`  Skipped (no artist): ${skippedNoArtist}`);
+    console.log(`  Total: ${imported + updated + skipped + skippedNoArtist}`);
 
     await mongoose.disconnect();
   } catch (error) {
