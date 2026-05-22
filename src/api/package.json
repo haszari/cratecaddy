@@ -12,7 +12,8 @@
     "import:rekordbox": "tsx scripts/import-rekordbox.ts",
     "import:applemusic": "tsx scripts/import-apple-music.ts",
     "import:djaypro": "tsx scripts/import-djaypro.ts",
-    "query:db": "tsx scripts/query-db.ts"
+    "query:db": "tsx scripts/query-db.ts",
+    "export:artists": "tsx scripts/export-artists.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
