@@ -43,17 +43,37 @@ export function normalizeGenres(genres: string[]): string[] {
     });
 }
 
-/**
- * Legacy function for backward compatibility - use normalizeArtistTitle instead
- */
-export function normalizeText(text: string): string {
-  if (!text) return '';
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+function unionMerge(existing: string[], incoming: string[]): string[] {
+  const seen = new Set(existing);
+  return [...existing, ...incoming.filter((x) => !seen.has(x))];
+}
+
+function favoriteRank(fav?: 'starred' | 'normal' | 'disliked'): number {
+  if (fav === 'starred') return 2;
+  if (fav === 'disliked') return 1;
+  return 0;
+}
+
+function formatRank(format?: SourceFormat): number {
+  const ranking: Record<string, number> = {
+    aiff: 5,
+    wav: 4,
+    aac: 3,
+    mp3: 2,
+    alac: 1,
+    applemusicstream: 0,
+  };
+  return format ? ranking[format] ?? -1 : -1;
+}
+
+function getMostRecentSourceDate(sources: ISource[]): Date | undefined {
+  let mostRecent: Date | undefined;
+  for (const s of sources) {
+    if (s.dateModified && (!mostRecent || s.dateModified > mostRecent)) {
+      mostRecent = s.dateModified;
+    }
+  }
+  return mostRecent;
 }
 
 export class SongService {
@@ -145,6 +165,9 @@ export class SongService {
         return false;
       });
 
+      const importMetaDate = source.importMeta?.dateModified;
+      const incomingDate = importMetaDate instanceof Date ? importMetaDate : undefined;
+
       const newSourceEntry: ISource = {
         sourceType: source.sourceType,
         lastImportDate: new Date(),
@@ -152,6 +175,7 @@ export class SongService {
       if (source.format) newSourceEntry.format = source.format;
       if (source.appleMusicId) newSourceEntry.appleMusicId = source.appleMusicId;
       if (source.filePath) newSourceEntry.filePath = source.filePath;
+      if (incomingDate) newSourceEntry.dateModified = incomingDate;
       if (source.importMeta) newSourceEntry.sourceMetadata = source.importMeta;
 
       if (existingIndex >= 0) {
@@ -163,15 +187,69 @@ export class SongService {
       const song = await Song.findById(existing._id);
       if (!song) throw new Error(`Failed to find song with id ${existing._id}`);
 
-      if (songData.genres !== undefined) song.genres = songData.genres;
-      if (songData.grouping !== undefined) song.grouping = songData.grouping;
-      if (songData.bpm !== undefined) song.bpm = songData.bpm;
-      if (songData.key !== undefined) song.key = songData.key;
-      if (songData.rating !== undefined) song.rating = songData.rating;
-      if (songData.year !== undefined) song.year = songData.year;
-      if (songData.album !== undefined) song.album = songData.album;
-      if (songData.appleMusicId !== undefined) song.appleMusicId = songData.appleMusicId;
-      if (songData.favorite !== undefined) song.favorite = songData.favorite;
+      // Multi-value fields: union merge
+      if (songData.genres !== undefined) {
+        song.genres = unionMerge(song.genres, songData.genres);
+      }
+      if (songData.grouping !== undefined) {
+        song.grouping = unionMerge(song.grouping, songData.grouping);
+      }
+
+      // Favorite: max rank wins
+      if (songData.favorite !== undefined) {
+        if (favoriteRank(songData.favorite) > favoriteRank(song.favorite)) {
+          song.favorite = songData.favorite;
+        }
+      }
+
+      // Single-value fields: existing holds; incoming fills nulls;
+      // if both non-null and differ, most-recent dateModified wins
+      const existingDate = getMostRecentSourceDate(existingSources);
+
+      function mergeField<T>(
+        current: T | undefined,
+        incoming: T | undefined,
+        set: (val: T) => void,
+      ): void {
+        if (incoming === undefined) return;
+        if (current === undefined) { set(incoming); return; }
+        if (current !== incoming && incomingDate && existingDate) {
+          if (incomingDate > existingDate) {
+            set(incoming);
+          }
+        }
+      }
+
+      mergeField(song.bpm, songData.bpm, (v) => { song.bpm = v; });
+      mergeField(song.key, songData.key, (v) => { song.key = v; });
+      mergeField(song.rating, songData.rating, (v) => { song.rating = v; });
+      mergeField(song.year, songData.year, (v) => { song.year = v; });
+      mergeField(song.album, songData.album, (v) => { song.album = v; });
+
+      // appleMusicIds: accumulate
+      if (source.appleMusicId) {
+        const existingIds = song.appleMusicIds || [];
+        if (!existingIds.includes(source.appleMusicId)) {
+          existingIds.push(source.appleMusicId);
+        }
+        song.appleMusicIds = existingIds;
+      }
+
+      // appleMusicId (canonical): elected by format hierarchy
+      if (source.appleMusicId && source.format) {
+        const currentRank = formatRank(
+          song.appleMusicId
+            ? existingSources.find((s) => s.appleMusicId === song.appleMusicId)?.format
+            : undefined,
+        );
+        const incomingRank = formatRank(source.format);
+        if (incomingRank > currentRank) {
+          song.appleMusicId = source.appleMusicId;
+        } else if (!song.appleMusicId) {
+          song.appleMusicId = source.appleMusicId;
+        }
+      }
+
       song.sources = existingSources;
 
       const saved = await song.save();
@@ -210,11 +288,13 @@ export class SongService {
       year: songData.year,
       album: songData.album,
       appleMusicId: songData.appleMusicId || source.appleMusicId,
+      appleMusicIds: source.appleMusicId ? [source.appleMusicId] : [],
       sources: [{
         sourceType: source.sourceType,
         format: source.format,
         appleMusicId: source.appleMusicId,
         filePath: source.filePath,
+        dateModified: source.importMeta?.dateModified instanceof Date ? source.importMeta.dateModified : undefined,
         sourceMetadata: source.importMeta,
         lastImportDate: new Date(),
       }],

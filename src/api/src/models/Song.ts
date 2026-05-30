@@ -11,6 +11,7 @@ export interface ISource {
   fileSize?: number;
   bitRate?: number;
   fileType?: string;
+  dateModified?: Date;
   sourceMetadata?: Record<string, any>;
   lastImportDate: Date;
 }
@@ -63,6 +64,9 @@ const sourceSchema = new Schema<ISource>(
     fileType: {
       type: String,
       trim: true,
+    },
+    dateModified: {
+      type: Date,
     },
     sourceMetadata: {
       type: Schema.Types.Mixed,
