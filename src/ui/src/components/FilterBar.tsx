@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './FilterBar.scss';
-import { X, House } from 'lucide-react';
+import { X, House, Pencil } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 
 interface FilterBarProps {
@@ -13,20 +13,18 @@ interface FilterBarProps {
   shuffleActive?: boolean;
   onShuffleToggle?: (active: boolean) => void;
   onShuffleReseed?: () => void;
+  editMode?: boolean;
+  onEditToggle?: () => void;
 }
 
 export default function FilterBar({
   genreNot, bpmGte, bpmLte,
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
+  editMode, onEditToggle,
 }: FilterBarProps) {
   const [bpmMinStr, setBpmMinStr] = useState('');
   const [bpmMaxStr, setBpmMaxStr] = useState('');
-
-  useEffect(() => {
-    setBpmMinStr(bpmGte !== undefined ? String(bpmGte) : '');
-    setBpmMaxStr(bpmLte !== undefined ? String(bpmLte) : '');
-  }, [bpmGte, bpmLte]);
 
   const applyBpm = () => {
     if (!onBpmChange) return;
@@ -52,6 +50,15 @@ export default function FilterBar({
         <Link to="/" className="FilterBar-home iconButton" title="Home">
           <House size={16} />
         </Link>
+        {onEditToggle && (
+          <button
+            className={`FilterBar-edit iconButton ${editMode ? 'FilterBar-edit--active' : ''}`}
+            onClick={onEditToggle}
+            title="Toggle edit mode (e)"
+          >
+            <Pencil size={16} />
+          </button>
+        )}
         {onShuffleToggle && (
           <ShuffleControl
             active={!!shuffleActive}

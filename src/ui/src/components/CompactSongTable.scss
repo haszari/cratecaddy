@@ -1,0 +1,59 @@
+.CompactSongTable {
+  overflow-y: auto;
+  height: 100%;
+  border-right: 1px solid #ddd;
+
+  .CompactSongTable-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.3em 0.5em;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.85em;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+
+    &--selected {
+      background: #e3f2fd;
+      font-weight: 600;
+    }
+
+    .CompactSongTable-fav {
+      width: 1.2em;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .CompactSongTable-artist {
+      color: #666;
+      flex-shrink: 0;
+      max-width: 30%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .CompactSongTable-sep {
+      color: #999;
+      flex-shrink: 0;
+    }
+
+    .CompactSongTable-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .CompactSongTable-bpm {
+      color: #888;
+      font-size: 0.85em;
+      flex-shrink: 0;
+      width: 3em;
+      text-align: right;
+    }
+  }
+}

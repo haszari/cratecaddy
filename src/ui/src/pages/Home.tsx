@@ -1,11 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchGenreStats, fetchSongs } from '../api/client';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useFilters } from '../hooks/useFilters';
+import { useEditMode } from '../hooks/useEditMode';
 import FilterBar from '../components/FilterBar';
 import SongTable from '../components/SongTable';
+import EditLayout from '../components/EditLayout';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
 
@@ -17,6 +19,9 @@ export default function Home() {
     removeExclude,
     setBpmRange, toggleShuffle, reshuffle, hasActiveFilters,
   } = useFilters();
+  const editMode = useEditMode();
+  const editToggleRef = useRef(editMode.toggle);
+  useEffect(() => { editToggleRef.current = editMode.toggle; });
   const [page, setPage] = useState(1);
 
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
@@ -40,6 +45,17 @@ export default function Home() {
     queryFn: () => fetchSongs({ ...extraParams, shuffle: shuffleParam, page, limit: 50 }),
     enabled: hasActiveFilters,
   });
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'e' && !e.ctrlKey && !e.metaKey && !isInputFocused()) {
+        e.preventDefault();
+        editToggleRef.current();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const handleAddInclude = useCallback(
     (genre: string) => {
@@ -66,6 +82,35 @@ export default function Home() {
   const hasTag = (genre: string) =>
     filters.genreNot.includes(genre);
 
+  const songs = paginated?.data ?? [];
+
+  if (editMode.active && hasActiveFilters && paginated) {
+    return (
+      <div className="HomePage">
+        <FilterBar
+          genreNot={filters.genreNot}
+          bpmGte={filters.bpmGte}
+          bpmLte={filters.bpmLte}
+          onRemoveExclude={removeExclude}
+          onBpmChange={setBpmRange}
+          shuffleActive={shuffleMode}
+          onShuffleToggle={toggleShuffle}
+          onShuffleReseed={reshuffle}
+          editMode={editMode.active}
+          onEditToggle={editMode.toggle}
+        />
+        <EditLayout
+          songs={songs}
+          selectedIndex={editMode.selectedIndex}
+          onSelect={editMode.selectIndex}
+          onSelectNext={() => editMode.selectNext(songs.length)}
+          onSelectPrev={editMode.selectPrev}
+          onExit={editMode.exit}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="HomePage">
       <FilterBar
@@ -77,6 +122,8 @@ export default function Home() {
         shuffleActive={shuffleMode}
         onShuffleToggle={toggleShuffle}
         onShuffleReseed={reshuffle}
+        editMode={editMode.active}
+        onEditToggle={editMode.toggle}
       />
       <p className="home-help">
         Combine genres with <code>+</code> (AND) or <code>,</code> (OR) — e.g.{' '}
@@ -120,4 +167,9 @@ export default function Home() {
       )}
     </div>
   );
+}
+
+function isInputFocused(): boolean {
+  const tag = document.activeElement?.tagName;
+  return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
 }

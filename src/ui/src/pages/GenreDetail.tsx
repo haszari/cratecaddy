@@ -1,14 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
 import { useFilters } from '../hooks/useFilters';
+import { useEditMode } from '../hooks/useEditMode';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
+import EditLayout from '../components/EditLayout';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
 
@@ -27,6 +29,21 @@ export default function GenreDetail() {
   const [shuffleMode, setShuffleMode] = useState(true);
   const [shuffleSeed, setShuffleSeed] = useState(() => Math.random().toString(36).slice(2, 10));
   const reshuffle = useCallback(() => setShuffleSeed(Math.random().toString(36).slice(2, 10)), []);
+
+  const editMode = useEditMode();
+  const editToggleRef = useRef(editMode.toggle);
+  useEffect(() => { editToggleRef.current = editMode.toggle; });
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'e' && !e.ctrlKey && !e.metaKey && !isInputFocused()) {
+        e.preventDefault();
+        editToggleRef.current();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const {
     filters, addExclude,
@@ -96,6 +113,39 @@ export default function GenreDetail() {
 
   const songs = paginated?.data ?? [];
 
+  if (editMode.active && paginated) {
+    return (
+      <div className="GenreDetail">
+        <BasePageCriteria
+          genres={decodedGenres.map((g) => ({ name: g, mode: isOrMode ? 'or' : 'and' }))}
+          onRemoveGenre={handleRemoveInclude}
+        />
+
+        <FilterBar
+          genreNot={filters.genreNot}
+          bpmGte={filters.bpmGte}
+          bpmLte={filters.bpmLte}
+          onRemoveExclude={removeExclude}
+          onBpmChange={setBpmRange}
+          shuffleActive={shuffleMode}
+          onShuffleToggle={setShuffleMode}
+          onShuffleReseed={reshuffle}
+          editMode={editMode.active}
+          onEditToggle={editMode.toggle}
+        />
+
+        <EditLayout
+          songs={songs}
+          selectedIndex={editMode.selectedIndex}
+          onSelect={editMode.selectIndex}
+          onSelectNext={() => editMode.selectNext(songs.length)}
+          onSelectPrev={editMode.selectPrev}
+          onExit={editMode.exit}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="GenreDetail">
       <BasePageCriteria
@@ -112,6 +162,8 @@ export default function GenreDetail() {
         shuffleActive={shuffleMode}
         onShuffleToggle={setShuffleMode}
         onShuffleReseed={reshuffle}
+        editMode={editMode.active}
+        onEditToggle={editMode.toggle}
       />
 
       {isLoading && <p>Loading songs...</p>}
@@ -139,4 +191,9 @@ export default function GenreDetail() {
       )}
     </div>
   );
+}
+
+function isInputFocused(): boolean {
+  const tag = document.activeElement?.tagName;
+  return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
 }

@@ -110,114 +110,6 @@ export class SongService {
     return candidates[0];
   }
 
-  /**
-   * Merge song data from incoming source with existing song
-   * @param existing - Existing song document
-   * @param incoming - Incoming song data
-   * @param newSource - New source to add/update
-   * @returns Merged song data
-   */
-  mergeSongData(
-    existing: ISong,
-    incoming: Partial<ISong>,
-    newSource: ISource
-  ): Partial<ISong> {
-    const merged: Partial<ISong> = {
-      ...existing.toObject(),
-    };
-
-    if (incoming.genres) {
-      const existingGenres = new Set(existing.genres || []);
-      incoming.genres.forEach((g) => existingGenres.add(g));
-      merged.genres = Array.from(existingGenres);
-    }
-
-    if (incoming.grouping) {
-      const existingGrouping = new Set(existing.grouping || []);
-      incoming.grouping.forEach((g) => existingGrouping.add(g));
-      merged.grouping = Array.from(existingGrouping);
-    }
-
-    if (incoming.bpm !== undefined && incoming.bpm !== null) {
-      merged.bpm = incoming.bpm;
-    }
-    if (incoming.year !== undefined && incoming.year !== null) {
-      merged.year = incoming.year;
-    }
-    if (incoming.rating !== undefined && incoming.rating !== null) {
-      merged.rating = incoming.rating;
-    }
-    if (incoming.key !== undefined && incoming.key !== null && incoming.key !== '') {
-      merged.key = incoming.key;
-    }
-    if (incoming.duration !== undefined && incoming.duration !== null && incoming.duration > 0) {
-      if (!merged.duration || merged.duration === 0) {
-        merged.duration = incoming.duration;
-      }
-    }
-    if (incoming.album !== undefined && incoming.album !== null && incoming.album !== '') {
-      merged.album = incoming.album;
-    }
-
-    const existingSources = [...(existing.sources || [])];
-
-    const sourceKey = newSource.sourceMetadata?.id || newSource.filePath;
-    const existingIndex = existingSources.findIndex((s) => {
-      if (s.sourceType === newSource.sourceType) {
-        if (sourceKey && s.sourceMetadata?.id === sourceKey) return true;
-        if (newSource.filePath && s.filePath === newSource.filePath) return true;
-      }
-      return false;
-    });
-
-    if (existingIndex >= 0) {
-      existingSources[existingIndex] = newSource;
-    } else {
-      existingSources.push(newSource);
-    }
-
-    merged.sources = existingSources;
-
-    return merged;
-  }
-
-  /**
-   * Upsert song with merge logic and source management
-   * @param artist - Artist name
-   * @param title - Song title
-   * @param duration - Duration in milliseconds
-   * @param songData - Song data to merge
-   * @param source - Source information
-   * @returns Created or updated song
-   */
-  async upsertSongWithMerge(
-    artist: string,
-    title: string,
-    duration: number | undefined,
-    songData: Partial<ISong>,
-    source: ISource
-  ): Promise<ISong> {
-    const existing = await this.findMatchingSong(artist, title, duration);
-
-    if (existing) {
-      const merged = this.mergeSongData(existing, songData, source);
-      const updated = await Song.findByIdAndUpdate(existing._id, merged, { new: true });
-      if (!updated) {
-        throw new Error(`Failed to update song with id ${existing._id}`);
-      }
-      return updated;
-    } else {
-      const newSong = new Song({
-        ...songData,
-        artist,
-        title,
-        duration,
-        sources: [source],
-      });
-      return await newSong.save();
-    }
-  }
-
   async updateWithHistory(
     artist: string,
     title: string,
@@ -350,8 +242,80 @@ export class SongService {
     return saved;
   }
 
+  async updateSongMetadata(
+    id: string,
+    songData: {
+      genres?: string[];
+      grouping?: string[];
+      bpm?: number;
+      key?: string;
+      rating?: number;
+      year?: number;
+      favorite?: 'starred' | 'normal' | 'disliked';
+    }
+  ): Promise<ISong | null> {
+    const song = await Song.findById(id);
+    if (!song) return null;
+
+    if (songData.genres !== undefined) song.genres = songData.genres;
+    if (songData.grouping !== undefined) song.grouping = songData.grouping;
+    if (songData.bpm !== undefined) song.bpm = songData.bpm;
+    if (songData.key !== undefined) song.key = songData.key;
+    if (songData.rating !== undefined) song.rating = songData.rating;
+    if (songData.year !== undefined) song.year = songData.year;
+    if (songData.favorite !== undefined) song.favorite = songData.favorite;
+
+    const saved = await song.save();
+
+    const lastEntry = await HistoryEntry.findOne({ songId: saved._id, sourceType: 'manual' })
+      .sort({ dateEdited: -1 });
+
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+    if (lastEntry && lastEntry.dateEdited > fiveMinAgo) {
+      lastEntry.snapshot = {
+        title: saved.title,
+        artist: saved.artist,
+        genres: saved.genres,
+        grouping: saved.grouping,
+        bpm: saved.bpm,
+        key: saved.key,
+        rating: saved.rating,
+        year: saved.year,
+        favorite: saved.favorite,
+      };
+      await lastEntry.save();
+    } else {
+      await HistoryEntry.create({
+        songId: saved._id,
+        dateEdited: new Date(),
+        sourceType: 'manual',
+        snapshot: {
+          title: saved.title,
+          artist: saved.artist,
+          genres: saved.genres,
+          grouping: saved.grouping,
+          bpm: saved.bpm,
+          key: saved.key,
+          rating: saved.rating,
+          year: saved.year,
+          favorite: saved.favorite,
+        },
+      });
+    }
+
+    return saved;
+  }
+
   async getHistory(songId: string): Promise<IHistoryEntry[]> {
     return await HistoryEntry.find({ songId }).sort({ dateEdited: -1 });
+  }
+
+  async exportToAppleMusic(songId: string): Promise<{ success: boolean; message: string }> {
+    const song = await Song.findById(songId);
+    if (!song) return { success: false, message: 'Song not found' };
+    const { exportToAppleMusic: runExport } = await import('./appleMusicExport.js');
+    return await runExport(song);
   }
 
   async createSong(data: Partial<ISong>): Promise<ISong> {

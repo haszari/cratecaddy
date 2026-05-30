@@ -48,6 +48,64 @@ export async function fetchSongById(id: string): Promise<Song> {
   return response.json();
 }
 
+export async function updateSongMetadata(
+  id: string,
+  data: Partial<Song>,
+): Promise<Song> {
+  const response = await fetch(`${API_URL}/api/songs/${id}/metadata`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update metadata: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function exportToAppleMusic(id: string): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_URL}/api/songs/${id}/export-to-apple-music`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to export: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export interface HistoryEntry {
+  _id: string;
+  songId: string;
+  dateEdited: string;
+  sourceType: string;
+  snapshot: {
+    title: string;
+    artist: string;
+    genres: string[];
+    grouping: string[];
+    bpm?: number;
+    key?: string;
+    rating?: number;
+    year?: number;
+    favorite?: 'starred' | 'normal' | 'disliked';
+  };
+  importMeta?: Record<string, unknown>;
+}
+
+export async function fetchSongHistory(id: string): Promise<HistoryEntry[]> {
+  const response = await fetch(`${API_URL}/api/songs/${id}/history`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch history: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function fetchGenreStats(params?: ApiGenreStatsParams): Promise<Array<{ genre: string; count: number }>> {
   const qs = params ? buildQueryString(params as ApiSongParams) : '';
   const response = await fetch(`${API_URL}/api/songs/stats/genres${qs}`);

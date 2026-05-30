@@ -102,6 +102,41 @@ export class SongController {
     }
   }
 
+  async updateMetadata(req: Request, res: Response) {
+    try {
+      const song = await songService.updateSongMetadata(req.params.id, req.body);
+      if (!song) {
+        res.status(404).json({ error: 'Song not found' });
+        return;
+      }
+      res.json(song);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update metadata' });
+    }
+  }
+
+  async exportToAppleMusic(req: Request, res: Response) {
+    try {
+      const result = await songService.exportToAppleMusic(req.params.id);
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to export to Apple Music' });
+    }
+  }
+
+  async getHistory(req: Request, res: Response) {
+    try {
+      const history = await songService.getHistory(req.params.id);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch history' });
+    }
+  }
+
   async getGenreStats(req: Request, res: Response) {
     try {
       const filters = extractFilterParams(req.query as Record<string, unknown>);

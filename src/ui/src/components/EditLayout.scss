@@ -1,0 +1,23 @@
+.EditLayout {
+  display: flex;
+  height: calc(100vh - 3.5em);
+  margin-top: 3em;
+
+  .EditLayout-list {
+    flex: 0 0 40%;
+    max-width: 40%;
+    overflow: hidden;
+  }
+
+  .EditLayout-detail {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .EditLayout-empty {
+    padding: 2em;
+    color: #999;
+    text-align: center;
+    font-style: italic;
+  }
+}

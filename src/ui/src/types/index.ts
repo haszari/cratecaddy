@@ -19,6 +19,9 @@ export interface Song {
   bpm?: number;
   rating?: number;
   key?: string;
+  grouping?: string[];
+  appleMusicId?: string;
+  favorite?: 'starred' | 'normal' | 'disliked';
   sources: ISource[];
 }
 
