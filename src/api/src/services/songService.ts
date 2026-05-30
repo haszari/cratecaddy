@@ -180,6 +180,7 @@ export class SongService {
         songId: saved._id,
         dateEdited: new Date(),
         sourceType: source.sourceType,
+        entryType: 'update',
         snapshot: {
           title: saved.title,
           artist: saved.artist,
@@ -225,6 +226,7 @@ export class SongService {
       songId: saved._id,
       dateEdited: new Date(),
       sourceType: source.sourceType,
+      entryType: 'create',
       snapshot: {
         title: saved.title,
         artist: saved.artist,
@@ -290,6 +292,7 @@ export class SongService {
         songId: saved._id,
         dateEdited: new Date(),
         sourceType: 'manual',
+        entryType: 'update',
         snapshot: {
           title: saved.title,
           artist: saved.artist,

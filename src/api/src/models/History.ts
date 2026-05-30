@@ -16,6 +16,7 @@ export interface IHistoryEntry extends Document {
   songId: Types.ObjectId;
   dateEdited: Date;
   sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'manual';
+  entryType: 'create' | 'update';
   snapshot: IHistorySnapshot;
   importMeta?: Record<string, unknown>;
 }
@@ -54,6 +55,11 @@ const historyEntrySchema = new Schema<IHistoryEntry>(
       type: String,
       required: true,
       enum: ['applemusic', 'rekordbox', 'djaypro', 'manual'],
+    },
+    entryType: {
+      type: String,
+      required: true,
+      enum: ['create', 'update'],
     },
     snapshot: {
       type: snapshotSchema,
