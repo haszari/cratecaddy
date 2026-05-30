@@ -23,20 +23,10 @@ import plist from 'plist';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ISource } from '../src/models/Song.js';
-import { songService, normalizeArtistTitle } from '../src/services/songService.js';
+import { SourceFormat } from '../src/models/Song.js';
+import { songService } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
-
-interface PlistDictItem {
-  key: string;
-  type: string;
-  value: any;
-}
-
-interface PlistDict {
-  [key: string]: PlistDictItem;
-}
 
 const connectDB = async () => {
   const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy';
@@ -52,16 +42,28 @@ const splitTagsField = (fieldStr?: string): string[] => {
     .filter((tag) => tag !== '');
 };
 
-// Convert Apple Music rating (0-100) to 0-5 scale as float
 const convertRating = (rating?: string | number): number | undefined => {
   if (!rating) return undefined;
   const num = typeof rating === 'string' ? parseInt(rating, 10) : rating;
   if (isNaN(num)) return undefined;
-  return num / 20; // 0-100 scale to 0-5 scale
+  return num / 20;
 };
 
-const hasGrouping = (groupingText: string, testValue: string): boolean => {
-  return groupingText.includes(testValue);
+const parseKeyFromComment = (comment?: string): string | undefined => {
+  if (!comment) return undefined;
+  const match = comment.match(/musicalKey=([A-G][b#]?(?:m|dim|aug|sus)?)/);
+  return match ? match[1] : undefined;
+};
+
+const detectFormat = (trackType?: string, kind?: string): SourceFormat | undefined => {
+  if (trackType === 'Remote') return 'applemusicstream';
+  if (!kind) return undefined;
+  if (kind.includes('Apple Lossless') || kind.includes('ALAC')) return 'alac';
+  if (kind.includes('AIFF')) return 'aiff';
+  if (kind.includes('WAV')) return 'wav';
+  if (kind.includes('AAC')) return 'aac';
+  if (kind.includes('MPEG') || kind.includes('mp3')) return 'mp3';
+  return undefined;
 };
 
 const importSongs = async (xmlPath: string) => {
@@ -70,11 +72,8 @@ const importSongs = async (xmlPath: string) => {
 
     console.log(`Importing songs from: ${xmlPath}`);
     const xmlData = readFileSync(xmlPath, 'utf-8');
-    
-    // Parse the plist file - plist library returns a proper JS object
     const parsed = plist.parse(xmlData) as Record<string, any>;
 
-    // Get the Tracks dictionary
     const tracksDict = parsed.Tracks;
     if (!tracksDict || typeof tracksDict !== 'object') {
       throw new Error('Failed to find Tracks dict in plist');
@@ -88,7 +87,6 @@ const importSongs = async (xmlPath: string) => {
     let skipped = 0;
     let filtered = 0;
 
-    // Iterate through each track
     for (const trackId of trackIds) {
       const trackData = tracksDict[trackId];
 
@@ -99,85 +97,80 @@ const importSongs = async (xmlPath: string) => {
 
       const groupingRawString = trackData['Grouping'];
       if (!groupingRawString) {
-        // Skip - no grouping value.
         filtered++;
         continue;
       }
-      if (!hasGrouping(groupingRawString, 'DJing') && !hasGrouping(groupingRawString, 'Listening')) {
-        // Skip - no relevant tag.
+      if (!groupingRawString.includes('DJing') && !groupingRawString.includes('Listening')) {
         filtered++;
         continue;
       }
 
-      // Get name
       const name = trackData['Name'];
 
-      // Skip tracks without names
       if (!name || (typeof name === 'string' && name.trim() === '')) {
         skipped++;
         continue;
       }
 
-      // Extract all values safely
       const persistentId = trackData['Persistent ID'] || '';
       const artist = trackData['Artist'] || '';
       const album = trackData['Album'] || '';
+      const comment = trackData['Comments'] || '';
       const genres = splitTagsField(trackData['Genre']);
-      const grouping = splitTagsField(trackData['Grouping']);
+      const grouping = splitTagsField(groupingRawString);
       const bpm = trackData['BPM'] ? parseInt(String(trackData['BPM']), 10) || undefined : undefined;
-      const fileSize = trackData['Size'] ? parseInt(String(trackData['Size']), 10) || undefined : undefined;
       const totalTime = trackData['Total Time'] ? parseInt(String(trackData['Total Time']), 10) || undefined : undefined;
       const year = trackData['Year'] ? parseInt(String(trackData['Year']), 10) || undefined : undefined;
-      const bitRate = trackData['Bit Rate'] ? parseInt(String(trackData['Bit Rate']), 10) || undefined : undefined;
       const rating = convertRating(trackData['Rating']);
       const location = trackData['Location'];
-      const fileType = trackData['Kind'] || undefined;
-      const dateAdded = trackData['Date Added'] instanceof Date ? trackData['Date Added'] : undefined;
-      const dateModified = trackData['Date Modified'] instanceof Date ? trackData['Date Modified'] : undefined;
-      const dateLastPlayed = trackData['Play Date UTC'] instanceof Date ? trackData['Play Date UTC'] : undefined;
+      const kind = trackData['Kind'] || undefined;
       const trackType = trackData['Track Type'];
       const isProtected = trackData['Protected'] === true;
       const isAppleMusic = trackData['Track Type'] === 'Remote';
+      const loved = trackData['Loved'] === true;
+      const disliked = trackData['Disliked'] === true;
 
-      // Create source object
-      const source: ISource = {
-        sourceType: 'applemusic',
-        filePath: location,
-        fileSize,
-        bitRate,
-        fileType,
-        sourceMetadata: {
-          id: trackId,
-          persistentId,
-          dateAdded,
-          dateModified,
-          dateLastPlayed,
-          trackType,
-          isProtected,
-          isAppleMusic,
-        },
-        lastImportDate: new Date(),
-      };
+      let favorite: 'normal' | 'starred' | 'disliked' = 'normal';
+      if (loved) favorite = 'starred';
+      else if (disliked) favorite = 'disliked';
 
-      // Create song data (song-level fields only)
-      const songData = {
-        title: name,
-        album,
-        genres,
-        grouping,
-        bpm: bpm || undefined,
-        duration: totalTime,
-        year: year || undefined,
-        rating: rating || undefined,
-        artistTitleNormalized: normalizeArtistTitle(artist, name),
-      };
-
-      // Check if song already exists (by matching)
       const existing = await songService.findMatchingSong(artist, name, totalTime);
       const isNew = !existing;
 
-      // Upsert with merge
-      await songService.upsertSongWithMerge(artist, name, totalTime, songData, source);
+      await songService.updateWithHistory(
+        artist,
+        name,
+        totalTime,
+        {
+          genres,
+          grouping,
+          bpm,
+          rating,
+          year,
+          album,
+          appleMusicId: persistentId,
+          key: parseKeyFromComment(comment),
+          favorite,
+        },
+        {
+          sourceType: 'applemusic',
+          format: detectFormat(trackType, kind),
+          appleMusicId: persistentId,
+          filePath: location,
+          importMeta: {
+            trackId,
+            persistentId,
+            dateAdded: trackData['Date Added'] instanceof Date ? trackData['Date Added'] : undefined,
+            dateModified: trackData['Date Modified'] instanceof Date ? trackData['Date Modified'] : undefined,
+            dateLastPlayed: trackData['Play Date UTC'] instanceof Date ? trackData['Play Date UTC'] : undefined,
+            trackType,
+            isProtected: trackData['Protected'] === true,
+            fileSize: trackData['Size'] ? parseInt(String(trackData['Size']), 10) || undefined : undefined,
+            bitRate: trackData['Bit Rate'] ? parseInt(String(trackData['Bit Rate']), 10) || undefined : undefined,
+            fileType: kind,
+          },
+        }
+      );
 
       if (isNew) {
         imported++;
@@ -190,7 +183,7 @@ const importSongs = async (xmlPath: string) => {
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
     console.log(`  Skipped (no name): ${skipped}`);
-    console.log(`  Filtered (no "DJing" tag): ${filtered}`);
+    console.log(`  Filtered (no DJing/Listening): ${filtered}`);
     console.log(`  Total processed: ${imported + updated + skipped}`);
     console.log(`  Total in file: ${trackIds.length}`);
 

@@ -22,8 +22,7 @@ import { readFileSync } from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ISource } from '../src/models/Song.js';
-import { songService, normalizeArtistTitle } from '../src/services/songService.js';
+import { songService } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
@@ -33,34 +32,22 @@ const connectDB = async () => {
   console.log('Connected to MongoDB');
 };
 
-/**
- * Parse time string (MM:SS) to milliseconds
- */
 const parseTimeToMs = (timeStr?: string): number | undefined => {
   if (!timeStr || timeStr.trim() === '') return undefined;
-  
   const parts = timeStr.trim().split(':');
   if (parts.length !== 2) return undefined;
-  
   const minutes = parseInt(parts[0], 10);
   const seconds = parseInt(parts[1], 10);
-  
   if (isNaN(minutes) || isNaN(seconds)) return undefined;
-  
   return (minutes * 60 + seconds) * 1000;
 };
 
-/**
- * Parse CSV line (handles quoted fields with commas)
- */
 const parseCSVLine = (line: string): string[] => {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
     if (char === '"') {
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
@@ -70,7 +57,6 @@ const parseCSVLine = (line: string): string[] => {
       current += char;
     }
   }
-  
   result.push(current.trim());
   return result;
 };
@@ -82,12 +68,10 @@ const importSongs = async (csvPath: string) => {
     console.log(`Importing songs from: ${csvPath}`);
     const csvData = readFileSync(csvPath, 'utf-8');
     const lines = csvData.split('\n').filter((line) => line.trim() !== '');
-    
     if (lines.length < 2) {
       throw new Error('CSV file must have at least a header and one data row');
     }
 
-    // Skip header row
     const dataLines = lines.slice(1);
     console.log(`Found ${dataLines.length} tracks in CSV`);
 
@@ -97,8 +81,6 @@ const importSongs = async (csvPath: string) => {
 
     for (const line of dataLines) {
       const fields = parseCSVLine(line);
-      
-      // Expected format: Title, Artist, Album, Time, BPM, Key, URL
       if (fields.length < 7) {
         skipped++;
         continue;
@@ -112,7 +94,6 @@ const importSongs = async (csvPath: string) => {
       const key = fields[5]?.replace(/^"|"$/g, '') || '';
       const url = fields[6]?.replace(/^"|"$/g, '') || '';
 
-      // Skip tracks without title or artist
       if (!title || !artist) {
         skipped++;
         continue;
@@ -121,34 +102,26 @@ const importSongs = async (csvPath: string) => {
       const duration = parseTimeToMs(timeStr);
       const bpm = bpmStr ? parseFloat(bpmStr) || undefined : undefined;
 
-      // Create source object
-      const source: ISource = {
-        sourceType: 'djaypro',
-        filePath: url || undefined,
-        sourceMetadata: {
-          url,
-        },
-        lastImportDate: new Date(),
-      };
-
-      // Create song data (song-level fields only)
-      const songData = {
-        title,
-        album,
-        genres: [],
-        grouping: [],
-        bpm,
-        duration,
-        key: key || undefined,
-        artistTitleNormalized: normalizeArtistTitle(artist, title),
-      };
-
-      // Check if song already exists (by matching)
       const existing = await songService.findMatchingSong(artist, title, duration);
       const isNew = !existing;
 
-      // Upsert with merge
-      await songService.upsertSongWithMerge(artist, title, duration, songData, source);
+      await songService.updateWithHistory(
+        artist,
+        title,
+        duration,
+        {
+          bpm,
+          key: key || undefined,
+          album,
+          genres: [],
+          grouping: [],
+        },
+        {
+          sourceType: 'djaypro',
+          filePath: url || undefined,
+          importMeta: { url },
+        }
+      );
 
       if (isNew) {
         imported++;

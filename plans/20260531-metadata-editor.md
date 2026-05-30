@@ -36,6 +36,7 @@ interface IHistoryEntry {
     key?: string;
     rating?: number;
     year?: number;
+    favorite?: 'starred' | 'normal' | 'disliked';
   };
   importMeta?: Record<string, unknown>;
 }
@@ -49,6 +50,7 @@ Index on `{ songId: 1, dateEdited: -1 }`.
 
 Changes:
 - Add `appleMusicId?: string` (top-level, for AppleScript export targeting)
+- Add `favorite?: 'starred' | 'normal' | 'disliked'` (triage marker imported from Apple Music Loved/Disliked)
 - Update `ISource.sourceType` enum to include `'manual'`
 - Update `ISource` shape to `{ sourceType, format: 'aiff'|'wav'|'alac'|'aac'|'mp3'|'applemusicstream', appleMusicId?: string, filePath?: string }`
 - `sources` sub-schema: drop `fileSize`, `bitRate`, `fileType` (moved to History.importMeta). Keep `sourceMetadata` optional for backward compat during migration.
@@ -90,6 +92,7 @@ Changes:
 - Pass importMeta to History entry (dateAdded, dateModified, etc.)
 - Map `Track Type: 'Remote'` → `format: 'applemusicstream'`
 - Map local files → `format` based on file extension (.aiff/.wav/.alac/.aac/.mp3)
+- Import `Loved`/`Disliked` booleans → `favorite` three-state field
 
 **File:** `src/api/scripts/import-rekordbox.ts` and `src/api/scripts/import-djaypro.ts`
 
@@ -114,6 +117,10 @@ tell application "Music"
     set rating of t to <rating * 20>
     set year of t to <year>
     set grouping of t to "<grouping-joined>"
+    -- favorite: starred → loved, disliked → disliked, normal → unset both
+    if "<favorite>" is "starred" then set loved of t to true
+    if "<favorite>" is "disliked" then set disliked of t to true
+    if "<favorite>" is "normal" then set loved of t to false; set disliked of t to false
     -- key written to comment
     set comment of t to "<existing-comment>musicalKey=<key>"
 end tell
@@ -131,7 +138,7 @@ Error handling: timeout, permission errors, track-not-found.
 
 **File:** `src/ui/src/types/index.ts`
 
-Add `appleMusicId` to `Song` interface.
+Add `appleMusicId`, `favorite` to `Song` interface.
 Update `ISource` to match new shape.
 
 ### 2b. API client
@@ -166,7 +173,8 @@ Emit `onToggleEdit` callback.
 **File:** `src/ui/src/components/SongList/CompactSongTable.tsx` (new)
 
 Props: `songs, selectedId, onSelect`
-Renders: 2-column list (artist | title), no genre pills, no sources, no bpm/key/rating.
+Renders: 2-column list (artist | title) with favorite star icon indicator.
+No genre pills, no sources, no bpm/key/rating.
 Selected row highlighted. Keyboard navigation via `j`/`k`.
 
 ### 2f. Edit form — field components
@@ -208,6 +216,10 @@ Text input with validation for musical key format. Autocomplete/candidates from 
 
 Row of 5 clickable star buttons. Keyboard shortcuts `1`–`5` set rating directly (when no form field is focused).
 
+**File:** `src/ui/src/components/EditMode/FavoriteField.tsx` (new)
+
+Three-state toggle: cycles `starred → normal → disliked`. Rendered as a star icon that toggles filled/outline/cross. Keyboard shortcut: no dedicated key (part of rating group).
+
 **File:** `src/ui/src/components/EditMode/ArtistTitleFields.tsx` (new)
 
 Two-up inline: artist + title fields. Keyboard shortcuts `t` (title) and `a` (artist).
@@ -220,7 +232,7 @@ Props: `song, onSave, onExport, onHistory`
 Layout:
 ```
 Artist | Title | Year
-BPM | Key | Rating
+BPM | Key | Rating | Favorite
 Grouping: [DJing] [Listening]
 Stage: [Warmup] [Peak] [Later]
 Set: [Deep] [BAM] [Ambient]
@@ -297,7 +309,7 @@ Not part of this implementation — build after the core edit round-trip works.
 ### Modified files (API)
 | File | Changes |
 |---|---|
-| `src/api/src/models/Song.ts` | Add `appleMusicId`, update `ISource`, add `manual` to enum |
+| `src/api/src/models/Song.ts` | Add `appleMusicId`, `favorite`, update `ISource`, add `manual` to enum |
 | `src/api/src/services/songService.ts` | Add `updateWithHistory`, `getHistory`; rewrite `upsertSongWithMerge` to straight overwrite |
 | `src/api/src/controllers/songController.ts` | Add 3 handlers |
 | `src/api/src/routes/songs.ts` | Add 3 routes |
@@ -320,6 +332,7 @@ Not part of this implementation — build after the core edit round-trip works.
 | `src/ui/src/components/EditMode/BpmField.tsx` | Number input |
 | `src/ui/src/components/EditMode/KeyField.tsx` | Key text input |
 | `src/ui/src/components/EditMode/RatingField.tsx` | Star buttons |
+| `src/ui/src/components/EditMode/FavoriteField.tsx` | Three-state starred/normal/disliked toggle |
 | `src/ui/src/components/EditMode/ArtistTitleFields.tsx` | Artist + title inline |
 | `src/ui/src/components/EditMode/validation.ts` | Client-side validation |
 

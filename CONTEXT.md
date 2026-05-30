@@ -6,7 +6,7 @@ A single track in the library. Source of truth: the `Song` MongoDB document.
 
 ### Current values
 
-The top-level fields on Song (`title`, `artist`, `album`, `duration`, `genres`, `bpm`, `key`, `rating`, `year`, `grouping`) are the **current effective values** at all times. There is no layered-override or merge-at-read model. Every write — whether from import or manual edit — overwrites these fields directly. Last write wins.
+The top-level fields on Song (`title`, `artist`, `album`, `duration`, `genres`, `bpm`, `key`, `rating`, `year`, `grouping`, `starred`) are the **current effective values** at all times. There is no layered-override or merge-at-read model. Every write — whether from import or manual edit — overwrites these fields directly. Last write wins.
 
 ### History
 
@@ -27,6 +27,10 @@ The Song document keeps a lightweight `sources[]` array for display and file-typ
 Heavy import provenance (bit rate, file size, dates, track type, protection status) lives in the **History** entry's `importMeta` — not on the Song document.
 
 Data on Song.sources is refreshed each import. Historical source data is recoverable from History.
+
+### Starred
+
+Three-state triage marker: `'starred'` (Apple Music loved), `'normal'` (default), `'disliked'`. Imported from Apple Music's Loved/Disliked booleans. Displayed in CompactSongTable as a star icon.
 
 ### artistTitleNormalized
 
@@ -63,6 +67,7 @@ The UI writes current Song fields back to the Apple Music app via AppleScript. P
 | rating | `rating` | 0–100 scale (multiply internal 0–5 by 20). |
 | year | `year` | |
 | grouping | `grouping` | |
+| favorite | `loved` / `disliked` | `'starred'` → `set loved to true`, `'disliked'` → `set disliked to true`, `'normal'` → `set loved to false; set disliked to false`. |
 | key | `comment` | Ad-hoc format `musicalKey=Fm` appended to existing comment. If comment already contains `musicalKey=`, update in-place. Not assumed to own the field — other metadata may coexist. Single-letter key notation preferred (`Fm`, `G`, `C#m`). |
 
 ### Key round-trip
@@ -178,7 +183,7 @@ Genres serve dual purpose (classification + energy-level tags like "Warmup | Pea
   snapshot: {
     title, artist,
     genres, grouping,
-    bpm, key, rating, year
+    bpm, key, rating, year, starred
   },
   importMeta?: {           // per-source provenance (heavy)
     fileSize, bitRate, fileType,

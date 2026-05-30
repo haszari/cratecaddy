@@ -6,8 +6,7 @@ import { parseStringPromise } from 'xml2js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ISource } from '../src/models/Song.js';
-import { songService, normalizeArtistTitle } from '../src/services/songService.js';
+import { songService } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
@@ -77,7 +76,6 @@ const importSongs = async (xmlPath: string) => {
     for (const track of tracks) {
       const attrs = track.$;
 
-      // Skip tracks without names
       if (!attrs.Name || attrs.Name.trim() === '') {
         skipped++;
         continue;
@@ -86,63 +84,53 @@ const importSongs = async (xmlPath: string) => {
       const title = attrs.Name;
       const artist = attrs.Artist || '';
 
-      // Skip tracks without artist (matching requires both artist and title)
       if (!artist || artist.trim() === '') {
         skippedNoArtist++;
         continue;
       }
+
       const album = attrs.Album || '';
       const genres = parseGenres(attrs.Genre);
       const grouping = attrs.Grouping ? [attrs.Grouping] : [];
-      const tonality = attrs.Tonality || '';
-      const fileType = attrs.Kind || '';
       const totalTime = parseInt(attrs.TotalTime || '0', 10) || undefined;
       const year = attrs.Year ? parseInt(attrs.Year, 10) || undefined : undefined;
       const bpm = attrs.AverageBpm ? parseFloat(attrs.AverageBpm) || undefined : undefined;
-      const bitRate = attrs.BitRate ? parseInt(attrs.BitRate, 10) || undefined : undefined;
       const rating = attrs.Rating ? parseInt(attrs.Rating, 10) || undefined : undefined;
       const location = attrs.Location || '';
-      const dateAdded = attrs.DateAdded ? new Date(attrs.DateAdded) : undefined;
 
-      // Create source object
-      const source: ISource = {
-        sourceType: 'rekordbox',
-        filePath: location,
-        bitRate,
-        fileType,
-        sourceMetadata: {
-          trackId: attrs.TrackID,
-          location,
-          dateAdded,
-          composer: attrs.Composer,
-          remixer: attrs.Remixer,
-          label: attrs.Label,
-          sampleRate: attrs.SampleRate ? parseInt(attrs.SampleRate, 10) : undefined,
-          playCount: attrs.PlayCount ? parseInt(attrs.PlayCount, 10) : undefined,
-        },
-        lastImportDate: new Date(),
-      };
-
-      // Create song data (song-level fields only)
-      const songData = {
-        title,
-        album,
-        genres,
-        grouping,
-        bpm,
-        duration: totalTime,
-        year,
-        key: tonality || undefined, // Extract key from Tonality field
-        rating,
-        artistTitleNormalized: normalizeArtistTitle(artist, title),
-      };
-
-      // Check if song already exists (by matching)
       const existing = await songService.findMatchingSong(artist, title, totalTime);
       const isNew = !existing;
 
-      // Upsert with merge
-      await songService.upsertSongWithMerge(artist, title, totalTime, songData, source);
+      await songService.updateWithHistory(
+        artist,
+        title,
+        totalTime,
+        {
+          genres,
+          grouping,
+          bpm,
+          year,
+          rating,
+          album,
+          key: attrs.Tonality || undefined,
+        },
+        {
+          sourceType: 'rekordbox',
+          filePath: location,
+          importMeta: {
+            trackId: attrs.TrackID,
+            location,
+            dateAdded: attrs.DateAdded ? new Date(attrs.DateAdded) : undefined,
+            composer: attrs.Composer,
+            remixer: attrs.Remixer,
+            label: attrs.Label,
+            sampleRate: attrs.SampleRate ? parseInt(attrs.SampleRate, 10) : undefined,
+            playCount: attrs.PlayCount ? parseInt(attrs.PlayCount, 10) : undefined,
+            bitRate: attrs.BitRate ? parseInt(attrs.BitRate, 10) : undefined,
+            fileType: attrs.Kind,
+          },
+        }
+      );
 
       if (isNew) {
         imported++;
