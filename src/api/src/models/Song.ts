@@ -28,7 +28,8 @@ export interface ISong extends Document {
   rating?: number; // 0-5 scale (can be fractional)
   favorite?: 'starred' | 'normal' | 'disliked'; // Triage marker
   artistTitleNormalized: string; // Normalized artist + title for fast matching
-  appleMusicId?: string; // Apple Music persistent ID for export targeting
+  appleMusicId?: string; // Canonical Apple Music persistent ID for export targeting
+  appleMusicIds: string[]; // All known Apple Music persistent IDs
   sources: ISource[];
   createdAt: Date;
   updatedAt: Date;
@@ -126,6 +127,10 @@ const songSchema = new Schema<ISong>(
       type: String,
       trim: true,
       index: true,
+    },
+    appleMusicIds: {
+      type: [String],
+      default: [],
     },
     artistTitleNormalized: {
       type: String,
