@@ -80,6 +80,17 @@ const importSongs = async (xmlPath: string) => {
     }
 
     const trackIds = Object.keys(tracksDict);
+    // Sort: Remote (stream) tracks first, File tracks last
+    // so local file metadata (richer genres) wins over Apple Music streams
+    trackIds.sort((a, b) => {
+      const aTrack = tracksDict[a];
+      const bTrack = tracksDict[b];
+      const aIsRemote = aTrack?.['Track Type'] === 'Remote';
+      const bIsRemote = bTrack?.['Track Type'] === 'Remote';
+      if (aIsRemote && !bIsRemote) return -1;
+      if (!aIsRemote && bIsRemote) return 1;
+      return 0;
+    });
     console.log(`Found ${trackIds.length} tracks in XML`);
 
     let imported = 0;
