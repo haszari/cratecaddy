@@ -13,7 +13,6 @@ interface SongTableProps {
 
 export default function SongTable({ songs, page, totalPages, totalCount, onPageChange }: SongTableProps) {
   const showPagination = totalPages !== undefined && totalPages > 1;
-  const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const formatRating = (rating: number | undefined) => {
     if (rating === undefined) return '';
@@ -35,7 +34,7 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
           </tr>
         </thead>
         <tbody>
-          {sortedSongs.map((song) => (
+            {songs.map((song) => (
             <tr key={song._id}>
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />

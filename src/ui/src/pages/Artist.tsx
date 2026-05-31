@@ -37,9 +37,6 @@ export default function Artist() {
   const decodedArtist = artistName ? decodeURIComponent(artistName) : '';
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
-  const [shuffleMode, setShuffleMode] = useState(true);
-  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random().toString(36).slice(2, 10));
-  const reshuffle = useCallback(() => setShuffleSeed(Math.random().toString(36).slice(2, 10)), []);
 
   const editMode = useEditMode();
   const editToggleRef = useRef(editMode.toggle);
@@ -61,13 +58,14 @@ export default function Artist() {
   const {
     filters, addExclude,
     removeExclude, setBpmRange,
+    shuffleMode, toggleShuffle, reshuffle,
   } = useFilters();
 
   const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const shuffleParam = shuffleMode ? shuffleSeed : undefined;
+  const shuffleParam = filters.shuffleSeed;
 
   const extraParams = {
     'artist.any': decodedArtist || undefined,
@@ -140,7 +138,7 @@ export default function Artist() {
           onRemoveExclude={removeExclude}
           onBpmChange={setBpmRange}
           shuffleActive={shuffleMode}
-          onShuffleToggle={setShuffleMode}
+          onShuffleToggle={toggleShuffle}
           onShuffleReseed={reshuffle}
           editMode={editMode.active}
           onEditToggle={editMode.toggle}
@@ -173,7 +171,7 @@ export default function Artist() {
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
         shuffleActive={shuffleMode}
-        onShuffleToggle={setShuffleMode}
+        onShuffleToggle={toggleShuffle}
         onShuffleReseed={reshuffle}
         editMode={editMode.active}
         onEditToggle={editMode.toggle}

@@ -14,10 +14,10 @@ import { withSearch } from '../utils/url';
 export default function Home() {
   const navigate = useNavigate();
   const {
-    filters, shuffleMode,
+    filters,
     addExclude,
     removeExclude,
-    setBpmRange, toggleShuffle, reshuffle, hasActiveFilters,
+    setBpmRange, hasActiveFilters,
   } = useFilters();
   const editMode = useEditMode();
   const editToggleRef = useRef(editMode.toggle);
@@ -27,7 +27,6 @@ export default function Home() {
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const shuffleParam = filters.shuffleSeed;
 
   const extraParams = {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
@@ -41,8 +40,8 @@ export default function Home() {
   });
 
   const { data: paginated } = useQuery({
-    queryKey: ['songs', 'filtered', genreNotParam, bpmGteParam, bpmLteParam, shuffleParam, page],
-    queryFn: () => fetchSongs({ ...extraParams, shuffle: shuffleParam, page, limit: 50 }),
+    queryKey: ['songs', 'filtered', genreNotParam, bpmGteParam, bpmLteParam, page],
+    queryFn: () => fetchSongs({ ...extraParams, page, limit: 50 }),
     enabled: hasActiveFilters,
   });
 
@@ -93,9 +92,6 @@ export default function Home() {
           bpmLte={filters.bpmLte}
           onRemoveExclude={removeExclude}
           onBpmChange={setBpmRange}
-          shuffleActive={shuffleMode}
-          onShuffleToggle={toggleShuffle}
-          onShuffleReseed={reshuffle}
           editMode={editMode.active}
           onEditToggle={editMode.toggle}
         />
@@ -119,9 +115,6 @@ export default function Home() {
         bpmLte={filters.bpmLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
-        shuffleActive={shuffleMode}
-        onShuffleToggle={toggleShuffle}
-        onShuffleReseed={reshuffle}
         editMode={editMode.active}
         onEditToggle={editMode.toggle}
       />

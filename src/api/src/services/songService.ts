@@ -455,7 +455,7 @@ export class SongService {
     }
 
     const [data, total] = await Promise.all([
-      Song.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit),
+      Song.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
       Song.countDocuments(filter),
     ]);
 
