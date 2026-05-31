@@ -33,8 +33,7 @@ $pill-off-text: #bbb;
     align-items: flex-start;
 
     > * {
-      flex: 1;
-      min-width: 6em;
+      flex: 0 1 auto;
     }
   }
 
