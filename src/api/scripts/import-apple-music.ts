@@ -98,6 +98,7 @@ const importSongs = async (xmlPath: string) => {
     let updated = 0;
     let skipped = 0;
     let filtered = 0;
+    let errors = 0;
 
     for (const trackId of trackIds) {
       const trackData = tracksDict[trackId];
@@ -143,57 +144,63 @@ const importSongs = async (xmlPath: string) => {
       if (loved) favorite = 'starred';
       else if (disliked) favorite = 'disliked';
 
-      const existing = await songService.findMatchingSong(artist, name, totalTime);
-      const isNew = !existing;
+      try {
+        const existing = await songService.findMatchingSong(artist, name, totalTime);
+        const isNew = !existing;
 
-      await songService.updateWithHistory(
-        artist,
-        name,
-        totalTime,
-        {
-          genres,
-          grouping,
-          bpm,
-          rating,
-          year,
-          album,
-          appleMusicId: persistentId,
-          key: parseKeyFromComment(comment),
-          favorite,
-        },
-        {
-          sourceType: 'applemusic',
-          format: detectFormat(trackType, kind),
-          appleMusicId: persistentId,
-          filePath: location,
-          importMeta: {
-            trackId,
-            persistentId,
-            dateAdded: trackData['Date Added'] instanceof Date ? trackData['Date Added'] : undefined,
-            dateModified: trackData['Date Modified'] instanceof Date ? trackData['Date Modified'] : undefined,
-            dateLastPlayed: trackData['Play Date UTC'] instanceof Date ? trackData['Play Date UTC'] : undefined,
-            trackType,
-            isProtected: trackData['Protected'] === true,
-            fileSize: trackData['Size'] ? parseInt(String(trackData['Size']), 10) || undefined : undefined,
-            bitRate: trackData['Bit Rate'] ? parseInt(String(trackData['Bit Rate']), 10) || undefined : undefined,
-            fileType: kind,
+        await songService.updateWithHistory(
+          artist,
+          name,
+          totalTime,
+          {
+            genres,
+            grouping,
+            bpm,
+            rating,
+            year,
+            album,
+            appleMusicId: persistentId,
+            key: parseKeyFromComment(comment),
+            favorite,
           },
-        }
-      );
+          {
+            sourceType: 'applemusic',
+            format: detectFormat(trackType, kind),
+            appleMusicId: persistentId,
+            filePath: location,
+            importMeta: {
+              trackId,
+              persistentId,
+              dateAdded: trackData['Date Added'] instanceof Date ? trackData['Date Added'] : undefined,
+              dateModified: trackData['Date Modified'] instanceof Date ? trackData['Date Modified'] : undefined,
+              dateLastPlayed: trackData['Play Date UTC'] instanceof Date ? trackData['Play Date UTC'] : undefined,
+              trackType,
+              isProtected: trackData['Protected'] === true,
+              fileSize: trackData['Size'] ? parseInt(String(trackData['Size']), 10) || undefined : undefined,
+              bitRate: trackData['Bit Rate'] ? parseInt(String(trackData['Bit Rate']), 10) || undefined : undefined,
+              fileType: kind,
+            },
+          }
+        );
 
-      if (isNew) {
-        imported++;
-      } else {
-        updated++;
+        if (isNew) {
+          imported++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error(`  Error importing "${artist} – ${name}":`, (err as Error).message);
+        errors++;
       }
     }
 
     console.log(`\nImport complete!`);
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
+    console.log(`  Errors: ${errors}`);
     console.log(`  Skipped (no name): ${skipped}`);
     console.log(`  Filtered (no DJing/Listening/Starred): ${filtered}`);
-    console.log(`  Total processed: ${imported + updated + skipped}`);
+    console.log(`  Total processed: ${imported + updated + errors + skipped}`);
     console.log(`  Total in file: ${trackIds.length}`);
 
     await mongoose.disconnect();
