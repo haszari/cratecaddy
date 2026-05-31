@@ -65,13 +65,14 @@ export async function updateSongMetadata(
   return response.json();
 }
 
-export async function exportToAppleMusic(id: string): Promise<{ success: boolean; message: string }> {
-  const response = await fetch(`${API_URL}/api/songs/${id}/export-to-apple-music`, {
+export async function writeToAppleMusic(id: string): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_URL}/api/songs/${id}/write-to-apple-music`, {
     method: 'POST',
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to export: ${response.statusText}`);
+    const body = await response.json();
+    throw new Error(body.error ?? body.message ?? 'Failed to write to Apple Music');
   }
 
   return response.json();

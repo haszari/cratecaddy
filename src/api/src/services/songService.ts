@@ -394,11 +394,12 @@ export class SongService {
     return await HistoryEntry.find({ songId }).sort({ dateEdited: -1 });
   }
 
-  async exportToAppleMusic(songId: string): Promise<{ success: boolean; message: string }> {
+  async writeToAppleMusic(songId: string): Promise<{ success: boolean; message: string }> {
     const song = await Song.findById(songId);
     if (!song) return { success: false, message: 'Song not found' };
-    const { exportToAppleMusic: runExport } = await import('./appleMusicExport.js');
-    return await runExport(song);
+
+    const { writeToAppleMusic: runWrite } = await import('./appleMusicWrite.js');
+    return runWrite(song);
   }
 
   async createSong(data: Partial<ISong>): Promise<ISong> {

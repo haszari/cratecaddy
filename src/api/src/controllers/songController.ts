@@ -115,16 +115,16 @@ export class SongController {
     }
   }
 
-  async exportToAppleMusic(req: Request, res: Response) {
+  async writeToAppleMusic(req: Request, res: Response) {
     try {
-      const result = await songService.exportToAppleMusic(req.params.id);
+      const result = await songService.writeToAppleMusic(req.params.id);
       if (result.success) {
         res.json(result);
       } else {
         res.status(400).json(result);
       }
     } catch (error) {
-      res.status(500).json({ error: 'Failed to export to Apple Music' });
+      res.status(500).json({ error: 'Failed to write to Apple Music' });
     }
   }
 

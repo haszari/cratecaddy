@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { updateSongMetadata, exportToAppleMusic, fetchSongHistory, fetchGenreStats } from '../api/client';
+import { updateSongMetadata, writeToAppleMusic, fetchSongHistory, fetchGenreStats } from '../api/client';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
@@ -151,7 +151,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const handleExport = useCallback(async () => {
     setExportMsg('');
     try {
-      const result = await exportToAppleMusic(song._id!);
+      const result = await writeToAppleMusic(song._id!);
       setExportMsg(result.message);
     } catch {
       setExportMsg('Export failed');

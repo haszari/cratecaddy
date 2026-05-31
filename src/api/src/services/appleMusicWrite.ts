@@ -5,7 +5,7 @@ function escapeAppleScript(str: string): string {
   return str.replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
 
-export async function exportToAppleMusic(song: ISong): Promise<{ success: boolean; message: string }> {
+export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean; message: string }> {
   if (!song.appleMusicId) {
     return { success: false, message: 'No appleMusicId — cannot identify track in Apple Music' };
   }
@@ -20,10 +20,11 @@ export async function exportToAppleMusic(song: ISong): Promise<{ success: boolea
   const year = song.year ?? '';
   const appleMusicId = escapeAppleScript(song.appleMusicId);
 
-  let lovedScript = '';
-  if (song.favorite === 'starred') lovedScript = 'set loved of t to true';
-  else if (song.favorite === 'disliked') lovedScript = 'set disliked of t to true';
-  else lovedScript = 'set loved of t to false; set disliked of t to false';
+  // TODO: loved/disliked causes "descriptor type mismatch" in Apple Music
+  // let lovedScript = '';
+  // if (song.favorite === 'starred') lovedScript = 'set loved of t to true';
+  // else if (song.favorite === 'disliked') lovedScript = 'set disliked of t to true';
+  // else lovedScript = 'set loved of t to false; set disliked of t to false';
 
   const script = `tell application "Music"
   try
@@ -36,7 +37,6 @@ export async function exportToAppleMusic(song: ISong): Promise<{ success: boolea
     if "${bpm}" is not "" then set bpm of t to ${bpm}
     if "${rating}" is not "" then set rating of t to ${rating}
     if "${year}" is not "" then set year of t to ${year}
-    ${lovedScript}
     set comment of t to (comment of t) & "musicalKey=${song.key || ''}"
     return "ok"
   on error errMsg
@@ -55,7 +55,7 @@ end tell`;
         resolve({ success: false, message: output });
         return;
       }
-      resolve({ success: true, message: 'Exported to Apple Music' });
+      resolve({ success: true, message: 'Saved to Apple Music' });
     });
   });
 }
