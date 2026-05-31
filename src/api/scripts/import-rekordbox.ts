@@ -64,11 +64,14 @@ const splitTagsField = (fieldStr?: string): string[] => {
     .filter((tag) => tag !== '');
 };
 
-const convertRating = (rating?: string): number | undefined => {
+// Rekordbox stores rating on a 0-255 scale (Pioneer ecosystem standard).
+// Converts to CrateCaddy's 0-5 score using 255/5 = 51 divisor.
+// Note: Apple Music uses 0-100 scale with /20 divisor — that's a different conversion.
+const rekordboxRatingToScore = (rating?: string): number | undefined => {
   if (!rating) return undefined;
   const num = parseInt(rating, 10);
   if (isNaN(num)) return undefined;
-  return num / 20;
+  return num / 51;
 };
 
 const camelotToKey: Record<string, string> = {
@@ -129,7 +132,7 @@ const importSongs = async (xmlPath: string) => {
       const duration = totalTimeSec ? totalTimeSec * 1000 : undefined;
       const year = track.Year ? parseInt(track.Year, 10) || undefined : undefined;
       const bpm = track.AverageBpm ? parseFloat(track.AverageBpm) || undefined : undefined;
-      const rating = convertRating(track.Rating);
+      const rating = rekordboxRatingToScore(track.Rating);
       const location = track.Location || '';
 
       try {
