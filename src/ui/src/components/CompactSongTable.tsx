@@ -7,30 +7,29 @@ interface CompactSongTableProps {
   onSelect: (index: number) => void;
 }
 
-function favoriteIcon(fav: Song['favorite']): string {
-  switch (fav) {
-    case 'starred': return '★';
-    case 'disliked': return '✕';
-    default: return '';
-  }
-}
-
 export default function CompactSongTable({ songs, selectedIndex, onSelect }: CompactSongTableProps) {
   return (
     <div className="CompactSongTable">
-      {songs.map((song, i) => (
-        <div
-          key={song._id}
-          className={`CompactSongTable-row ${i === selectedIndex ? 'CompactSongTable-row--selected' : ''}`}
-          onClick={() => onSelect(i)}
-        >
-          <span className="CompactSongTable-fav">{favoriteIcon(song.favorite)}</span>
-          <span className="CompactSongTable-artist">{song.artist}</span>
-          <span className="CompactSongTable-sep"> – </span>
-          <span className="CompactSongTable-title">{song.title}</span>
-          <span className="CompactSongTable-bpm">{song.bpm ?? ''}</span>
-        </div>
-      ))}
+      <table>
+        <thead>
+          <tr>
+            <th className="col-artist">Artist</th>
+            <th className="col-title">Title</th>
+          </tr>
+        </thead>
+        <tbody>
+          {songs.map((song, i) => (
+            <tr
+              key={song._id}
+              className={i === selectedIndex ? 'CompactSongTable-row--selected' : ''}
+              onClick={() => onSelect(i)}
+            >
+              <td className="col-artist">{song.artist}</td>
+              <td className="col-title">{song.title}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
