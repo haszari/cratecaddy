@@ -1,3 +1,4 @@
+import { SourcesIcons } from './SourcesIcons';
 import type { Song } from '../types';
 import './CompactSongTable.scss';
 
@@ -13,6 +14,7 @@ export default function CompactSongTable({ songs, selectedIndex, onSelect }: Com
       <table>
         <thead>
           <tr>
+            <th className="col-sources">Sources</th>
             <th className="col-artist">Artist</th>
             <th className="col-title">Title</th>
           </tr>
@@ -24,6 +26,9 @@ export default function CompactSongTable({ songs, selectedIndex, onSelect }: Com
               className={i === selectedIndex ? 'CompactSongTable-row--selected' : ''}
               onClick={() => onSelect(i)}
             >
+              <td className="col-sources">
+                <SourcesIcons sources={song.sources} />
+              </td>
               <td className="col-artist">{song.artist}</td>
               <td className="col-title">{song.title}</td>
             </tr>
