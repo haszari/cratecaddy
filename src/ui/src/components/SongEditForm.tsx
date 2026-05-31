@@ -56,6 +56,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const [rating, setRating] = useState(song.rating ?? 0);
   const [favorite, setFavorite] = useState<Song['favorite']>(song.favorite ?? 'normal');
   const [exportMsg, setExportMsg] = useState('');
+  const [exportIsError, setExportIsError] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Partial<Song> | null>(null);
@@ -150,11 +151,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
   const handleExport = useCallback(async () => {
     setExportMsg('');
+    setExportIsError(false);
     try {
       const result = await writeToAppleMusic(song._id!);
       setExportMsg(result.message);
+      setExportIsError(!result.success);
     } catch {
-      setExportMsg('Export failed');
+      setExportMsg('Write to Apple Music failed');
+      setExportIsError(true);
     }
   }, [song._id]);
 
@@ -303,7 +307,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               Save to Apple Music
             </span>
             {exportMsg && (
-              <Box component="span" className="SongEditForm-export-msg">{exportMsg}</Box>
+              <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
             )}
           </Box>
         </Box>

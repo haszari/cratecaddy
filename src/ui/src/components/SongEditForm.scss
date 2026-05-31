@@ -241,6 +241,10 @@ $field-font-size: 1em;
   .SongEditForm-export-msg {
     font-size: 0.8em;
     color: #4caf50;
+
+    &.SongEditForm-export-msg--error {
+      color: #e53935;
+    }
   }
 
   .SongEditForm-history {
