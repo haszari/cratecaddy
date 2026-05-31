@@ -7,7 +7,7 @@ import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
-import { Star, ThumbsDown } from 'lucide-react';
+import { Star, ThumbsDown, X } from 'lucide-react';
 import './SongEditForm.scss';
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -15,8 +15,10 @@ const STAGE_OPTIONS = ['Warmup', 'Peak', 'Later'];
 const SET_OPTIONS = ['Deep', 'BAM', 'Ambient'];
 const LISTENING_ROW1 = ['Dance', 'Electronic', 'Jazz', 'Funk', 'Contemporary', 'Classical'];
 const LISTENING_ROW2 = ['Reggae', 'Hip Hop', 'Pop', 'Rock', 'Country', 'Indie'];
-const LISTENING_OPTIONS = [...LISTENING_ROW1, ...LISTENING_ROW2];
-const ORG_TAGS = new Set([...STAGE_OPTIONS, ...SET_OPTIONS, ...LISTENING_OPTIONS, 'NZ']);
+
+const KNOWN_TAGS = new Set([
+  ...STAGE_OPTIONS, ...SET_OPTIONS, ...LISTENING_ROW1, ...LISTENING_ROW2, 'NZ',
+]);
 
 function parseKeyField(value: string | undefined): { root: string; minor: boolean } {
   if (!value) return { root: '', minor: false };
@@ -63,19 +65,24 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const saveMutation = useMutation({
     mutationFn: (data: Partial<Song>) => updateSongMetadata(song._id!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['songs'] });
       queryClient.invalidateQueries({ queryKey: ['history', song._id] });
     },
+    onError: (err) => {
+      console.error('Save failed', err);
+    },
   });
+
+  const mutateRef = useRef(saveMutation.mutate);
+  useEffect(() => { mutateRef.current = saveMutation.mutate; }, [saveMutation.mutate]);
 
   const flushSave = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = null;
     if (pendingRef.current && Object.keys(pendingRef.current).length > 0) {
-      saveMutation.mutate(pendingRef.current);
+      mutateRef.current(pendingRef.current);
       pendingRef.current = null;
     }
-  }, [saveMutation]);
+  }, []);
 
   const scheduleSave = useCallback((data: Partial<Song>) => {
     pendingRef.current = { ...pendingRef.current, ...data };
@@ -102,6 +109,15 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const saveRef = useRef(handleSave);
   useEffect(() => { saveRef.current = handleSave; }, [handleSave]);
 
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    handleSave();
+  }, [handleSave]);
+
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -109,107 +125,38 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     };
   }, [flushSave]);
 
-  useEffect(() => {
-    const SHARP_MAP: Record<string, string> = {
-      C: 'C#', 'C#': 'C', D: 'D#', 'D#': 'D', E: 'F', F: 'F#', 'F#': 'F',
-      G: 'G#', 'G#': 'G', A: 'A#', 'A#': 'A', B: 'C',
-    };
-    const ROOT_FROM_KEY: Record<string, string> = {
-      a: 'A', b: 'B', c: 'C', d: 'D', e: 'E', f: 'F', g: 'G',
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-      const keyFieldActive = keyFieldRef.current?.contains(e.target as Node);
-
-      if (isInput && !keyFieldActive) return;
-
-      if (e.key >= '1' && e.key <= '5' && !isInput) {
-        e.preventDefault();
-        setRating(parseInt(e.key, 10));
-        setTimeout(() => saveRef.current(), 0);
-        return;
-      }
-
-      if (!isInput) {
-        if (e.key === 'd') {
-          setGrouping((prev) => {
-            if (prev.includes('DJing')) return prev;
-            const next = [...prev, 'DJing'];
-            setTimeout(() => saveRef.current(), 0);
-            return next;
-          });
-          return;
-        }
-        if (e.key === 'l') {
-          setGrouping((prev) => {
-            if (prev.includes('Listening')) return prev;
-            const next = [...prev, 'Listening'];
-            setTimeout(() => saveRef.current(), 0);
-            return next;
-          });
-          return;
-        }
-      }
-
-      if (keyFieldActive) {
-        const lower = e.key.toLowerCase();
-        if (lower >= 'a' && lower <= 'g') {
-          e.preventDefault();
-          setKeyRoot(ROOT_FROM_KEY[lower] || '');
-          return;
-        }
-        if (e.key === '+') {
-          e.preventDefault();
-          setKeyRoot((prev) => SHARP_MAP[prev] || prev);
-          return;
-        }
-        if (e.key === 'm') {
-          e.preventDefault();
-          setKeyMinor((prev) => !prev);
-          return;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   const { data: history } = useQuery({
     queryKey: ['history', song._id],
     queryFn: () => fetchSongHistory(song._id!),
-    enabled: !!song._id,
+    enabled: song._id != null,
   });
 
-  const { data: genreStats } = useQuery({
-    queryKey: ['genreStats'],
+  const { data: allGenreStats } = useQuery({
+    queryKey: ['genres', 'stats'],
     queryFn: () => fetchGenreStats(),
-    staleTime: 60000,
   });
 
-  const styleSuggestions = useMemo(() => {
-    if (!genreStats) return [];
-    return genreStats
-      .map((g) => g.genre)
-      .filter((g) => !ORG_TAGS.has(g))
-      .sort((a, b) => {
-        const aCount = genreStats.find((g) => g.genre === a)?.count ?? 0;
-        const bCount = genreStats.find((g) => g.genre === b)?.count ?? 0;
-        return bCount - aCount;
-      });
-  }, [genreStats]);
-
-  const handleExport = useCallback(async () => {
-    const result = await exportToAppleMusic(song._id!);
-    setExportMsg(result.success ? 'Saved \u2713' : result.message);
-    setTimeout(() => setExportMsg(''), 3000);
-  }, [song._id]);
+  const allStyleSuggestions = useMemo(() => {
+    if (!allGenreStats) return [];
+    return allGenreStats
+      .filter((g: { genre: string; count: number }) => !KNOWN_TAGS.has(g.genre))
+      .sort((a, b) => b.count - a.count)
+      .map((g: { genre: string }) => g.genre);
+  }, [allGenreStats]);
 
   const handleFlush = useCallback(() => {
-    handleSave();
-  }, [handleSave]);
+    saveRef.current();
+  }, []);
+
+  const handleExport = useCallback(async () => {
+    setExportMsg('');
+    try {
+      const result = await exportToAppleMusic(song._id!);
+      setExportMsg(result.message);
+    } catch {
+      setExportMsg('Export failed');
+    }
+  }, [song._id]);
 
   const handleArtistBlur = useCallback(() => {
     if (!artist.trim()) setArtist(song.artist);
@@ -256,6 +203,73 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const handleMinorToggle = useCallback(() => {
     setKeyMinor((prev) => !prev);
   }, []);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const tag = (e.target as HTMLElement).tagName;
+    const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    const keyFieldActive = keyFieldRef.current?.contains(e.target as Node);
+
+    if (isInput && !keyFieldActive) return;
+
+    if (e.key >= '1' && e.key <= '5' && !isInput) {
+      e.preventDefault();
+      setRating(parseInt(e.key, 10));
+      setTimeout(() => saveRef.current(), 0);
+      return;
+    }
+
+    if (!isInput) {
+      if (e.key === 'd') {
+        setGrouping((prev) => {
+          if (prev.includes('DJing')) return prev;
+          const next = [...prev, 'DJing'];
+          setTimeout(() => saveRef.current(), 0);
+          return next;
+        });
+        return;
+      }
+      if (e.key === 'l') {
+        setGrouping((prev) => {
+          if (prev.includes('Listening')) return prev;
+          const next = [...prev, 'Listening'];
+          setTimeout(() => saveRef.current(), 0);
+          return next;
+        });
+        return;
+      }
+    }
+
+    if (keyFieldActive) {
+      const SHARP_MAP: Record<string, string> = {
+        C: 'C#', 'C#': 'C', D: 'D#', 'D#': 'D', E: 'F', F: 'F#', 'F#': 'F',
+        G: 'G#', 'G#': 'G', A: 'A#', 'A#': 'A', B: 'C',
+      };
+      const ROOT_FROM_KEY: Record<string, string> = {
+        a: 'A', b: 'B', c: 'C', d: 'D', e: 'E', f: 'F', g: 'G',
+      };
+      const lower = e.key.toLowerCase();
+      if (lower >= 'a' && lower <= 'g') {
+        e.preventDefault();
+        setKeyRoot(ROOT_FROM_KEY[lower] || '');
+        return;
+      }
+      if (e.key === '+') {
+        e.preventDefault();
+        setKeyRoot((prev) => SHARP_MAP[prev] || prev);
+        return;
+      }
+      if (e.key === 'm') {
+        e.preventDefault();
+        setKeyMinor((prev) => !prev);
+        return;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   return (
     <Box className="SongEditForm">
@@ -324,7 +338,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                   key={n}
                   component="span"
                   className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
-                  onClick={() => setRating(n)}
+                  onClick={() => { setRating(n); setTimeout(() => saveRef.current(), 0); }}
                 >
                   {n <= rating ? '\u2605' : '\u2606'}
                 </Box>
@@ -436,18 +450,26 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         </Box>
 
         <Box className="SongEditForm-row">
-          <Box className="SongEditForm-field">
+          <Box className="SongEditForm-field SongEditForm-field--styles">
             <span className="SongEditForm-field-label">styles</span>
+            {styles.length > 0 && (
+              <span className="SongEditForm-styles-pills">
+                {styles.map((opt) => (
+                  <span key={opt} className="SongEditForm-pill SongEditForm-pill--on SongEditForm-pill--removable" onClick={() => setStyles(prev => prev.filter(s => s !== opt))}>
+                    <X size={18} />{opt}
+                  </span>
+                ))}
+              </span>
+            )}
             <Autocomplete
               multiple
               freeSolo
               id="edit-field-styles"
-              options={styleSuggestions}
+              options={allStyleSuggestions}
               value={styles}
               onChange={(_, newVal) => {
-                setStyles(newVal);
+                setStyles(newVal as string[]);
               }}
-              onBlur={handleFlush}
               renderInput={(params) => (
                 <TextField {...params} placeholder="Add style..." size="small" />
               )}

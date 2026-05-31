@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
 import { useFilters } from '../hooks/useFilters';
@@ -30,6 +30,14 @@ export default function GenreDetail() {
   const editMode = useEditMode();
   const editToggleRef = useRef(editMode.toggle);
   useEffect(() => { editToggleRef.current = editMode.toggle; });
+  const queryClient = useQueryClient();
+  const prevEditActive = useRef(editMode.active);
+  useEffect(() => {
+    if (prevEditActive.current && !editMode.active) {
+      queryClient.invalidateQueries({ queryKey: ['songs'] });
+    }
+    prevEditActive.current = editMode.active;
+  }, [editMode.active, queryClient]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -138,7 +146,6 @@ export default function GenreDetail() {
           onSelect={editMode.selectIndex}
           onSelectNext={() => editMode.selectNext(songs.length)}
           onSelectPrev={editMode.selectPrev}
-          onExit={editMode.exit}
         />
       </div>
     );

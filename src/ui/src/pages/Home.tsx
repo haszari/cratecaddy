@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchGenreStats, fetchSongs } from '../api/client';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useFilters } from '../hooks/useFilters';
@@ -22,6 +22,14 @@ export default function Home() {
   const editMode = useEditMode();
   const editToggleRef = useRef(editMode.toggle);
   useEffect(() => { editToggleRef.current = editMode.toggle; });
+  const queryClient = useQueryClient();
+  const prevEditActive = useRef(editMode.active);
+  useEffect(() => {
+    if (prevEditActive.current && !editMode.active) {
+      queryClient.invalidateQueries({ queryKey: ['songs'] });
+    }
+    prevEditActive.current = editMode.active;
+  }, [editMode.active, queryClient]);
   const [page, setPage] = useState(1);
 
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
@@ -101,7 +109,6 @@ export default function Home() {
           onSelect={editMode.selectIndex}
           onSelectNext={() => editMode.selectNext(songs.length)}
           onSelectPrev={editMode.selectPrev}
-          onExit={editMode.exit}
         />
       </div>
     );

@@ -47,6 +47,10 @@ $field-font-size: 1em;
     flex-direction: column;
     gap: 0.2em;
 
+    &.SongEditForm-field--styles {
+      width: 100%;
+    }
+
     &.SongEditForm-field--nz {
       align-items: center;
     }
@@ -152,6 +156,10 @@ $field-font-size: 1em;
       background: $pill-on;
       color: #fff;
     }
+
+    &.SongEditForm-pill--removable {
+      gap: 0;
+    }
   }
 
   .SongEditForm-pill--sm {
@@ -176,6 +184,17 @@ $field-font-size: 1em;
       background: $pill-on;
       color: #fff;
     }
+  }
+
+  .SongEditForm-styles-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+    margin-bottom: 0.3em;
+  }
+
+  .SongEditForm-field--styles .MuiChip-root {
+    display: none;
   }
 
   .MuiInputBase-input {
