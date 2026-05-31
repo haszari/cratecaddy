@@ -125,20 +125,21 @@ const importSongs = async (xmlPath: string) => {
       const album = track.Album?.trim() || '';
       const genres = splitTagsField(track.Genre);
       const grouping = splitTagsField(track.Grouping);
-      const totalTime = parseInt(track.TotalTime || '0', 10) || undefined;
+      const totalTimeSec = parseInt(track.TotalTime || '0', 10) || undefined;
+      const duration = totalTimeSec ? totalTimeSec * 1000 : undefined;
       const year = track.Year ? parseInt(track.Year, 10) || undefined : undefined;
       const bpm = track.AverageBpm ? parseFloat(track.AverageBpm) || undefined : undefined;
       const rating = convertRating(track.Rating);
       const location = track.Location || '';
 
       try {
-        const existing = await songService.findMatchingSong(artist, title, totalTime);
+        const existing = await songService.findMatchingSong(artist, title, duration);
         const isNew = !existing;
 
         await songService.updateWithHistory(
           artist,
           title,
-          totalTime,
+          duration,
           {
             genres,
             grouping,
