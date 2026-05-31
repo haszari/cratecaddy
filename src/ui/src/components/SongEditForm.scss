@@ -69,6 +69,27 @@
     margin-top: 0.5em;
   }
 
+  .SongEditForm-rating {
+    display: flex;
+    gap: 0.15em;
+    cursor: pointer;
+    outline: none;
+
+    .SongEditForm-star {
+      font-size: 1.1em;
+      color: #bbb;
+      user-select: none;
+
+      &--on {
+        color: #ff9800;
+      }
+
+      &:hover {
+        color: #ffb74d;
+      }
+    }
+  }
+
   .SongEditForm-export {
     display: flex;
     align-items: center;

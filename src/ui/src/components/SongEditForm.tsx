@@ -55,6 +55,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const [keyRoot, setKeyRoot] = useState(initKey.root);
   const [keyMinor, setKeyMinor] = useState(initKey.minor);
   const [year, setYear] = useState(song.year ?? null);
+  const [rating, setRating] = useState(song.rating ?? 0);
   const [favorite, setFavorite] = useState<Song['favorite']>(song.favorite ?? 'normal');
   const [exportMsg, setExportMsg] = useState('');
 
@@ -63,6 +64,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
   const hasDjing = grouping.includes('DJing');
   const isDjingRequired = hasDjing;
+  const keyFieldRef = useRef<HTMLDivElement>(null);
 
   const saveMutation = useMutation({
     mutationFn: (data: Partial<Song>) => updateSongMetadata(song._id!, data),
@@ -98,9 +100,13 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       bpm: bpm ?? undefined,
       key: key || undefined,
       year: year ?? undefined,
+      rating: rating > 0 ? rating : undefined,
       favorite: favorite === 'normal' ? undefined : favorite,
     });
-  }, [artist, title, stage, setField, locationNz, styles, grouping, bpm, keyRoot, keyMinor, year, favorite, scheduleSave]);
+  }, [artist, title, stage, setField, locationNz, styles, grouping, bpm, keyRoot, keyMinor, year, rating, favorite, scheduleSave]);
+
+  const saveRef = useRef(handleSave);
+  useEffect(() => { saveRef.current = handleSave; }, [handleSave]);
 
   useEffect(() => {
     return () => {
@@ -108,6 +114,74 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       flushSave();
     };
   }, [flushSave]);
+
+  useEffect(() => {
+    const SHARP_MAP: Record<string, string> = {
+      C: 'C#', 'C#': 'C', D: 'D#', 'D#': 'D', E: 'F', F: 'F#', 'F#': 'F',
+      G: 'G#', 'G#': 'G', A: 'A#', 'A#': 'A', B: 'C',
+    };
+    const ROOT_FROM_KEY: Record<string, string> = {
+      a: 'A', b: 'B', c: 'C', d: 'D', e: 'E', f: 'F', g: 'G',
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+      const keyFieldActive = keyFieldRef.current?.contains(e.target as Node);
+
+      if (isInput && !keyFieldActive) return;
+
+      if (e.key >= '1' && e.key <= '5' && !isInput) {
+        e.preventDefault();
+        setRating(parseInt(e.key, 10));
+        setTimeout(() => saveRef.current(), 0);
+        return;
+      }
+
+      if (!isInput) {
+        if (e.key === 'd') {
+          setGrouping((prev) => {
+            if (prev.includes('DJing')) return prev;
+            const next = [...prev, 'DJing'];
+            setTimeout(() => saveRef.current(), 0);
+            return next;
+          });
+          return;
+        }
+        if (e.key === 'l') {
+          setGrouping((prev) => {
+            if (prev.includes('Listening')) return prev;
+            const next = [...prev, 'Listening'];
+            setTimeout(() => saveRef.current(), 0);
+            return next;
+          });
+          return;
+        }
+      }
+
+      if (keyFieldActive) {
+        const lower = e.key.toLowerCase();
+        if (lower >= 'a' && lower <= 'g') {
+          e.preventDefault();
+          setKeyRoot(ROOT_FROM_KEY[lower] || '');
+          return;
+        }
+        if (e.key === '+') {
+          e.preventDefault();
+          setKeyRoot((prev) => SHARP_MAP[prev] || prev);
+          return;
+        }
+        if (e.key === 'm') {
+          e.preventDefault();
+          setKeyMinor((prev) => !prev);
+          return;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const { data: history } = useQuery({
     queryKey: ['history', song._id],
@@ -195,6 +269,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       <Box className="SongEditForm-body">
         <Box className="SongEditForm-row">
           <TextField
+            id="edit-field-artist"
             label="Artist"
             value={artist}
             onChange={(e) => setArtist(e.target.value)}
@@ -203,6 +278,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             fullWidth
           />
           <TextField
+            id="edit-field-title"
             label="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -226,6 +302,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             </ToggleButtonGroup>
           </FormControl>
           <TextField
+            id="edit-field-bpm"
             label="BPM"
             type="number"
             value={bpm ?? ''}
@@ -234,7 +311,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
           />
-          <FormControl size="small">
+          <FormControl size="small" ref={keyFieldRef}>
             <InputLabel>Key</InputLabel>
             <Box className="SongEditForm-key-row">
               <Select
@@ -261,6 +338,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             </Box>
           </FormControl>
           <TextField
+            id="edit-field-year"
             label="Year"
             type="number"
             value={year ?? ''}
@@ -312,6 +390,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
           <Autocomplete
             multiple
             freeSolo
+            id="edit-field-styles"
             options={styleSuggestions}
             value={styles}
             onChange={(_, newVal) => {
@@ -329,6 +408,18 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         )}
 
         <Box className="SongEditForm-actions">
+          <Box id="edit-field-rating" className="SongEditForm-rating" tabIndex={-1}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Box
+                key={n}
+                component="span"
+                className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
+                onClick={() => setRating(n)}
+              >
+                {n <= rating ? '\u2605' : '\u2606'}
+              </Box>
+            ))}
+          </Box>
           <Box>
             <ToggleButtonGroup
               value={favorite}

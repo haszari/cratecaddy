@@ -13,18 +13,36 @@ interface EditLayoutProps {
   onExit: () => void;
 }
 
+const FIELD_FOCUS_MAP: Record<string, string> = {
+  t: 'edit-field-title',
+  a: 'edit-field-artist',
+  g: 'edit-field-styles',
+  b: 'edit-field-bpm',
+  y: 'edit-field-year',
+  r: 'edit-field-rating',
+};
+
 export default function EditLayout({
   songs, selectedIndex, onSelect, onSelectNext, onSelectPrev, onExit,
 }: EditLayoutProps) {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'j' && !e.ctrlKey && !e.metaKey) {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
       onSelectNext();
-    } else if (e.key === 'k' && !e.ctrlKey && !e.metaKey) {
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       onSelectPrev();
     } else if (e.key === 'Escape') {
       onExit();
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const fieldId = FIELD_FOCUS_MAP[e.key];
+      if (fieldId) {
+        const el = document.getElementById(fieldId);
+        if (el) {
+          e.preventDefault();
+          el.focus();
+        }
+      }
     }
   }, [onSelectNext, onSelectPrev, onExit]);
 
