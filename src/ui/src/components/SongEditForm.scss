@@ -1,3 +1,7 @@
+$pill-on: orange;
+$pill-off-bg: #43423c;
+$pill-off-text: #bbb;
+
 .SongEditForm {
   padding: 1em;
   overflow-y: auto;
@@ -34,25 +38,111 @@
     }
   }
 
-  .SongEditForm-grouping {
-    .MuiToggleButtonGroup-root {
-      margin-top: 0.25em;
+  .SongEditForm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+  }
+
+  .SongEditForm-field-label {
+    font-size: 0.65em;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+    text-align: left;
+    display: block;
+  }
+
+  .SongEditForm-composite-pill {
+    display: inline-flex;
+    border-radius: 0.5em;
+    overflow: hidden;
+    align-self: flex-start;
+  }
+
+  .SongEditForm-composite-segment {
+    padding: 0.25em 0.55em;
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    font-size: 0.82em;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &.SongEditForm-composite-segment--on {
+      background: $pill-on;
+      color: #fff;
     }
   }
 
-  .SongEditForm-key-row {
+  .SongEditForm-pill-group {
     display: flex;
     gap: 0.3em;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
-  .SongEditForm-key-select {
-    min-width: 5em;
+  .SongEditForm-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    padding: 0.25em 0.55em;
+    border-radius: 0.5em;
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    font-size: 0.82em;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &.SongEditForm-pill--on {
+      background: $pill-on;
+      color: #fff;
+    }
   }
 
-  .SongEditForm-minor-toggle {
-    min-width: 2.4em;
-    margin-top: 0.25em;
+  .SongEditForm-pill--sm {
+    font-size: 0.72em;
+    padding: 0.2em 0.5em;
+  }
+
+  .SongEditForm-key-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+
+    .SongEditForm-key-row {
+      display: flex;
+      gap: 0.3em;
+      align-items: flex-start;
+    }
+
+    .SongEditForm-key-select {
+      background: $pill-off-bg;
+      color: $pill-off-text;
+      border: none;
+      border-radius: 0.5em;
+      padding: 0.25em 0.5em;
+      font-size: 0.82em;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      min-width: 5em;
+    }
   }
 
   .SongEditForm-hint {

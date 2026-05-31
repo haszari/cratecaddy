@@ -1,15 +1,9 @@
 .CompactSongTable {
   overflow-y: auto;
   height: 100%;
-  border-right: 1px solid #ddd;
 
   table {
     width: 100%;
-  }
-
-  thead .col-sources {
-    opacity: 0.5;
-    font-size: inherit;
   }
 
   tbody tr {
@@ -21,7 +15,8 @@
   }
 
   .CompactSongTable-row--selected {
-    background: #e3f2fd;
+    background: #43423c;
+    color: #fff;
     font-weight: 600;
   }
 }

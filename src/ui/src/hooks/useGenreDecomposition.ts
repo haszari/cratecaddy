@@ -3,23 +3,23 @@ const SET_VALUES = new Set(['Deep', 'BAM', 'Ambient']);
 const NZ = 'NZ';
 
 export interface DecomposedGenres {
-  stage: string;
-  set: string;
+  stage: string[];
+  set: string[];
   locationNz: boolean;
   styles: string[];
 }
 
 export function decomposeGenres(genres: string[]): DecomposedGenres {
-  let stage = '';
-  let set = '';
+  const stage: string[] = [];
+  const set: string[] = [];
   let locationNz = false;
   const styles: string[] = [];
 
   for (const g of genres) {
     if (STAGE_VALUES.has(g)) {
-      stage = g;
+      stage.push(g);
     } else if (SET_VALUES.has(g)) {
-      set = g;
+      set.push(g);
     } else if (g === NZ) {
       locationNz = true;
     } else {
@@ -31,8 +31,8 @@ export function decomposeGenres(genres: string[]): DecomposedGenres {
 }
 
 export function reassembleGenres(
-  stage: string,
-  set: string,
+  stage: string[],
+  set: string[],
   locationNz: boolean,
   styles: string[],
 ): string[] {
@@ -40,8 +40,8 @@ export function reassembleGenres(
   const parts: string[] = [
     ...sorted,
     ...(locationNz ? [NZ] : []),
-    ...(set ? [set] : []),
-    ...(stage ? [stage] : []),
+    ...set,
+    ...stage,
   ];
   return parts;
 }

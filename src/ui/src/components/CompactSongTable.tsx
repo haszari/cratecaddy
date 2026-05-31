@@ -29,8 +29,8 @@ export default function CompactSongTable({ songs, selectedIndex, onSelect }: Com
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />
               </td>
-              <td className="col-artist">{song.artist}</td>
-              <td className="col-title">{song.title}</td>
+              <td className="col-artist"><span className="Artist-link">{song.artist}</span></td>
+              <td className="col-title"><span className="Song-link">{song.title}</span></td>
             </tr>
           ))}
         </tbody>

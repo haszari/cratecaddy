@@ -1,5 +1,10 @@
 import { createTheme } from '@mui/material/styles';
 
+const FIELD_BG = '#43423c';
+const FIELD_TEXT = '#fff';
+const FIELD_LABEL = 'rgba(255,255,255,0.55)';
+const FIELD_BORDER = 'rgba(255,255,255,0.15)';
+const FIELD_BORDER_HOVER = 'rgba(255,255,255,0.3)';
 const theme = createTheme({
   cssVariables: true,
   palette: {
@@ -25,32 +30,45 @@ const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          backgroundColor: '#f8f8f8',
+          backgroundColor: FIELD_BG,
+          color: FIELD_TEXT,
           '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#ddd',
+            borderColor: FIELD_BORDER,
           },
           '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#bbb',
+            borderColor: FIELD_BORDER_HOVER,
           },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
             borderWidth: 1,
+            borderColor: FIELD_BORDER_HOVER,
+          },
+          '&.Mui-disabled': {
+            backgroundColor: FIELD_BG,
           },
         },
         input: {
           padding: '6px 10px',
+          color: FIELD_TEXT,
+          '&::placeholder': {
+            color: FIELD_LABEL,
+            opacity: 1,
+          },
         },
       },
     },
     MuiInputLabel: {
       styleOverrides: {
         outlined: {
-          color: '#b0b0b0',
+          color: FIELD_LABEL,
           fontWeight: 500,
           fontSize: '0.7em',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           '&.Mui-focused': {
-            color: '#b0b0b0',
+            color: FIELD_LABEL,
+          },
+          '&.MuiInputLabel-shrink': {
+            color: FIELD_LABEL,
           },
         },
       },
@@ -59,6 +77,17 @@ const theme = createTheme({
       styleOverrides: {
         select: {
           padding: '6px 10px',
+          color: FIELD_TEXT,
+        },
+        icon: {
+          color: FIELD_LABEL,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#fff',
         },
       },
     },
@@ -112,6 +141,17 @@ const theme = createTheme({
       styleOverrides: {
         tag: {
           borderRadius: 4,
+        },
+        root: {
+          '& .MuiAutocomplete-popupIndicator': {
+            color: FIELD_LABEL,
+          },
+          '& .MuiAutocomplete-clearIndicator': {
+            color: FIELD_LABEL,
+          },
+          '& .MuiAutocomplete-inputRoot': {
+            color: FIELD_TEXT,
+          },
         },
       },
     },

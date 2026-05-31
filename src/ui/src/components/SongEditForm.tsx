@@ -1,20 +1,14 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { SelectChangeEvent } from '@mui/material/Select';
 
 import { updateSongMetadata, exportToAppleMusic, fetchSongHistory, fetchGenreStats } from '../api/client';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
+import { Star, ThumbsDown } from 'lucide-react';
 import './SongEditForm.scss';
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -63,7 +57,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const pendingRef = useRef<Partial<Song> | null>(null);
 
   const hasDjing = grouping.includes('DJing');
-  const isDjingRequired = hasDjing;
   const keyFieldRef = useRef<HTMLDivElement>(null);
 
   const saveMutation = useMutation({
@@ -209,7 +202,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
   const handleExport = useCallback(async () => {
     const result = await exportToAppleMusic(song._id!);
-    setExportMsg(result.success ? 'Exported \u2713' : result.message);
+    setExportMsg(result.success ? 'Saved \u2713' : result.message);
     setTimeout(() => setExportMsg(''), 3000);
   }, [song._id]);
 
@@ -227,33 +220,35 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     handleSave();
   }, [title, song.title, handleSave]);
 
-  const handleGroupingChange = useCallback((_: React.MouseEvent<HTMLElement>, newVal: string[]) => {
-    if (newVal.length === 0) return;
-    setGrouping(newVal);
+  const toggleStage = useCallback((opt: string) => {
+    setStage((prev) =>
+      prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
+    );
   }, []);
 
-  const handleFavoriteChange = useCallback((_: React.MouseEvent<HTMLElement>, newVal: Song['favorite']) => {
-    if (newVal) setFavorite(newVal);
+  const toggleSet = useCallback((opt: string) => {
+    setSetField((prev) =>
+      prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
+    );
   }, []);
 
-  const handleKeyRootChange = useCallback((e: SelectChangeEvent) => {
+  const toggleGroupingPill = useCallback((opt: string) => {
+    setGrouping((prev) => {
+      if (prev.includes(opt)) {
+        if (prev.length === 1) return prev;
+        return prev.filter((g) => g !== opt);
+      }
+      return [...prev, opt];
+    });
+  }, []);
+
+  const handleKeyRootChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setKeyRoot(e.target.value);
   }, []);
 
   const handleMinorToggle = useCallback(() => {
     setKeyMinor((prev) => !prev);
   }, []);
-
-  const genreFieldSx = (isEmpty: boolean): Record<string, unknown> | undefined =>
-    isEmpty && isDjingRequired ? {
-      '& .MuiInputLabel-root': { fontWeight: 700 },
-      '& .MuiOutlinedInput-root': {
-        backgroundColor: '#fff8e1',
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#ffcc02',
-        },
-      },
-    } : undefined;
 
   return (
     <Box className="SongEditForm">
@@ -301,18 +296,18 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         </Box>
 
         <Box className="SongEditForm-row">
-          <FormControl size="small">
-            <InputLabel>Grouping</InputLabel>
-            <ToggleButtonGroup
-              value={grouping}
-              onChange={handleGroupingChange}
-              size="small"
-              sx={{ marginTop: '1.5em' }}
-            >
-              <ToggleButton value="DJing">DJing</ToggleButton>
-              <ToggleButton value="Listening">Listening</ToggleButton>
-            </ToggleButtonGroup>
-          </FormControl>
+          <Box className="SongEditForm-pill-group">
+            <span className="SongEditForm-pill-label">Grouping</span>
+            {['DJing', 'Listening'].map((opt) => (
+              <span
+                key={opt}
+                className={`SongEditForm-pill ${grouping.includes(opt) ? 'SongEditForm-pill--on' : ''}`}
+                onClick={() => toggleGroupingPill(opt)}
+              >
+                {opt}
+              </span>
+            ))}
+          </Box>
           <TextField
             id="edit-field-bpm"
             label="BPM"
@@ -323,32 +318,28 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
           />
-          <FormControl size="small" ref={keyFieldRef}>
-            <InputLabel>Key</InputLabel>
+          <Box className="SongEditForm-key-field" ref={keyFieldRef}>
+            <span className="SongEditForm-pill-label">Key</span>
             <Box className="SongEditForm-key-row">
-              <Select
+              <select
                 value={keyRoot || ''}
                 onChange={handleKeyRootChange}
                 onBlur={handleFlush}
-                displayEmpty
                 className="SongEditForm-key-select"
               >
-                <MenuItem value="">—</MenuItem>
+                <option value="">—</option>
                 {KEY_ROOTS.map((r) => (
-                  <MenuItem key={r} value={r}>{r}</MenuItem>
+                  <option key={r} value={r}>{r}</option>
                 ))}
-              </Select>
-              <ToggleButton
-                value="minor"
-                selected={keyMinor}
-                onChange={handleMinorToggle}
-                size="small"
-                className="SongEditForm-minor-toggle"
+              </select>
+              <span
+                className={`SongEditForm-pill SongEditForm-pill--sm ${keyMinor ? 'SongEditForm-pill--on' : ''}`}
+                onClick={handleMinorToggle}
               >
                 m
-              </ToggleButton>
+              </span>
             </Box>
-          </FormControl>
+          </Box>
           <TextField
             id="edit-field-year"
             label="Year"
@@ -362,40 +353,43 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         </Box>
 
         <Box className="SongEditForm-row">
-          <FormControl size="small" sx={genreFieldSx(!setField)}>
-            <InputLabel>Set</InputLabel>
-            <Select
-              value={setField}
-              onChange={(e) => setSetField(e.target.value)}
-              onBlur={handleFlush}
-            >
-              <MenuItem value="">—</MenuItem>
-              {SET_OPTIONS.map((o) => (
-                <MenuItem key={o} value={o}>{o}</MenuItem>
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">set</span>
+            <span className="SongEditForm-composite-pill">
+              {SET_OPTIONS.map((opt) => (
+                <span
+                  key={opt}
+                  className={`SongEditForm-composite-segment ${setField.includes(opt) ? 'SongEditForm-composite-segment--on' : ''}`}
+                  onClick={() => toggleSet(opt)}
+                >
+                  {opt}
+                </span>
               ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={genreFieldSx(!stage)}>
-            <InputLabel>Stage</InputLabel>
-            <Select
-              value={stage}
-              onChange={(e) => setStage(e.target.value)}
-              onBlur={handleFlush}
-            >
-              <MenuItem value="">—</MenuItem>
-              {STAGE_OPTIONS.map((o) => (
-                <MenuItem key={o} value={o}>{o}</MenuItem>
+            </span>
+          </Box>
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">stage</span>
+            <span className="SongEditForm-composite-pill">
+              {STAGE_OPTIONS.map((opt) => (
+                <span
+                  key={opt}
+                  className={`SongEditForm-composite-segment ${stage.includes(opt) ? 'SongEditForm-composite-segment--on' : ''}`}
+                  onClick={() => toggleStage(opt)}
+                >
+                  {opt}
+                </span>
               ))}
-            </Select>
-          </FormControl>
-          <ToggleButton
-            value="nz"
-            selected={locationNz}
-            onChange={() => setLocationNz((prev) => !prev)}
-            size="small"
-          >
-            NZ
-          </ToggleButton>
+            </span>
+          </Box>
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">nz</span>
+            <span
+              className={`SongEditForm-pill ${locationNz ? 'SongEditForm-pill--on' : ''}`}
+              onClick={() => setLocationNz((prev) => !prev)}
+            >
+              NZ
+            </span>
+          </Box>
         </Box>
 
         <Box className="SongEditForm-row">
@@ -420,21 +414,23 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         )}
 
         <Box className="SongEditForm-actions">
-          <Box>
-            <ToggleButtonGroup
-              value={favorite}
-              onChange={handleFavoriteChange}
-              exclusive
-              size="small"
+          <Box className="SongEditForm-pill-group">
+            <span
+              className={`SongEditForm-pill ${favorite === 'starred' ? 'SongEditForm-pill--on' : ''}`}
+              onClick={() => setFavorite((prev) => prev === 'starred' ? 'normal' : 'starred')}
             >
-              <ToggleButton value="starred">{'\u2605'}</ToggleButton>
-              <ToggleButton value="normal">{'\u25CB'}</ToggleButton>
-              <ToggleButton value="disliked">{'\u2715'}</ToggleButton>
-            </ToggleButtonGroup>
+              <Star size={14} fill={favorite === 'starred' ? 'currentColor' : 'none'} />
+            </span>
+            <span
+              className={`SongEditForm-pill ${favorite === 'disliked' ? 'SongEditForm-pill--on' : ''}`}
+              onClick={() => setFavorite((prev) => prev === 'disliked' ? 'normal' : 'disliked')}
+            >
+              <ThumbsDown size={14} />
+            </span>
           </Box>
           <Box className="SongEditForm-export">
             <Button variant="outlined" size="small" onClick={handleExport}>
-              Export to Apple Music
+              Save to Apple Music
             </Button>
             {exportMsg && (
               <Box component="span" className="SongEditForm-export-msg">{exportMsg}</Box>
