@@ -14,7 +14,8 @@
  *   npm run import:applemusic [path/to/Library.xml]
  * 
  * Filter:
- *   Only imports songs with "DJing" in the Grouping field
+ *   Only imports songs with "DJing" or "Listening" in the Grouping field,
+ *   or songs marked as Loved (Starred) in Apple Music.
  */
 
 import mongoose from 'mongoose';
@@ -107,11 +108,9 @@ const importSongs = async (xmlPath: string) => {
       }
 
       const groupingRawString = trackData['Grouping'];
-      if (!groupingRawString) {
-        filtered++;
-        continue;
-      }
-      if (!groupingRawString.includes('DJing') && !groupingRawString.includes('Listening')) {
+      const loved = trackData['Loved'] === true;
+      const hasValidGrouping = groupingRawString && (groupingRawString.includes('DJing') || groupingRawString.includes('Listening'));
+      if (!hasValidGrouping && !loved) {
         filtered++;
         continue;
       }
@@ -138,7 +137,6 @@ const importSongs = async (xmlPath: string) => {
       const trackType = trackData['Track Type'];
       const isProtected = trackData['Protected'] === true;
       const isAppleMusic = trackData['Track Type'] === 'Remote';
-      const loved = trackData['Loved'] === true;
       const disliked = trackData['Disliked'] === true;
 
       let favorite: 'normal' | 'starred' | 'disliked' = 'normal';
@@ -194,7 +192,7 @@ const importSongs = async (xmlPath: string) => {
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
     console.log(`  Skipped (no name): ${skipped}`);
-    console.log(`  Filtered (no DJing/Listening): ${filtered}`);
+    console.log(`  Filtered (no DJing/Listening/Starred): ${filtered}`);
     console.log(`  Total processed: ${imported + updated + skipped}`);
     console.log(`  Total in file: ${trackIds.length}`);
 
