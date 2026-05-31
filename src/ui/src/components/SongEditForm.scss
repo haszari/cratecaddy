@@ -35,6 +35,10 @@ $pill-off-text: #bbb;
     > * {
       flex: 0 1 auto;
     }
+
+    &.SongEditForm-row--tight {
+      margin-top: -0.45em;
+    }
   }
 
   .SongEditForm-field {
@@ -166,12 +170,6 @@ $pill-off-text: #bbb;
     }
   }
 
-  .SongEditForm-hint {
-    font-size: 0.78em;
-    color: #999;
-    font-style: italic;
-    margin-top: -0.3em;
-  }
 
   .SongEditForm-actions {
     display: flex;

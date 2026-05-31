@@ -13,8 +13,10 @@ import './SongEditForm.scss';
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const STAGE_OPTIONS = ['Warmup', 'Peak', 'Later'];
 const SET_OPTIONS = ['Deep', 'BAM', 'Ambient'];
-const ORG_TAGS = new Set([...STAGE_OPTIONS, ...SET_OPTIONS, 'NZ']);
-const LISTENING_HINT = 'Common: Jazz, Funk, Classical, Contemporary, Electronic, Dance, Hip Hop, Pop, Rock, Country, Indie, Ambient';
+const LISTENING_ROW1 = ['Dance', 'Electronic', 'Jazz', 'Funk', 'Contemporary', 'Classical'];
+const LISTENING_ROW2 = ['Reggae', 'Hip Hop', 'Pop', 'Rock', 'Country', 'Indie'];
+const LISTENING_OPTIONS = [...LISTENING_ROW1, ...LISTENING_ROW2];
+const ORG_TAGS = new Set([...STAGE_OPTIONS, ...SET_OPTIONS, ...LISTENING_OPTIONS, 'NZ']);
 
 function parseKeyField(value: string | undefined): { root: string; minor: boolean } {
   if (!value) return { root: '', minor: false };
@@ -43,6 +45,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const [setField, setSetField] = useState(init.set);
   const [locationNz, setLocationNz] = useState(init.locationNz);
   const [styles, setStyles] = useState<string[]>(init.styles);
+  const [listening, setListening] = useState<string[]>(init.listening);
   const [grouping, setGrouping] = useState<string[]>(song.grouping ?? []);
   const [bpm, setBpm] = useState(song.bpm ?? null);
   const [keyRoot, setKeyRoot] = useState(initKey.root);
@@ -55,7 +58,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<Partial<Song> | null>(null);
 
-  const hasDjing = grouping.includes('DJing');
   const keyFieldRef = useRef<HTMLDivElement>(null);
 
   const saveMutation = useMutation({
@@ -82,7 +84,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   }, [flushSave]);
 
   const handleSave = useCallback(() => {
-    const genres = reassembleGenres(stage, setField, locationNz, styles);
+    const genres = reassembleGenres(stage, setField, locationNz, listening, styles);
     const key = formatKeyField(keyRoot, keyMinor);
     scheduleSave({
       artist: artist || undefined,
@@ -95,7 +97,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       rating: rating > 0 ? rating : undefined,
       favorite: favorite === 'normal' ? undefined : favorite,
     });
-  }, [artist, title, stage, setField, locationNz, styles, grouping, bpm, keyRoot, keyMinor, year, rating, favorite, scheduleSave]);
+  }, [artist, title, stage, setField, locationNz, listening, styles, grouping, bpm, keyRoot, keyMinor, year, rating, favorite, scheduleSave]);
 
   const saveRef = useRef(handleSave);
   useEffect(() => { saveRef.current = handleSave; }, [handleSave]);
@@ -231,6 +233,12 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     );
   }, []);
 
+  const toggleListening = useCallback((opt: string) => {
+    setListening((prev) =>
+      prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
+    );
+  }, []);
+
   const toggleGroupingPill = useCallback((opt: string) => {
     setGrouping((prev) => {
       if (prev.includes(opt)) {
@@ -261,6 +269,31 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       </Box>
 
       <Box className="SongEditForm-body">
+        <Box className="SongEditForm-actions">
+          <Box className="SongEditForm-pill-group">
+            <span
+              className={`SongEditForm-pill ${favorite === 'starred' ? 'SongEditForm-pill--on' : ''}`}
+              onClick={() => setFavorite((prev) => prev === 'starred' ? 'normal' : 'starred')}
+            >
+              <Star size={14} fill={favorite === 'starred' ? 'currentColor' : 'none'} />
+            </span>
+            <span
+              className={`SongEditForm-pill ${favorite === 'disliked' ? 'SongEditForm-pill--on' : ''}`}
+              onClick={() => setFavorite((prev) => prev === 'disliked' ? 'normal' : 'disliked')}
+            >
+              <ThumbsDown size={14} />
+            </span>
+          </Box>
+          <Box className="SongEditForm-export">
+            <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
+              Save to Apple Music
+            </span>
+            {exportMsg && (
+              <Box component="span" className="SongEditForm-export-msg">{exportMsg}</Box>
+            )}
+          </Box>
+        </Box>
+
         <Box className="SongEditForm-row">
           <Box className="SongEditForm-field">
             <span className="SongEditForm-field-label">artist</span>
@@ -422,34 +455,42 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             />
           </Box>
         </Box>
-        {hasDjing && grouping.includes('Listening') && (
-          <Box className="SongEditForm-hint">{LISTENING_HINT}</Box>
-        )}
 
-        <Box className="SongEditForm-actions">
-          <Box className="SongEditForm-pill-group">
-            <span
-              className={`SongEditForm-pill ${favorite === 'starred' ? 'SongEditForm-pill--on' : ''}`}
-              onClick={() => setFavorite((prev) => prev === 'starred' ? 'normal' : 'starred')}
-            >
-              <Star size={14} fill={favorite === 'starred' ? 'currentColor' : 'none'} />
-            </span>
-            <span
-              className={`SongEditForm-pill ${favorite === 'disliked' ? 'SongEditForm-pill--on' : ''}`}
-              onClick={() => setFavorite((prev) => prev === 'disliked' ? 'normal' : 'disliked')}
-            >
-              <ThumbsDown size={14} />
-            </span>
-          </Box>
-          <Box className="SongEditForm-export">
-            <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
-              Save to Apple Music
-            </span>
-            {exportMsg && (
-              <Box component="span" className="SongEditForm-export-msg">{exportMsg}</Box>
-            )}
-          </Box>
-        </Box>
+        {grouping.includes('Listening') && (
+          <>
+            <Box className="SongEditForm-row">
+              <Box className="SongEditForm-field">
+                <span className="SongEditForm-field-label">listening</span>
+                <span className="SongEditForm-pill-group">
+                  {LISTENING_ROW1.map((opt) => (
+                    <span
+                      key={opt}
+                      className={`SongEditForm-pill ${listening.includes(opt) ? 'SongEditForm-pill--on' : ''}`}
+                      onClick={() => toggleListening(opt)}
+                    >
+                      {opt}
+                    </span>
+                  ))}
+                </span>
+              </Box>
+            </Box>
+            <Box className="SongEditForm-row SongEditForm-row--tight">
+              <Box className="SongEditForm-field">
+                <span className="SongEditForm-pill-group">
+                  {LISTENING_ROW2.map((opt) => (
+                    <span
+                      key={opt}
+                      className={`SongEditForm-pill ${listening.includes(opt) ? 'SongEditForm-pill--on' : ''}`}
+                      onClick={() => toggleListening(opt)}
+                    >
+                      {opt}
+                    </span>
+                  ))}
+                </span>
+              </Box>
+            </Box>
+          </>
+        )}
 
         {history && history.length > 0 && (
           <Box className="SongEditForm-history">
