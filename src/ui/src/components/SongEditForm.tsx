@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { updateSongMetadata, writeToAppleMusic, fetchSongHistory, fetchGenreStats } from '../api/client';
+import { updateSongMetadata, writeToAppleMusic, fetchGenreStats } from '../api/client';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
@@ -37,7 +37,6 @@ interface SongEditFormProps {
 }
 
 export default function SongEditForm({ song }: SongEditFormProps) {
-  const queryClient = useQueryClient();
   const init = useMemo(() => decomposeGenres(song.genres), [song.genres]);
   const initKey = useMemo(() => parseKeyField(song.key), [song.key]);
 
@@ -64,9 +63,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
   const saveMutation = useMutation({
     mutationFn: (data: Partial<Song>) => updateSongMetadata(song._id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['history', song._id] });
-    },
     onError: (err) => {
       console.error('Save failed', err);
     },
@@ -123,12 +119,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       flushSave();
     };
   }, [flushSave]);
-
-  const { data: history } = useQuery({
-    queryKey: ['history', song._id],
-    queryFn: () => fetchSongHistory(song._id!),
-    enabled: song._id != null,
-  });
 
   const { data: allGenreStats } = useQuery({
     queryKey: ['genres', 'stats'],
@@ -275,26 +265,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
   return (
     <Box className="SongEditForm">
-      <Box className="SongEditForm-header">
-        {song.artist} – {song.title}
-        {song.appleMusicId && (
-          <Box component="span" className="SongEditForm-amid">
-            {' '}⋮ {song.appleMusicId}
-          </Box>
-        )}
-      </Box>
-
-      <Box className="SongEditForm-body">
-        <Box className="SongEditForm-export">
-          <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
-            Save to Apple Music
-          </span>
-          {exportMsg && (
-            <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
-          )}
-        </Box>
-      </Box>
-
       <Box className="SongEditForm-row">
           <Box className="SongEditForm-field">
             <span className="SongEditForm-field-label">artist</span>
@@ -501,19 +471,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
           </>
         )}
 
-        {history && history.length > 0 && (
-          <Box className="SongEditForm-history">
-            <Box className="SongEditForm-history-title">History</Box>
-            {history.slice(0, 20).map((entry) => (
-              <Box key={entry._id} className="SongEditForm-history-entry">
-                <span className="SongEditForm-history-date">
-                  {new Date(entry.dateEdited).toLocaleString()}
-                </span>
-                <span className="SongEditForm-history-source">{entry.sourceType}</span>
-              </Box>
-            ))}
-          </Box>
-        )}
+        <Box className="SongEditForm-export">
+          <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
+            Save to Apple Music
+          </span>
+          {exportMsg && (
+            <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
+          )}
+        </Box>
     </Box>
   );
 }

@@ -7,25 +7,9 @@ $field-font-size: 1em;
   padding: 1em;
   overflow-y: auto;
   height: 100%;
-
-  .SongEditForm-header {
-    font-size: 1em;
-    margin: 0 0 1em;
-    line-height: 1.4;
-
-    .SongEditForm-amid {
-      font-size: 0.7em;
-      color: #999;
-      margin-left: 0.5em;
-      font-weight: normal;
-    }
-  }
-
-  .SongEditForm-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75em;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
 
   .SongEditForm-row {
     display: flex;
@@ -201,11 +185,11 @@ $field-font-size: 1em;
     font-size: $field-font-size !important;
   }
 
-  .SongEditForm-actions {
+  .SongEditForm-export {
+    margin-top: 1.125em;
     display: flex;
     align-items: center;
-    gap: 0.75em;
-    margin-top: 0.5em;
+    gap: 0.5em;
   }
 
   .SongEditForm-rating {
@@ -247,32 +231,4 @@ $field-font-size: 1em;
     }
   }
 
-  .SongEditForm-history {
-    margin-top: 1em;
-  }
-
-  .SongEditForm-history-title {
-    font-size: 0.8em;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #666;
-    margin-bottom: 0.4em;
-  }
-
-  .SongEditForm-history-entry {
-    font-size: 0.75em;
-    color: #888;
-    padding: 0.15em 0;
-    display: flex;
-    gap: 0.5em;
-
-    .SongEditForm-history-date {
-      min-width: 10em;
-    }
-
-    .SongEditForm-history-source {
-      color: #666;
-    }
-  }
 }
