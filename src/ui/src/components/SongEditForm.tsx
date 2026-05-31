@@ -7,7 +7,7 @@ import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
-import { Star, ThumbsDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import './SongEditForm.scss';
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -54,7 +54,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const [keyMinor, setKeyMinor] = useState(initKey.minor);
   const [year, setYear] = useState(song.year ?? null);
   const [rating, setRating] = useState(song.rating ?? 0);
-  const [favorite, setFavorite] = useState<Song['favorite']>(song.favorite ?? 'normal');
   const [exportMsg, setExportMsg] = useState('');
   const [exportIsError, setExportIsError] = useState(false);
 
@@ -103,9 +102,8 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       key: key || undefined,
       year: year ?? undefined,
       rating: rating > 0 ? rating : undefined,
-      favorite: favorite === 'normal' ? undefined : favorite,
     });
-  }, [artist, title, stage, setField, locationNz, listening, styles, grouping, bpm, keyRoot, keyMinor, year, rating, favorite, scheduleSave]);
+  }, [artist, title, stage, setField, locationNz, listening, styles, grouping, bpm, keyRoot, keyMinor, year, rating, scheduleSave]);
 
   const saveRef = useRef(handleSave);
   useEffect(() => { saveRef.current = handleSave; }, [handleSave]);
@@ -287,32 +285,17 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       </Box>
 
       <Box className="SongEditForm-body">
-        <Box className="SongEditForm-actions">
-          <Box className="SongEditForm-pill-group">
-            <span
-              className={`SongEditForm-pill ${favorite === 'starred' ? 'SongEditForm-pill--on' : ''}`}
-              onClick={() => setFavorite((prev) => prev === 'starred' ? 'normal' : 'starred')}
-            >
-              <Star size={14} fill={favorite === 'starred' ? 'currentColor' : 'none'} />
-            </span>
-            <span
-              className={`SongEditForm-pill ${favorite === 'disliked' ? 'SongEditForm-pill--on' : ''}`}
-              onClick={() => setFavorite((prev) => prev === 'disliked' ? 'normal' : 'disliked')}
-            >
-              <ThumbsDown size={14} />
-            </span>
-          </Box>
-          <Box className="SongEditForm-export">
-            <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
-              Save to Apple Music
-            </span>
-            {exportMsg && (
-              <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
-            )}
-          </Box>
+        <Box className="SongEditForm-export">
+          <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
+            Save to Apple Music
+          </span>
+          {exportMsg && (
+            <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
+          )}
         </Box>
+      </Box>
 
-        <Box className="SongEditForm-row">
+      <Box className="SongEditForm-row">
           <Box className="SongEditForm-field">
             <span className="SongEditForm-field-label">artist</span>
             <TextField
@@ -531,7 +514,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             ))}
           </Box>
         )}
-      </Box>
     </Box>
   );
 }

@@ -20,12 +20,6 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
   const year = song.year ?? '';
   const appleMusicId = escapeAppleScript(song.appleMusicId);
 
-  // TODO: loved/disliked causes "descriptor type mismatch" in Apple Music
-  // let lovedScript = '';
-  // if (song.favorite === 'starred') lovedScript = 'set loved of t to true';
-  // else if (song.favorite === 'disliked') lovedScript = 'set disliked of t to true';
-  // else lovedScript = 'set loved of t to false; set disliked of t to false';
-
   const script = `tell application "Music"
   try
     set t to (first track of library playlist 1 whose persistent ID is "${appleMusicId}")
