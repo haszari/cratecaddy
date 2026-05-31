@@ -88,86 +88,117 @@ Multiple IDs for the same source type (e.g. one streaming + one local Apple Musi
 
 ### Entry
 
-Toggle in the header bar (current FilterBar). Keyboard shortcut `e` to toggle. Not on all pages — only song-list screens.
+Toggle button in the header bar (current FilterBar "ED" button). Keyboard shortcut `e` to toggle. On all song-list screens: Home, GenreDetail, Artist. Not on Song detail page (v1).
 
 ### Layout
 
-Split pane: compact song list (left) + edit form (right). Components:
+Split pane: compact song list (left, ~40%) + edit form (right, ~60%). Components:
 
 | Mode | Component | Description |
 |---|---|---|
-| View | `FullSongTable` | Current table (sources, artist, title, bpm, key, rating, genres) |
-| Edit | `CompactSongTable` | Narrow list — artist, title only |
+| View | `SongTable` | Current table (sources, artist, title, bpm, key, rating, genres) |
+| Edit | `CompactSongTable` | Narrow table — shares SongTable row styles, only artist + title columns visible |
 | Edit | `SongEditForm` | Full edit form for selected song |
 
-Page-level component coordinates: render `FullSongTable` or `CompactSongTable + SongEditForm` based on edit mode state.
+`CompactSongTable` uses the same `<table>` element and row classes as `SongTable`. Only Artist and Title columns are rendered. Sources, Genres, Rating, BPM, Key columns are omitted. Selected row gets a highlight.
+
+### Edit form layout
+
+Flexbox wrap with gap. Fields grouped by row:
+
+| Row | Fields | Type |
+|-----|--------|------|
+| 1 | Artist, Title | Text fields (MUI TextField) |
+| 2 | Grouping, BPM, Key (root dropdown + ♯ toggle + m toggle), Year | Toggle chips, number inputs, dropdown+toggles |
+| 3 | Set, Stage, NZ | Dropdowns, toggle chip |
+| 4 | Styles | Autosuggest (free-solo, chips, popular-first) |
+| 5 | Favorite (★/○/✕), Export to Apple Music | Toggle buttons, action button |
+
+### Field styling (MUI theme)
+
+All fields use MUI components themed via `createTheme`:
+- Flat, subtle box with pale background (`#f5f5f5`), very small border-radius
+- Label: subtle small, uppercase, above top left, same color as field
+- "Required" fields (Set/Stage/Styles when grouping contains DJing): bold labels + subtle highlight/underline on input when empty
+- Guidance is visual only — no block on save
+
+### Genre decomposition (edit time only)
+
+On form open, parse `song.genres` flat array into sub-fields:
+
+- Known stage token (`Warmup`/`Peak`/`Later`) → stage field
+- Known set token (`Deep`/`BAM`/`Ambient`) → set field
+- Token `NZ` → location checkbox
+- Everything else → styles array
+
+"Ambient" is both a Set and a Listening style. Set token takes priority during decomposition.
+
+### Genre reassembly (on save)
+
+Order: `styles (alphabetically), ?NZ, set, stage`
+
+Strip empty/falsy values. Example output: `Minimal, Dub Techno, NZ, Warmup, Deep`.
+
+### Styles autosuggest
+
+MUI Autocomplete with `freeSolo`, `multiple` (chip mode). Suggestion source: all unique genre tokens from DB minus known org tags (stage/set values, "NZ"). Sorted by usage frequency (most popular first).
+
+When grouping contains Listening, show subtle hint below: "Common: Jazz, Funk, Classical, Contemporary, Electronic, Dance, Hip Hop, Pop, Rock, Country, Indie, Ambient".
+
+### Grouping picker
+
+Toggle button group: `[DJing] [Listening]`. At least one always active. Each toggles independently. Maps to `grouping: string[]` on Song.
+
+### Key field
+
+MUI Select (root notes): `C, C#, D, D#, E, F, F#, G, G#, A, A#, B`.
+Toggle button for sharp (`♯`). Toggle button for minor (`m`).
+Sharp replaces natural root with `#` variant. Minor appends `m`.
+Output: e.g. `"F#m"`, `"G"`, `"Dm"`.
+
+When empty, omit from export to Apple Music.
+
+### Location (NZ)
+
+Single toggle chip. When active, inserts `"NZ"` into genres array at the `location` position. No other locations get special UI — they appear in the styles bucket.
+
+### Save model
+
+Auto-save on field blur. 800ms debounce — collects pending field changes into a single `PUT /api/songs/:id/metadata`. Prevent empty title/artist (revert to previous value on blur).
 
 ### Keyboard shortcuts
 
-**Navigation**: `j`/`↓` down, `k`/`↑` up, `Escape` exit edit mode.
+Global (no field focused):
 
-**Field focus**: `b` bpm, `k` key, `r` rating, `y` year, `t` title, `a` artist, `g` genre input.
+| Key | Action |
+|-----|--------|
+| `↑`/`↓` | Navigate songs |
+| `Escape` | Exit edit mode |
+| `1`–`5` | Set rating |
+| `d` | Toggle DJing grouping |
+| `l` | Toggle Listening grouping |
+| `t` | Focus title |
+| `a` | Focus artist |
+| `g` | Focus styles autosuggest |
+| `b` | Focus BPM |
+| `y` | Focus year |
+| `r` | Focus rating |
 
-**Rating**: `1`–`5` set rating (only when no specific field is focused).
+Key field (when focused):
 
-**Save**: auto-save on field blur. Server deduplicates rapid edits into one History entry.
+| Key | Action |
+|-----|--------|
+| `Shift+A`–`Shift+G` | Set root note |
+| `+` (`Shift+=`) | Toggle sharp |
+| `m` | Toggle minor |
 
 ## Genres — structured editing
 
-The `genres` field on Song remains a flat string list for storage and filtering. The edit UI splits it into purpose-specific sub-fields for ergonomic editing.
-
-### Validation rules
-
-Rating < 3: no constraints on genre sub-fields.
-Rating >= 3:
-
-| Condition | Stage | Set | Location | Styles |
-|---|---|---|---|---|
-| grouping has DJing | Required: Warmup/Peak/Later | Required: Deep/BAM/Ambient | Optional | Required (≥1 free-form tag, autosuggest) |
-| grouping is Listening only | Not shown | Not shown | Optional | Required (≥1, pick from curated list) |
-| grouping has both | DJing rules apply | DJing rules apply | Optional | Required (≥1) |
-
-Fields are additive/constraining — switching a DJing song to Listening doesn't remove existing stage/set. They simply aren't validated.
-
-### Genre sub-fields (edit UI only)
-
-| Sub-field | Type | Required |
-|---|---|---|
-| `stage` | `'warmup' \| 'peak' \| 'later'` | Yes, if grouping contains DJing |
-| `set` | `'deep' \| 'bam' \| 'ambient'` | Yes, if grouping contains DJing |
-| `location` | `string` (optional) | No — e.g. `'NZ'` if artist is from NZ |
-| `styles` | `string[]` (free-form) | At least one, if grouping contains DJing |
-
-### Assembly order (for Apple Music comma-separated genre)
-
-```
-stage, set, ?location, styles (sorted alphabetically)
-```
-
-This ensures a predictable round-trip in Apple Music's single `genre` field.
-
-### Parse on import
-
-Split Apple Music genre by `, `, then classify each token:
-- If known stage → `stage`
-- If known set → `set`
-- If known location → `location`
-- Otherwise → `styles`
-
-### Known values
-
-| Field | Values | Case |
-|---|---|---|
-| stage | `Warmup`, `Peak`, `Later` | Title |
-| set | `Deep`, `BAM`, `Ambient` | Title except BAM (uppercase) |
-| Listening styles | `Jazz`, `Funk`, `Classical`, `Contemporary`, `Electronic`, `Dance`, `Hip Hop`, `Pop`, `Rock`, `Country`, `Indie`, `Ambient` | Title |
-| DJing styles | Free-form, autosuggest from existing DB values | Per-user entry |
-
-### Assembly order (for Apple Music comma-separated genre)
+The `genres` field on Song remains a flat `string[]` for storage, filtering, and Apple Music round-trip. The edit UI decomposes and reassembles it into purpose-specific sub-fields. See **Edit mode UI > Genre decomposition** and **Genre reassembly** above for the canonical specification.
 
 ## Grouping edit UI
 
-Toggle buttons: `[DJing]` `[Listening]` with force-select (at least one always active). Stored as-is in the `grouping` array (matching current import convention).
+See **Edit mode UI > Grouping picker** above.
 
 ## Genre standardisation (future)
 
@@ -195,7 +226,7 @@ Genres serve dual purpose (classification + energy-level tags like "Warmup | Pea
 ```
 
 - `dateEdited`: semantic timestamp of the write.
-- `snapshot`: editable fields only (title, artist, genres, grouping, bpm, key, rating, year). Duration and album are on the Song doc but not repeatable — duration is a physical property of the audio file.
+- `snapshot`: all editable fields (title, artist, genres, grouping, bpm, key, rating, year, favorite). Duration and album are on the Song doc but not editable — duration is a physical property of the audio file.
 - `importMeta`: heavy provenance data from imports. Not present for manual edits.
 - Server-side dedup: if the latest history entry for a song shares `sourceType: 'manual'` and is less than N minutes old, update its snapshot in-place rather than appending.
 
