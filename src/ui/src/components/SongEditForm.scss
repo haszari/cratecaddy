@@ -1,6 +1,7 @@
 $pill-on: orange;
 $pill-off-bg: #43423c;
 $pill-off-text: #bbb;
+$field-font-size: 1em;
 
 .SongEditForm {
   padding: 1em;
@@ -53,7 +54,7 @@ $pill-off-text: #bbb;
     &.SongEditForm-field--no-label::before {
       content: '';
       display: block;
-      height: 1.1em;
+      height: 0.78em;
     }
 
     .SongEditForm-key-row {
@@ -68,7 +69,7 @@ $pill-off-text: #bbb;
       border: none;
       border-radius: 0.5em;
       padding: 0.25em 0.5em;
-      font-size: 0.82em;
+      font-size: $field-font-size;
       font-weight: 600;
       cursor: pointer;
       outline: none;
@@ -78,6 +79,7 @@ $pill-off-text: #bbb;
 
   .SongEditForm-field-label {
     font-size: 0.65em;
+    line-height: 1.2;
     color: rgba(255, 255, 255, 0.4);
     white-space: nowrap;
     text-align: left;
@@ -95,7 +97,7 @@ $pill-off-text: #bbb;
     padding: 0.25em 0.55em;
     background: $pill-off-bg;
     color: $pill-off-text;
-    font-size: 0.82em;
+    font-size: $field-font-size;
     font-weight: 600;
     cursor: pointer;
     user-select: none;
@@ -131,7 +133,7 @@ $pill-off-text: #bbb;
     border-radius: 0.5em;
     background: $pill-off-bg;
     color: $pill-off-text;
-    font-size: 0.82em;
+    font-size: $field-font-size;
     font-weight: 600;
     cursor: pointer;
     user-select: none;
@@ -155,14 +157,13 @@ $pill-off-text: #bbb;
   .SongEditForm-pill--nz {
     min-width: 2.2em;
     justify-content: center;
-    padding: 0.2em 0.35em;
   }
 
   .SongEditForm-pill--action {
     background: $pill-off-bg;
     color: $pill-off-text;
     padding: 0.25em 0.7em;
-    font-size: 0.82em;
+    font-size: $field-font-size;
 
     &:hover {
       background: $pill-on;
@@ -170,6 +171,9 @@ $pill-off-text: #bbb;
     }
   }
 
+  .MuiInputBase-input {
+    font-size: $field-font-size !important;
+  }
 
   .SongEditForm-actions {
     display: flex;

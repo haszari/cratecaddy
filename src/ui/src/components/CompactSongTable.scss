@@ -4,25 +4,49 @@
 
   table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
   }
 
   th, td {
     border: none;
+    background-clip: padding-box;
   }
 
   tbody tr {
     cursor: pointer;
 
-    &:hover {
+    td {
+      background: transparent;
+      transition: background 0.1s ease;
+      padding: 0.15em 0;
+    }
+
+    td:first-child {
+      padding-left: 0.3em;
+    }
+
+    td:last-child {
+      padding-right: 0.3em;
+    }
+
+    &:hover td {
       background: #43423c;
       color: #fff;
     }
   }
 
-  .CompactSongTable-row--selected {
+  .CompactSongTable-row--selected td {
     background: #43423c;
     color: orange;
     font-weight: 600;
+
+    &:first-child {
+      border-radius: 0.4em 0 0 0.4em;
+    }
+
+    &:last-child {
+      border-radius: 0 0.4em 0.4em 0;
+    }
   }
 }
