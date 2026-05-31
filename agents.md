@@ -61,7 +61,10 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 ```
 
 - One commit per logical step (waypoint commits).
-- Short subject line; body can add detail if needed.
+- Subject line is plain English: what changed and why. No shorthand like `s/foo/bar`.
+- Body can add detail if needed.
+- **Never amend, rebase, or otherwise edit commit history.** Only ever create new commits.
+- **Only commit when explicitly instructed.**
 
 ## Best Practices
 
