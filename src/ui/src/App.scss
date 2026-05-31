@@ -100,6 +100,24 @@ thead .col-sources {
   color: #b3b3b3;
 }
 
+thead th {
+  padding: 0.15em 0.3em;
+}
+
+table tbody td {
+  padding: 0.15em 0.3em;
+}
+
+table tbody td:first-child,
+thead th:first-child {
+  padding-left: 0.3em;
+}
+
+table tbody td:last-child,
+thead th:last-child {
+  padding-right: 0.3em;
+}
+
 .col-sources .sources-icons {
   gap: 0;
   position: relative;
