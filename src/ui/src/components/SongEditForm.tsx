@@ -286,6 +286,18 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             size="small"
             fullWidth
           />
+          <Box id="edit-field-rating" className="SongEditForm-rating" tabIndex={-1}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Box
+                key={n}
+                component="span"
+                className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
+                onClick={() => setRating(n)}
+              >
+                {n <= rating ? '\u2605' : '\u2606'}
+              </Box>
+            ))}
+          </Box>
         </Box>
 
         <Box className="SongEditForm-row">
@@ -408,18 +420,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         )}
 
         <Box className="SongEditForm-actions">
-          <Box id="edit-field-rating" className="SongEditForm-rating" tabIndex={-1}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <Box
-                key={n}
-                component="span"
-                className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
-                onClick={() => setRating(n)}
-              >
-                {n <= rating ? '\u2605' : '\u2606'}
-              </Box>
-            ))}
-          </Box>
           <Box>
             <ToggleButtonGroup
               value={favorite}

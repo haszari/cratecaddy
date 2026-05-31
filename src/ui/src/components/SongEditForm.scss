@@ -71,14 +71,18 @@
 
   .SongEditForm-rating {
     display: flex;
-    gap: 0.15em;
+    gap: 1px;
     cursor: pointer;
     outline: none;
+    align-items: center;
+    align-self: flex-end;
+    padding-bottom: 3px;
 
     .SongEditForm-star {
-      font-size: 1.1em;
-      color: #bbb;
+      font-size: 1em;
+      color: #ccc;
       user-select: none;
+      line-height: 1;
 
       &--on {
         color: #ff9800;
