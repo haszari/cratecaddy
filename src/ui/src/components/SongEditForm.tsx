@@ -6,7 +6,6 @@ import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecompositio
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
-import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { Star, ThumbsDown } from 'lucide-react';
 import './SongEditForm.scss';
@@ -263,63 +262,73 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
       <Box className="SongEditForm-body">
         <Box className="SongEditForm-row">
-          <TextField
-            id="edit-field-artist"
-            label="Artist"
-            value={artist}
-            onChange={(e) => setArtist(e.target.value)}
-            onBlur={handleArtistBlur}
-            size="small"
-            fullWidth
-          />
-          <TextField
-            id="edit-field-title"
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleTitleBlur}
-            size="small"
-            fullWidth
-          />
-          <Box id="edit-field-rating" className="SongEditForm-rating" tabIndex={-1}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <Box
-                key={n}
-                component="span"
-                className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
-                onClick={() => setRating(n)}
-              >
-                {n <= rating ? '\u2605' : '\u2606'}
-              </Box>
-            ))}
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">artist</span>
+            <TextField
+              id="edit-field-artist"
+              value={artist}
+              onChange={(e) => setArtist(e.target.value)}
+              onBlur={handleArtistBlur}
+              size="small"
+              fullWidth
+            />
+          </Box>
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">title</span>
+            <TextField
+              id="edit-field-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleTitleBlur}
+              size="small"
+              fullWidth
+            />
+          </Box>
+          <Box className="SongEditForm-field SongEditForm-field--no-label" id="edit-field-rating">
+            <Box className="SongEditForm-rating" tabIndex={-1}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Box
+                  key={n}
+                  component="span"
+                  className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
+                  onClick={() => setRating(n)}
+                >
+                  {n <= rating ? '\u2605' : '\u2606'}
+                </Box>
+              ))}
+            </Box>
           </Box>
         </Box>
 
         <Box className="SongEditForm-row">
-          <Box className="SongEditForm-pill-group">
-            <span className="SongEditForm-pill-label">Grouping</span>
-            {['DJing', 'Listening'].map((opt) => (
-              <span
-                key={opt}
-                className={`SongEditForm-pill ${grouping.includes(opt) ? 'SongEditForm-pill--on' : ''}`}
-                onClick={() => toggleGroupingPill(opt)}
-              >
-                {opt}
-              </span>
-            ))}
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">grouping</span>
+            <span className="SongEditForm-composite-pill">
+              {['DJing', 'Listening'].map((opt) => (
+                <span
+                  key={opt}
+                  className={`SongEditForm-composite-segment ${grouping.includes(opt) ? 'SongEditForm-composite-segment--on' : ''}`}
+                  onClick={() => toggleGroupingPill(opt)}
+                >
+                  {opt}
+                </span>
+              ))}
+            </span>
           </Box>
-          <TextField
-            id="edit-field-bpm"
-            label="BPM"
-            type="number"
-            value={bpm ?? ''}
-            onChange={(e) => setBpm(e.target.value ? parseFloat(e.target.value) : null)}
-            onBlur={handleFlush}
-            size="small"
-            slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
-          />
-          <Box className="SongEditForm-key-field" ref={keyFieldRef}>
-            <span className="SongEditForm-pill-label">Key</span>
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">bpm</span>
+            <TextField
+              id="edit-field-bpm"
+              type="number"
+              value={bpm ?? ''}
+              onChange={(e) => setBpm(e.target.value ? parseFloat(e.target.value) : null)}
+              onBlur={handleFlush}
+              size="small"
+              slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
+            />
+          </Box>
+          <Box className="SongEditForm-field" ref={keyFieldRef}>
+            <span className="SongEditForm-field-label">key</span>
             <Box className="SongEditForm-key-row">
               <select
                 value={keyRoot || ''}
@@ -340,16 +349,18 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               </span>
             </Box>
           </Box>
-          <TextField
-            id="edit-field-year"
-            label="Year"
-            type="number"
-            value={year ?? ''}
-            onChange={(e) => setYear(e.target.value ? parseInt(e.target.value, 10) : null)}
-            onBlur={handleFlush}
-            size="small"
-            slotProps={{ htmlInput: { min: 1900, max: 2099, step: 1 } }}
-          />
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">year</span>
+            <TextField
+              id="edit-field-year"
+              type="number"
+              value={year ?? ''}
+              onChange={(e) => setYear(e.target.value ? parseInt(e.target.value, 10) : null)}
+              onBlur={handleFlush}
+              size="small"
+              slotProps={{ htmlInput: { min: 1900, max: 2099, step: 1 } }}
+            />
+          </Box>
         </Box>
 
         <Box className="SongEditForm-row">
@@ -381,10 +392,9 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               ))}
             </span>
           </Box>
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">nz</span>
+          <Box className="SongEditForm-field SongEditForm-field--nz SongEditForm-field--no-label">
             <span
-              className={`SongEditForm-pill ${locationNz ? 'SongEditForm-pill--on' : ''}`}
+              className={`SongEditForm-pill SongEditForm-pill--nz ${locationNz ? 'SongEditForm-pill--on' : ''}`}
               onClick={() => setLocationNz((prev) => !prev)}
             >
               NZ
@@ -393,21 +403,24 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         </Box>
 
         <Box className="SongEditForm-row">
-          <Autocomplete
-            multiple
-            freeSolo
-            id="edit-field-styles"
-            options={styleSuggestions}
-            value={styles}
-            onChange={(_, newVal) => {
-              setStyles(newVal);
-            }}
-            onBlur={handleFlush}
-            renderInput={(params) => (
-              <TextField {...params} label="Styles" placeholder="Add style..." size="small" />
-            )}
-            fullWidth
-          />
+          <Box className="SongEditForm-field">
+            <span className="SongEditForm-field-label">styles</span>
+            <Autocomplete
+              multiple
+              freeSolo
+              id="edit-field-styles"
+              options={styleSuggestions}
+              value={styles}
+              onChange={(_, newVal) => {
+                setStyles(newVal);
+              }}
+              onBlur={handleFlush}
+              renderInput={(params) => (
+                <TextField {...params} placeholder="Add style..." size="small" />
+              )}
+              fullWidth
+            />
+          </Box>
         </Box>
         {hasDjing && grouping.includes('Listening') && (
           <Box className="SongEditForm-hint">{LISTENING_HINT}</Box>
@@ -429,9 +442,9 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             </span>
           </Box>
           <Box className="SongEditForm-export">
-            <Button variant="outlined" size="small" onClick={handleExport}>
+            <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
               Save to Apple Music
-            </Button>
+            </span>
             {exportMsg && (
               <Box component="span" className="SongEditForm-export-msg">{exportMsg}</Box>
             )}

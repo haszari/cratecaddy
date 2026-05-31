@@ -42,6 +42,35 @@ $pill-off-text: #bbb;
     display: flex;
     flex-direction: column;
     gap: 0.2em;
+
+    &.SongEditForm-field--nz {
+      align-items: center;
+    }
+
+    &.SongEditForm-field--no-label::before {
+      content: '';
+      display: block;
+      height: 1.1em;
+    }
+
+    .SongEditForm-key-row {
+      display: flex;
+      gap: 0.3em;
+      align-items: flex-start;
+    }
+
+    .SongEditForm-key-select {
+      background: $pill-off-bg;
+      color: $pill-off-text;
+      border: none;
+      border-radius: 0.5em;
+      padding: 0.25em 0.5em;
+      font-size: 0.82em;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      min-width: 5em;
+    }
   }
 
   .SongEditForm-field-label {
@@ -120,28 +149,21 @@ $pill-off-text: #bbb;
     padding: 0.2em 0.5em;
   }
 
-  .SongEditForm-key-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25em;
+  .SongEditForm-pill--nz {
+    min-width: 2.2em;
+    justify-content: center;
+    padding: 0.2em 0.35em;
+  }
 
-    .SongEditForm-key-row {
-      display: flex;
-      gap: 0.3em;
-      align-items: flex-start;
-    }
+  .SongEditForm-pill--action {
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    padding: 0.25em 0.7em;
+    font-size: 0.82em;
 
-    .SongEditForm-key-select {
-      background: $pill-off-bg;
-      color: $pill-off-text;
-      border: none;
-      border-radius: 0.5em;
-      padding: 0.25em 0.5em;
-      font-size: 0.82em;
-      font-weight: 600;
-      cursor: pointer;
-      outline: none;
-      min-width: 5em;
+    &:hover {
+      background: $pill-on;
+      color: #fff;
     }
   }
 
