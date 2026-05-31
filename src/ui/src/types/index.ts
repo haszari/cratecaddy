@@ -15,10 +15,12 @@ export interface Song {
   _id?: string;
   title: string;
   artist: string;
+  album: string;
   genres: string[];
   bpm?: number;
   rating?: number;
   key?: string;
+  year?: number;
   grouping?: string[];
   appleMusicId?: string;
   favorite?: 'starred' | 'normal' | 'disliked';
