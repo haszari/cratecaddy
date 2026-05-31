@@ -9,6 +9,7 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 - **src/ui/** - Vite + React SPA displaying genre tag clouds from the API
 - **src/api/** - Express TypeScript server with Mongoose models, CRUD endpoints at `/api/songs`
   - **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
+- **Docker** - Only MongoDB runs in Docker; the API runs on the host (macOS) so it can call `osascript` for write round-trips to Apple Music
 
 ## Development
 
@@ -16,24 +17,30 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
 
 Ports and config are in `.env` files (committed, override as needed):
 
-- `src/.env` — API port, MongoDB URI (used by docker compose)
+- `src/.env` — API port, MongoDB URI
 - `src/ui/.env` — API URL, UI port
 
 ```bash
-# Build Docker image (installs npm deps for the API)
-docker-compose up --build -d
+# Start MongoDB (Docker)
+docker compose up -d
 
-# Install frontend dependencies
+# Install API dependencies
+cd src/api && npm install
+
+# Install UI dependencies
 cd src/ui && npm install
 ```
 
 ### Daily build & run
 
 ```bash
-# Terminal 1: MongoDB + API server (Docker)
-docker-compose up -d
+# Terminal 1: MongoDB (Docker)
+docker compose up -d
 
-# Terminal 2: Frontend dev server (Vite)
+# Terminal 2: API server (host, macOS)
+cd src/api && npm run dev
+
+# Terminal 3: Frontend dev server (Vite)
 cd src/ui && npm run dev
 ```
 
@@ -47,58 +54,23 @@ Code changes are picked up automatically — no restart needed for normal develo
 | Code change | How it's picked up |
 |---|---|
 | UI source (`src/ui/src/`) | Vite HMR — instant browser update |
-| API source (`src/api/src/`) | `tsx watch` inside Docker auto-restarts on save. Source is mounted as a volume, so changes sync instantly. |
+| API source (`src/api/src/`) | `tsx watch` — auto-restarts on save |
 
-### Restart, rebuild, clean state
+### Database management
 
-These are for edge cases — you shouldn't need them during normal development.
-
-#### When to restart the API container
-
-If `tsx watch` misses a change or gets stuck, restart the container without rebuilding:
+#### Start/stop MongoDB
 
 ```bash
-docker-compose restart api
+docker compose up -d    # Start
+docker compose down             # Stop MongoDB + remove container (data persists)
 ```
 
-The image is unchanged — this just re-runs the existing container.
-
-#### When to rebuild the Docker image
-
-Rebuild when infrastructure changes. The API's `src/` is mounted as a volume for hot reload, so code changes don't need it.
+#### Reset MongoDB (wipe all data)
 
 ```bash
-docker-compose up --build -d
+docker compose down --volumes
+docker compose up -d
 ```
-
-Needed after:
-- `package.json` changed (new dependency, script, etc.)
-- `Dockerfile` changed
-- `docker-compose.yml` changed
-
-#### What state builds up during development
-
-Imports and database changes accumulate in MongoDB, which stores data in a Docker volume (`mongodb_data`). This is persistent across container restarts — your imported songs, genres, and edits survive `docker-compose down` and `docker-compose up`.
-
-#### When to do a full state wipe
-
-Blows away containers **and** the MongoDB data volume, starting completely fresh:
-
-```bash
-docker-compose down --volumes
-docker-compose up -d
-```
-
-Use this when you want a clean slate (no imported songs, start from zero) or suspect volume corruption.
-
-#### Stop
-
-```bash
-docker-compose down          # Stop MongoDB + API
-# Ctrl+C in Vite terminal    # Stop frontend
-```
-
-`docker-compose down` without `--volumes` keeps the database volume intact.
 
 ### Import data from Apple Music
 
@@ -137,5 +109,3 @@ Currently UI and API are built separately:
 2. Build API: `cd src/api && npm run build` → outputs to `dist/`
 3. Serve UI from a static host (Vercel, Netlify, S3, etc.)
 4. Run API server on a Node.js host with MongoDB connection
-
-**Future:** A Docker Compose setup could containerize both the built UI and API in production for simplified deployment.
