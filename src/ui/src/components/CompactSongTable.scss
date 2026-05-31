@@ -4,19 +4,25 @@
 
   table {
     width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: none;
   }
 
   tbody tr {
     cursor: pointer;
 
     &:hover {
-      background: #f5f5f5;
+      background: #43423c;
+      color: #fff;
     }
   }
 
   .CompactSongTable-row--selected {
     background: #43423c;
-    color: #fff;
+    color: orange;
     font-weight: 600;
   }
 }
