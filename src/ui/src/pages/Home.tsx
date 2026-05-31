@@ -130,7 +130,7 @@ export default function Home() {
         <a href="/genre/BAM,Deep"><code>/genre/BAM,Deep</code></a> or <a href="/genre/BAM+Deep"><code>/genre/BAM+Deep</code></a>
       </p>
       {stats && (
-        <p className="song-count">{totalSongs} song{totalSongs !== 1 ? 's' : ''} across {Object.keys(tags).length} genre{Object.keys(tags).length !== 1 ? 's' : ''}</p>
+        <p className="song-count">{totalSongs} song{totalSongs !== 1 ? 's' : ''} across {Object.keys(tags).length} style{Object.keys(tags).length !== 1 ? 's' : ''}</p>
       )}
       {isLoading && <p>Loading genres...</p>}
       {error && <p style={{ color: 'red' }}>Failed to load genres</p>}
