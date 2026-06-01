@@ -61,23 +61,29 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
   commentBlock += `
     set comment of t to newComment`;
 
-  const script = `tell application "Music"
-  try
-    set t to (first track of library playlist 1 whose persistent ID is "${appleMusicId}")
-    set name of t to "${title}"
-    set artist of t to "${artist}"
-    if "${album}" is not "" then set album of t to "${album}"
-    if "${genre}" is not "" then set genre of t to "${genre}"
-    if "${grouping}" is not "" then set grouping of t to "${grouping}"
-    if "${bpm}" is not "" then set bpm of t to ${bpm}
-    if "${rating}" is not "" then set rating of t to ${rating}
-    if "${year}" is not "" then set year of t to ${year}
-    ${commentBlock}
-    return "ok"
-  on error errMsg
-    return "error: " & errMsg
-  end try
-end tell`;
+  const scriptLines: string[] = [
+    `tell application "Music"`,
+    `  try`,
+    `    set t to (first track of library playlist 1 whose persistent ID is "${appleMusicId}")`,
+    `    set name of t to "${title}"`,
+    `    set artist of t to "${artist}"`,
+  ];
+
+  if (album) scriptLines.push(`    set album of t to "${album}"`);
+  if (genre) scriptLines.push(`    set genre of t to "${genre}"`);
+  if (grouping) scriptLines.push(`    set grouping of t to "${grouping}"`);
+  if (bpm) scriptLines.push(`    set bpm of t to ${bpm}`);
+  if (rating) scriptLines.push(`    set rating of t to ${rating}`);
+  if (year) scriptLines.push(`    set year of t to ${year}`);
+
+  scriptLines.push(...commentBlock.trim().split('\n').map(l => `    ${l.trim()}`));
+  scriptLines.push(`    return "ok"`);
+  scriptLines.push(`  on error errMsg`);
+  scriptLines.push(`    return "error: " & errMsg`);
+  scriptLines.push(`  end try`);
+  scriptLines.push(`end tell`);
+
+  const script = scriptLines.join('\n');
 
   return new Promise((resolve) => {
     exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, { timeout: 15000 }, (error, stdout, stderr) => {
