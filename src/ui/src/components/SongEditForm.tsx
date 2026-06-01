@@ -164,19 +164,22 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     setStage((prev) =>
       prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
     );
-  }, []);
+    handleSave();
+  }, [handleSave]);
 
   const toggleSet = useCallback((opt: string) => {
     setSetField((prev) =>
       prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
     );
-  }, []);
+    handleSave();
+  }, [handleSave]);
 
   const toggleListening = useCallback((opt: string) => {
     setListening((prev) =>
       prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
     );
-  }, []);
+    handleSave();
+  }, [handleSave]);
 
   const toggleGroupingPill = useCallback((opt: string) => {
     setGrouping((prev) => {
@@ -186,15 +189,18 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       }
       return [...prev, opt];
     });
-  }, []);
+    handleSave();
+  }, [handleSave]);
 
   const handleKeyRootChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setKeyRoot(e.target.value);
-  }, []);
+    handleSave();
+  }, [handleSave]);
 
   const handleMinorToggle = useCallback(() => {
     setKeyMinor((prev) => !prev);
-  }, []);
+    handleSave();
+  }, [handleSave]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const tag = (e.target as HTMLElement).tagName;
