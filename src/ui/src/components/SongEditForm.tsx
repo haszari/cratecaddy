@@ -138,6 +138,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   }, []);
 
   const handleExport = useCallback(async () => {
+    handleSave();
     setExportMsg('');
     setExportIsError(false);
     try {
@@ -148,7 +149,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       setExportMsg('Write to Apple Music failed');
       setExportIsError(true);
     }
-  }, [song._id]);
+  }, [song._id, handleSave]);
 
   const handleArtistBlur = useCallback(() => {
     if (!artist.trim()) setArtist(song.artist);
