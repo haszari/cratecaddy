@@ -57,7 +57,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 ## Commit format
 
 ```
-[agent opencode-big-pickle <agent>] <what changed and why>
+[agent <harness>-<model> <agent_skill_task_or_step>] <what changed and why>
 ```
 
 - One commit per logical step (waypoint commits).
