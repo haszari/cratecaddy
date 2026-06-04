@@ -327,6 +327,8 @@ export class SongService {
   async updateSongMetadata(
     id: string,
     songData: {
+      artist?: string;
+      title?: string;
       genres?: string[];
       grouping?: string[];
       bpm?: number;
@@ -339,6 +341,8 @@ export class SongService {
     const song = await Song.findById(id);
     if (!song) return null;
 
+    if (songData.artist !== undefined) song.artist = songData.artist;
+    if (songData.title !== undefined) song.title = songData.title;
     if (songData.genres !== undefined) song.genres = songData.genres;
     if (songData.grouping !== undefined) song.grouping = songData.grouping;
     if (songData.bpm !== undefined) song.bpm = songData.bpm;

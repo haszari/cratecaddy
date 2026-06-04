@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { updateSongMetadata, writeToAppleMusic, fetchGenreStats } from '../api/client';
+import { updateSongMetadata, writeToAppleMusic, fetchGenreStats, fetchSongHistory } from '../api/client';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
@@ -56,10 +56,8 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const [exportMsg, setExportMsg] = useState('');
   const [exportIsError, setExportIsError] = useState(false);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingRef = useRef<Partial<Song> | null>(null);
-
   const keyFieldRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
 
   const saveMutation = useMutation({
     mutationFn: (data: Partial<Song>) => updateSongMetadata(song._id!, data),
@@ -71,54 +69,63 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const mutateRef = useRef(saveMutation.mutate);
   useEffect(() => { mutateRef.current = saveMutation.mutate; }, [saveMutation.mutate]);
 
-  const flushSave = useCallback(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = null;
-    if (pendingRef.current && Object.keys(pendingRef.current).length > 0) {
-      mutateRef.current(pendingRef.current);
-      pendingRef.current = null;
-    }
-  }, []);
-
-  const scheduleSave = useCallback((data: Partial<Song>) => {
-    pendingRef.current = { ...pendingRef.current, ...data };
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(flushSave, 800);
-  }, [flushSave]);
-
-  const handleSave = useCallback(() => {
-    const genres = reassembleGenres(stage, setField, locationNz, listening, styles);
-    const key = formatKeyField(keyRoot, keyMinor);
-    scheduleSave({
-      artist: artist || undefined,
-      title: title || undefined,
-      genres,
-      grouping,
-      bpm: bpm ?? undefined,
-      key: key || undefined,
-      year: year ?? undefined,
-      rating: rating > 0 ? rating : undefined,
-    });
-  }, [artist, title, stage, setField, locationNz, listening, styles, grouping, bpm, keyRoot, keyMinor, year, rating, scheduleSave]);
-
-  const saveRef = useRef(handleSave);
-  useEffect(() => { saveRef.current = handleSave; }, [handleSave]);
-
-  const mountedRef = useRef(false);
+  // Debounced auto-save on any state change. Each render starts an 800ms timer;
+  // cleanup cancels it so rapid changes collapse into one save.
   useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
-    handleSave();
-  }, [handleSave]);
+    const timer = setTimeout(() => {
+      const genres = reassembleGenres(stage, setField, locationNz, listening, styles);
+      const key = formatKeyField(keyRoot, keyMinor);
+      mutateRef.current({
+        artist: artist || undefined,
+        title: title || undefined,
+        genres,
+        grouping,
+        bpm: bpm ?? undefined,
+        key: key || undefined,
+        year: year ?? undefined,
+        rating: rating > 0 ? rating : undefined,
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [
+    artist, title, stage, setField, locationNz, listening, styles,
+    grouping, bpm, keyRoot, keyMinor, year, rating,
+  ]);
 
+  // Latest-state ref (updated after every render) for unmount flush and export.
+  const latestRef = useRef({
+    artist, title, stage, setField, locationNz, listening, styles,
+    grouping, bpm, keyRoot, keyMinor, year, rating, id: song._id,
+  });
+  useEffect(() => {
+    latestRef.current = {
+      artist, title, stage, setField, locationNz, listening, styles,
+      grouping, bpm, keyRoot, keyMinor, year, rating, id: song._id,
+    };
+  });
+
+  // Unmount: flush any unsaved changes
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      flushSave();
+      const f = latestRef.current;
+      const genres = reassembleGenres(f.stage, f.setField, f.locationNz, f.listening, f.styles);
+      const key = formatKeyField(f.keyRoot, f.keyMinor);
+      mutateRef.current({
+        artist: f.artist || undefined,
+        title: f.title || undefined,
+        genres,
+        grouping: f.grouping,
+        bpm: f.bpm ?? undefined,
+        key: key || undefined,
+        year: f.year ?? undefined,
+        rating: f.rating > 0 ? f.rating : undefined,
+      });
     };
-  }, [flushSave]);
+  }, []);
 
   const { data: allGenreStats } = useQuery({
     queryKey: ['genres', 'stats'],
@@ -133,54 +140,40 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       .map((g: { genre: string }) => g.genre);
   }, [allGenreStats]);
 
-  const handleFlush = useCallback(() => {
-    saveRef.current();
-  }, []);
+  const { data: history } = useQuery({
+    queryKey: ['song-history', song._id],
+    queryFn: () => fetchSongHistory(song._id!),
+    enabled: !!song._id,
+  });
 
-  const handleExport = useCallback(async () => {
-    handleSave();
-    setExportMsg('');
-    setExportIsError(false);
-    try {
-      const result = await writeToAppleMusic(song._id!);
-      setExportMsg(result.message);
-      setExportIsError(!result.success);
-    } catch {
-      setExportMsg('Write to Apple Music failed');
-      setExportIsError(true);
-    }
-  }, [song._id, handleSave]);
+  // Handlers only update state. The effect above debounces saves.
+  // No inline save calls — no double saves, no stale closures.
 
   const handleArtistBlur = useCallback(() => {
     if (!artist.trim()) setArtist(song.artist);
-    handleSave();
-  }, [artist, song.artist, handleSave]);
+  }, [artist, song.artist]);
 
   const handleTitleBlur = useCallback(() => {
     if (!title.trim()) setTitle(song.title);
-    handleSave();
-  }, [title, song.title, handleSave]);
+  }, [title, song.title]);
 
   const toggleStage = useCallback((opt: string) => {
     setStage((prev) =>
       prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
     );
-    handleSave();
-  }, [handleSave]);
+  }, []);
 
   const toggleSet = useCallback((opt: string) => {
     setSetField((prev) =>
       prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
     );
-    handleSave();
-  }, [handleSave]);
+  }, []);
 
   const toggleListening = useCallback((opt: string) => {
     setListening((prev) =>
       prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt],
     );
-    handleSave();
-  }, [handleSave]);
+  }, []);
 
   const toggleGroupingPill = useCallback((opt: string) => {
     setGrouping((prev) => {
@@ -190,18 +183,15 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       }
       return [...prev, opt];
     });
-    handleSave();
-  }, [handleSave]);
+  }, []);
 
   const handleKeyRootChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setKeyRoot(e.target.value);
-    handleSave();
-  }, [handleSave]);
+  }, []);
 
   const handleMinorToggle = useCallback(() => {
     setKeyMinor((prev) => !prev);
-    handleSave();
-  }, [handleSave]);
+  }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const tag = (e.target as HTMLElement).tagName;
@@ -213,7 +203,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     if (e.key >= '1' && e.key <= '5' && !isInput) {
       e.preventDefault();
       setRating(parseInt(e.key, 10));
-      setTimeout(() => saveRef.current(), 0);
       return;
     }
 
@@ -221,18 +210,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       if (e.key === 'd') {
         setGrouping((prev) => {
           if (prev.includes('DJing')) return prev;
-          const next = [...prev, 'DJing'];
-          setTimeout(() => saveRef.current(), 0);
-          return next;
+          return [...prev, 'DJing'];
         });
         return;
       }
       if (e.key === 'l') {
         setGrouping((prev) => {
           if (prev.includes('Listening')) return prev;
-          const next = [...prev, 'Listening'];
-          setTimeout(() => saveRef.current(), 0);
-          return next;
+          return [...prev, 'Listening'];
         });
         return;
       }
@@ -270,6 +255,32 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  const handleExport = useCallback(async () => {
+    setExportMsg('');
+    setExportIsError(false);
+    try {
+      const f = latestRef.current;
+      const genres = reassembleGenres(f.stage, f.setField, f.locationNz, f.listening, f.styles);
+      const key = formatKeyField(f.keyRoot, f.keyMinor);
+      await updateSongMetadata(f.id!, {
+        artist: f.artist || undefined,
+        title: f.title || undefined,
+        genres,
+        grouping: f.grouping,
+        bpm: f.bpm ?? undefined,
+        key: key || undefined,
+        year: f.year ?? undefined,
+        rating: f.rating > 0 ? f.rating : undefined,
+      });
+      const result = await writeToAppleMusic(f.id!);
+      setExportMsg(result.message);
+      setExportIsError(!result.success);
+    } catch {
+      setExportMsg('Write to Apple Music failed');
+      setExportIsError(true);
+    }
+  }, []);
+
   return (
     <Box className="SongEditForm">
       <Box className="SongEditForm-row">
@@ -302,7 +313,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                   key={n}
                   component="span"
                   className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
-                  onClick={() => { setRating(n); setTimeout(() => saveRef.current(), 0); }}
+                  onClick={() => setRating(n)}
                 >
                   {n <= rating ? '\u2605' : '\u2606'}
                 </Box>
@@ -333,7 +344,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               type="number"
               value={bpm ?? ''}
               onChange={(e) => setBpm(e.target.value ? parseFloat(e.target.value) : null)}
-              onBlur={handleFlush}
               size="small"
               slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
             />
@@ -344,7 +354,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               <select
                 value={keyRoot || ''}
                 onChange={handleKeyRootChange}
-                onBlur={handleFlush}
                 className="SongEditForm-key-select"
               >
                 <option value="">—</option>
@@ -367,7 +376,6 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               type="number"
               value={year ?? ''}
               onChange={(e) => setYear(e.target.value ? parseInt(e.target.value, 10) : null)}
-              onBlur={handleFlush}
               size="small"
               slotProps={{ htmlInput: { min: 1900, max: 2099, step: 1 } }}
             />
@@ -435,7 +443,20 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                 setStyles(newVal as string[]);
               }}
               renderInput={(params) => (
-                <TextField {...params} placeholder="Add style..." size="small" />
+                <TextField
+                  {...params}
+                  placeholder="Add style..."
+                  size="small"
+                  onPaste={(e) => {
+                    const text = e.clipboardData.getData('text');
+                    if (!text.includes(',')) return;
+                    e.preventDefault();
+                    const items = [...new Set(
+                      text.split(',').map(s => s.trim()).filter(Boolean),
+                    )];
+                    setStyles(prev => [...new Set([...prev, ...items])]);
+                  }}
+                />
               )}
               fullWidth
             />
@@ -486,6 +507,31 @@ export default function SongEditForm({ song }: SongEditFormProps) {
             <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
           )}
         </Box>
+
+        {history && history.length > 0 && (
+          <details className="SongEditForm-history">
+            <summary className="SongEditForm-history-summary">
+              edit history ({history.length})
+            </summary>
+            <Box className="SongEditForm-history-list">
+              {history.map((entry) => (
+                <Box key={entry._id} className="SongEditForm-history-entry">
+                  <span className="SongEditForm-history-date">
+                    {new Date(entry.dateEdited).toLocaleString()}
+                  </span>
+                  <span className="SongEditForm-history-source">
+                    {entry.sourceType}
+                  </span>
+                  {entry.snapshot.genres.length > 0 && (
+                    <span className="SongEditForm-history-genres">
+                      {entry.snapshot.genres.join(', ')}
+                    </span>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </details>
+        )}
     </Box>
   );
 }
