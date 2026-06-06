@@ -17,8 +17,7 @@ interface SongTableProps {
   onSortChange?: (field: SortField) => void;
 }
 
-function SortIcon({ field, sortField, sortOrder }: { field: SortField; sortField?: SortField; sortOrder?: SortOrder }) {
-  if (field !== sortField) return <span className="SongTable-sort-icon SongTable-sort-icon--inactive">&#8597;</span>;
+function SortIcon({ sortOrder }: { field: SortField; sortField?: SortField; sortOrder?: SortOrder }) {
   return (
     <span className="SongTable-sort-icon SongTable-sort-icon--active">
       {sortOrder === 'desc' ? '\u25B2' : '\u25BC'}
@@ -33,13 +32,14 @@ function SortableHeader({ field, label, sortField, sortOrder, onSortChange }: {
   sortOrder?: SortOrder;
   onSortChange?: (field: SortField) => void;
 }) {
+  const sortButton = (field === sortField) && <SortIcon field={field} sortField={sortField} sortOrder={sortOrder} />;
   return (
     <th
-      className={`col-${field} SongTable-sortable`}
-      onClick={() => onSortChange?.(field)}
+    className={`col-${field} SongTable-sortable`}
+    onClick={() => onSortChange?.(field)}
     >
       {label}
-      <SortIcon field={field} sortField={sortField} sortOrder={sortOrder} />
+      {sortButton}
     </th>
   );
 }
