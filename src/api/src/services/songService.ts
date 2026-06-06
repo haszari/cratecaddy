@@ -362,7 +362,7 @@ export class SongService {
     pagination: ApiPaginationParams;
   }): Promise<{ data: ISong[]; page: number; limit: number; total: number; totalPages: number; shuffleSeed?: string }> {
     const filter = buildSongFilter(params.filters);
-    const { page, limit, skip, shuffleSeed, sort, sortOrder } = parsePagination(params.pagination);
+    const { page, limit, skip, shuffleSeed, sort, sortDirection } = parsePagination(params.pagination);
 
     if (shuffleSeed) {
       const pipeline: any[] = [];
@@ -388,7 +388,7 @@ export class SongService {
     }
 
     const sortObj: Record<string, 1 | -1> = sort
-      ? { [sort]: sortOrder === 'desc' ? -1 : 1 }
+      ? { [sort]: sortDirection === 'desc' ? -1 : 1 }
       : { rating: -1 };
 
     const [data, total] = await Promise.all([

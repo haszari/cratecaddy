@@ -1,11 +1,10 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 export interface FilterState {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
-  shuffleSeed?: string;
 }
 
 function splitCSV(val: string | null): string[] {
@@ -27,13 +26,8 @@ function setParam(
   return next;
 }
 
-function generateSeed(): string {
-  return Math.random().toString(36).slice(2, 10);
-}
-
 export function useFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialized = useRef(false);
 
   const filters: FilterState = {
     genreNot: splitCSV(searchParams.get('genre.not')),
@@ -45,24 +39,7 @@ export function useFilters() {
       const v = searchParams.get('bpm.lte');
       return v ? parseFloat(v) : undefined;
     })(),
-    shuffleSeed: (() => {
-      const v = searchParams.get('shuffle');
-      if (v === 'false') return undefined;
-      return v || undefined;
-    })(),
   };
-
-  useEffect(() => {
-    if (!initialized.current && !searchParams.has('shuffle')) {
-      const seed = generateSeed();
-      setSearchParams(
-        (prev) => setParam(prev, 'shuffle', seed),
-        { replace: true },
-      );
-      initialized.current = true;
-    }
-    initialized.current = true;
-  }, [searchParams, setSearchParams]);
 
   const addExclude = useCallback(
     (genre: string) => {
@@ -96,29 +73,6 @@ export function useFilters() {
     [setSearchParams],
   );
 
-  const toggleShuffle = useCallback(
-    (on: boolean) => {
-      setSearchParams((prev) => {
-        const current = prev.get('shuffle');
-        if (on && (!current || current === 'false')) {
-          return setParam(prev, 'shuffle', current === 'false' ? generateSeed() : current || generateSeed());
-        }
-        if (!on) {
-          return setParam(prev, 'shuffle', 'false');
-        }
-        return prev;
-      }, { replace: true });
-    },
-    [setSearchParams],
-  );
-
-  const reshuffle = useCallback(() => {
-    setSearchParams((prev) =>
-      setParam(prev, 'shuffle', generateSeed()),
-      { replace: true },
-    );
-  }, [setSearchParams]);
-
   const clearFilters = useCallback(() => {
     setSearchParams((prev) => {
       let next = setParam(prev, 'genre.not', null);
@@ -133,16 +87,11 @@ export function useFilters() {
     filters.bpmGte !== undefined ||
     filters.bpmLte !== undefined;
 
-  const shuffleMode = filters.shuffleSeed !== undefined;
-
   return {
     filters,
-    shuffleMode,
     addExclude,
     removeExclude,
     setBpmRange,
-    toggleShuffle,
-    reshuffle,
     clearFilters,
     hasActiveFilters,
   };

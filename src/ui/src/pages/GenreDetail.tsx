@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
 import { useFilters } from '../hooks/useFilters';
+import { useSortShuffle } from '../hooks/useSortShuffle';
 import { useEditMode } from '../hooks/useEditMode';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
@@ -12,7 +13,7 @@ import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import EditLayout from '../components/EditLayout';
 import type { TagInfo } from '../types';
-import type { SortField, SortOrder } from '../components/SongTable';
+import type { SortField, SortDirection } from '../components/SongTable';
 import { withSearch } from '../utils/url';
 
 export default function GenreDetail() {
@@ -27,20 +28,21 @@ export default function GenreDetail() {
     : [];
 
   const [page, setPage] = useState(1);
-  const [sortField, setSortField] = useState<SortField | undefined>();
-  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
 
-  const handleSortChange = useCallback((field: SortField) => {
-    setSortField(prev => {
-      if (prev === field) {
-        setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
-        return prev;
-      }
-      setSortOrder('asc');
-      return field;
-    });
+  const {
+    sortField, sortDirection, shuffleSeed, shuffleMode,
+    setSort, toggleShuffle, reshuffle,
+  } = useSortShuffle();
+
+  const handleSort = useCallback((field: SortField, direction: SortDirection) => {
+    setSort(field, direction);
     setPage(1);
-  }, [setPage]);
+  }, [setSort, setPage]);
+
+  const handleShuffleToggle = useCallback((on: boolean) => {
+    toggleShuffle(on);
+    setPage(1);
+  }, [toggleShuffle, setPage]);
 
   const editMode = useEditMode();
   const editToggleRef = useRef(editMode.toggle);
@@ -68,14 +70,12 @@ export default function GenreDetail() {
   const {
     filters, addExclude,
     removeExclude, setBpmRange,
-    shuffleMode, toggleShuffle, reshuffle,
   } = useFilters();
 
   const genreParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const shuffleParam = filters.shuffleSeed;
 
   const extraParams = {
     ...(genreParam && (isOrMode ? { 'genre.any': genreParam } : { 'genre.all': genreParam })),
@@ -83,12 +83,12 @@ export default function GenreDetail() {
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
     ...(sortField && { sort: sortField }),
-    ...(sortOrder && { sortOrder }),
+    ...(sortDirection && { sortDirection }),
   };
 
   const { data: paginated, isLoading, error } = useSongs({
     ...extraParams,
-    shuffle: shuffleParam,
+    shuffle: shuffleSeed,
     page,
     limit: 50,
   });
@@ -151,7 +151,7 @@ export default function GenreDetail() {
           onRemoveExclude={removeExclude}
           onBpmChange={setBpmRange}
           shuffleActive={shuffleMode}
-          onShuffleToggle={toggleShuffle}
+          onShuffleToggle={handleShuffleToggle}
           onShuffleReseed={reshuffle}
           editMode={editMode.active}
           onEditToggle={editMode.toggle}
@@ -180,7 +180,7 @@ export default function GenreDetail() {
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
         shuffleActive={shuffleMode}
-        onShuffleToggle={toggleShuffle}
+        onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editMode={editMode.active}
         onEditToggle={editMode.toggle}
@@ -198,8 +198,8 @@ export default function GenreDetail() {
               totalCount={paginated.total}
               onPageChange={setPage}
               sortField={sortField}
-              sortOrder={sortOrder}
-              onSortChange={handleSortChange}
+              sortDirection={sortDirection}
+              onSortChange={handleSort}
             />
           )}
 

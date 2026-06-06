@@ -15,7 +15,7 @@ export interface ApiPaginationParams {
   limit?: string | number;
   shuffle?: string;
   sort?: string;
-  sortOrder?: string;
+  sortDirection?: string;
 }
 
 export type ApiSongParams = ApiFilterParams & ApiPaginationParams;
@@ -28,5 +28,5 @@ export const FILTER_PARAM_KEYS: (keyof ApiFilterParams)[] = [
 ];
 
 export const PAGINATION_PARAM_KEYS: (keyof ApiPaginationParams)[] = [
-  'page', 'limit', 'shuffle', 'sort', 'sortOrder',
+  'page', 'limit', 'shuffle', 'sort', 'sortDirection',
 ];

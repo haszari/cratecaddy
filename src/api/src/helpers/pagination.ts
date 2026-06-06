@@ -8,7 +8,7 @@ export interface PaginationResult {
   skip: number;
   shuffleSeed?: string;
   sort?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortDirection?: 'asc' | 'desc';
 }
 
 const DEFAULT_PAGE = 1;
@@ -39,11 +39,11 @@ export function parsePagination(query: ApiPaginationParams): PaginationResult {
   }
 
   let sort: string | undefined;
-  let sortOrder: 'asc' | 'desc' | undefined;
+  let sortDirection: 'asc' | 'desc' | undefined;
   if (query.sort && VALID_SORT_FIELDS.includes(query.sort as string)) {
     sort = query.sort as string;
-    sortOrder = query.sortOrder === 'desc' ? 'desc' : 'asc';
+    sortDirection = query.sortDirection === 'desc' ? 'desc' : 'asc';
   }
 
-  return { page, limit, skip, shuffleSeed, sort, sortOrder };
+  return { page, limit, skip, shuffleSeed, sort, sortDirection };
 }
