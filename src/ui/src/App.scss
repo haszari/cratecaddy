@@ -110,6 +110,29 @@ thead th {
   padding: 0.15em 0.3em;
 }
 
+.SongTable-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.SongTable-sortable:hover {
+  opacity: 1;
+}
+
+.SongTable-sort-icon {
+  margin-left: 0.25em;
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+
+.SongTable-sort-icon--inactive {
+  opacity: 0.3;
+}
+
+.SongTable-sort-icon--active {
+  opacity: 1;
+}
+
 table tbody td {
   padding: 0.15em 0.3em;
 }

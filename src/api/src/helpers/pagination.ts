@@ -1,10 +1,14 @@
 import { ApiPaginationParams } from './apiParams.js';
 
+const VALID_SORT_FIELDS = ['artist', 'title', 'bpm', 'key', 'rating', 'year', 'createdAt'];
+
 export interface PaginationResult {
   page: number;
   limit: number;
   skip: number;
   shuffleSeed?: string;
+  sort?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 const DEFAULT_PAGE = 1;
@@ -34,5 +38,12 @@ export function parsePagination(query: ApiPaginationParams): PaginationResult {
       : query.shuffle;
   }
 
-  return { page, limit, skip, shuffleSeed };
+  let sort: string | undefined;
+  let sortOrder: 'asc' | 'desc' | undefined;
+  if (query.sort && VALID_SORT_FIELDS.includes(query.sort as string)) {
+    sort = query.sort as string;
+    sortOrder = query.sortOrder === 'desc' ? 'desc' : 'asc';
+  }
+
+  return { page, limit, skip, shuffleSeed, sort, sortOrder };
 }

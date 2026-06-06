@@ -4,11 +4,11 @@ import './CompactSongTable.scss';
 
 interface CompactSongTableProps {
   songs: Song[];
-  selectedIndex: number;
-  onSelect: (index: number) => void;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 }
 
-export default function CompactSongTable({ songs, selectedIndex, onSelect }: CompactSongTableProps) {
+export default function CompactSongTable({ songs, selectedId, onSelect }: CompactSongTableProps) {
   return (
     <div className="CompactSongTable">
       <table>
@@ -20,11 +20,11 @@ export default function CompactSongTable({ songs, selectedIndex, onSelect }: Com
           </tr>
         </thead>
         <tbody>
-          {songs.map((song, i) => (
+          {songs.map((song) => (
             <tr
               key={song._id}
-              className={i === selectedIndex ? 'CompactSongTable-row--selected' : ''}
-              onClick={() => onSelect(i)}
+              className={song._id === selectedId ? 'CompactSongTable-row--selected' : ''}
+              onClick={() => song._id && onSelect(song._id)}
             >
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />

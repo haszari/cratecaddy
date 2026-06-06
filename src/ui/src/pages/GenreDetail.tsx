@@ -12,6 +12,7 @@ import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import EditLayout from '../components/EditLayout';
 import type { TagInfo } from '../types';
+import type { SortField, SortOrder } from '../components/SongTable';
 import { withSearch } from '../utils/url';
 
 export default function GenreDetail() {
@@ -26,6 +27,20 @@ export default function GenreDetail() {
     : [];
 
   const [page, setPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField | undefined>();
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+
+  const handleSortChange = useCallback((field: SortField) => {
+    setSortField(prev => {
+      if (prev === field) {
+        setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
+        return prev;
+      }
+      setSortOrder('asc');
+      return field;
+    });
+    setPage(1);
+  }, [setPage]);
 
   const editMode = useEditMode();
   const editToggleRef = useRef(editMode.toggle);
@@ -67,6 +82,8 @@ export default function GenreDetail() {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(sortField && { sort: sortField }),
+    ...(sortOrder && { sortOrder }),
   };
 
   const { data: paginated, isLoading, error } = useSongs({
@@ -142,10 +159,8 @@ export default function GenreDetail() {
 
         <EditLayout
           songs={songs}
-          selectedIndex={editMode.selectedIndex}
-          onSelect={editMode.selectIndex}
-          onSelectNext={() => editMode.selectNext(songs.length)}
-          onSelectPrev={editMode.selectPrev}
+          selectedId={editMode.selectedId}
+          onSelect={editMode.selectId}
         />
       </div>
     );
@@ -182,6 +197,9 @@ export default function GenreDetail() {
               totalPages={paginated.totalPages}
               totalCount={paginated.total}
               onPageChange={setPage}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
             />
           )}
 

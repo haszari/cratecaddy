@@ -1,14 +1,45 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { updateSongMetadata, writeToAppleMusic, fetchGenreStats, fetchSongHistory } from '../api/client';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
-import type { Song } from '../types';
+import type { PaginatedResponse, Song } from '../types';
+import type { HistoryEntry } from '../api/client';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import { X } from 'lucide-react';
 import './SongEditForm.scss';
+
+interface SnapshotDiff {
+  field: string;
+  value: string | string[];
+}
+
+const DIFF_FIELDS: (keyof HistoryEntry['snapshot'])[] = [
+  'title', 'artist', 'genres', 'grouping', 'bpm', 'key', 'rating', 'year', 'favorite',
+];
+
+function computeSnapshotDiff(
+  current: HistoryEntry['snapshot'],
+  prev: HistoryEntry['snapshot'] | undefined,
+): SnapshotDiff[] {
+  const diffs: SnapshotDiff[] = [];
+  for (const field of DIFF_FIELDS) {
+    const curr = current[field];
+    const prevVal = prev?.[field];
+    const currJson = JSON.stringify(curr);
+    const prevJson = JSON.stringify(prevVal);
+    if (currJson !== prevJson) {
+      if (Array.isArray(curr)) {
+        diffs.push({ field, value: curr.slice() });
+      } else if (curr !== undefined && curr !== null && curr !== '') {
+        diffs.push({ field, value: String(curr) });
+      }
+    }
+  }
+  return diffs;
+}
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const STAGE_OPTIONS = ['Warmup', 'Peak', 'Later'];
@@ -37,6 +68,7 @@ interface SongEditFormProps {
 }
 
 export default function SongEditForm({ song }: SongEditFormProps) {
+  const queryClient = useQueryClient();
   const init = useMemo(() => decomposeGenres(song.genres), [song.genres]);
   const initKey = useMemo(() => parseKeyField(song.key), [song.key]);
 
@@ -59,10 +91,35 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const keyFieldRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
 
+  const [saveMsg, setSaveMsg] = useState('');
+  const [saveIsError, setSaveIsError] = useState(false);
+
+  const patchSongsCache = useCallback((updated: Song) => {
+    queryClient.setQueriesData<PaginatedResponse<Song>>(
+      { queryKey: ['songs'] },
+      (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.map((s) =>
+            s._id === updated._id ? { ...s, ...updated } : s,
+          ),
+        };
+      },
+    );
+  }, [queryClient]);
+
   const saveMutation = useMutation({
     mutationFn: (data: Partial<Song>) => updateSongMetadata(song._id!, data),
+    onSuccess: (updated) => {
+      patchSongsCache(updated);
+      setSaveMsg('');
+      setSaveIsError(false);
+    },
     onError: (err) => {
       console.error('Save failed', err);
+      setSaveMsg(err instanceof Error ? err.message : 'Save failed');
+      setSaveIsError(true);
     },
   });
 
@@ -262,7 +319,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       const f = latestRef.current;
       const genres = reassembleGenres(f.stage, f.setField, f.locationNz, f.listening, f.styles);
       const key = formatKeyField(f.keyRoot, f.keyMinor);
-      await updateSongMetadata(f.id!, {
+      const updated = await updateSongMetadata(f.id!, {
         artist: f.artist || undefined,
         title: f.title || undefined,
         genres,
@@ -272,6 +329,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         year: f.year ?? undefined,
         rating: f.rating > 0 ? f.rating : undefined,
       });
+      patchSongsCache(updated);
       const result = await writeToAppleMusic(f.id!);
       setExportMsg(result.message);
       setExportIsError(!result.success);
@@ -279,7 +337,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       setExportMsg('Write to Apple Music failed');
       setExportIsError(true);
     }
-  }, []);
+  }, [patchSongsCache]);
 
   return (
     <Box className="SongEditForm">
@@ -500,11 +558,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         )}
 
         <Box className="SongEditForm-export">
+          {saveMsg && (
+            <Box component="span" className={`SongEditForm-status-msg${saveIsError ? ' SongEditForm-status-msg--error' : ''}`}>{saveMsg}</Box>
+          )}
           <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
             Save to Apple Music
           </span>
           {exportMsg && (
-            <Box component="span" className={`SongEditForm-export-msg${exportIsError ? ' SongEditForm-export-msg--error' : ''}`}>{exportMsg}</Box>
+            <Box component="span" className={`SongEditForm-status-msg${exportIsError ? ' SongEditForm-status-msg--error' : ''}`}>{exportMsg}</Box>
           )}
         </Box>
 
@@ -514,21 +575,36 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               edit history ({history.length})
             </summary>
             <Box className="SongEditForm-history-list">
-              {history.map((entry) => (
-                <Box key={entry._id} className="SongEditForm-history-entry">
-                  <span className="SongEditForm-history-date">
-                    {new Date(entry.dateEdited).toLocaleString()}
-                  </span>
-                  <span className="SongEditForm-history-source">
-                    {entry.sourceType}
-                  </span>
-                  {entry.snapshot.genres.length > 0 && (
-                    <span className="SongEditForm-history-genres">
-                      {entry.snapshot.genres.join(', ')}
+              {history.map((entry, i) => {
+                const prev = i > 0 ? history[i - 1].snapshot : undefined;
+                const diffs = prev ? computeSnapshotDiff(entry.snapshot, prev) : [];
+                return (
+                  <Box key={entry._id} className="SongEditForm-history-entry">
+                    <span className="SongEditForm-history-date">
+                      {new Date(entry.dateEdited).toLocaleString()}
                     </span>
-                  )}
-                </Box>
-              ))}
+                    <span className="SongEditForm-history-source">
+                      {entry.sourceType}
+                    </span>
+                    {diffs.length > 0 && (
+                      <span className="SongEditForm-history-diffs">
+                        {diffs.map((d) => (
+                          <span key={d.field} className="SongEditForm-history-field">
+                            <span className="SongEditForm-history-field-label">{d.field}:</span>
+                            {Array.isArray(d.value) ? (
+                              d.value.map((v) => (
+                                <span key={v} className="SongEditForm-history-token">{v}</span>
+                              ))
+                            ) : (
+                              <span className="SongEditForm-history-value">{d.value}</span>
+                            )}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </Box>
+                );
+              })}
             </Box>
           </details>
         )}

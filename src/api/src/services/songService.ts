@@ -254,24 +254,7 @@ export class SongService {
 
       const saved = await song.save();
 
-      await HistoryEntry.create({
-        songId: saved._id,
-        dateEdited: new Date(),
-        sourceType: source.sourceType,
-        entryType: 'update',
-        snapshot: {
-          title: saved.title,
-          artist: saved.artist,
-          genres: saved.genres,
-          grouping: saved.grouping,
-          bpm: saved.bpm,
-          key: saved.key,
-          rating: saved.rating,
-          year: saved.year,
-          favorite: saved.favorite,
-        },
-        importMeta: source.importMeta,
-      });
+      await this.pushHistory(saved, source.sourceType, source.importMeta);
 
       return saved;
     }
@@ -302,24 +285,7 @@ export class SongService {
 
     const saved = await newSong.save();
 
-    await HistoryEntry.create({
-      songId: saved._id,
-      dateEdited: new Date(),
-      sourceType: source.sourceType,
-      entryType: 'create',
-      snapshot: {
-        title: saved.title,
-        artist: saved.artist,
-        genres: saved.genres,
-        grouping: saved.grouping,
-        bpm: saved.bpm,
-        key: saved.key,
-        rating: saved.rating,
-        year: saved.year,
-        favorite: saved.favorite,
-      },
-      importMeta: source.importMeta,
-    });
+    await this.pushHistory(saved, source.sourceType, source.importMeta);
 
     return saved;
   }
@@ -352,45 +318,7 @@ export class SongService {
     if (songData.favorite !== undefined) song.favorite = songData.favorite;
 
     const saved = await song.save();
-
-    const lastEntry = await HistoryEntry.findOne({ songId: saved._id, sourceType: 'manual' })
-      .sort({ dateEdited: -1 });
-
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-
-    if (lastEntry && lastEntry.dateEdited > fiveMinAgo) {
-      lastEntry.snapshot = {
-        title: saved.title,
-        artist: saved.artist,
-        genres: saved.genres,
-        grouping: saved.grouping,
-        bpm: saved.bpm,
-        key: saved.key,
-        rating: saved.rating,
-        year: saved.year,
-        favorite: saved.favorite,
-      };
-      await lastEntry.save();
-    } else {
-      await HistoryEntry.create({
-        songId: saved._id,
-        dateEdited: new Date(),
-        sourceType: 'manual',
-        entryType: 'update',
-        snapshot: {
-          title: saved.title,
-          artist: saved.artist,
-          genres: saved.genres,
-          grouping: saved.grouping,
-          bpm: saved.bpm,
-          key: saved.key,
-          rating: saved.rating,
-          year: saved.year,
-          favorite: saved.favorite,
-        },
-      });
-    }
-
+    await this.pushHistory(saved, 'manual');
     return saved;
   }
 
@@ -434,7 +362,7 @@ export class SongService {
     pagination: ApiPaginationParams;
   }): Promise<{ data: ISong[]; page: number; limit: number; total: number; totalPages: number; shuffleSeed?: string }> {
     const filter = buildSongFilter(params.filters);
-    const { page, limit, skip, shuffleSeed } = parsePagination(params.pagination);
+    const { page, limit, skip, shuffleSeed, sort, sortOrder } = parsePagination(params.pagination);
 
     if (shuffleSeed) {
       const pipeline: any[] = [];
@@ -459,8 +387,12 @@ export class SongService {
       return { data, page, limit, total, totalPages: Math.ceil(total / limit), shuffleSeed };
     }
 
+    const sortObj: Record<string, 1 | -1> = sort
+      ? { [sort]: sortOrder === 'desc' ? -1 : 1 }
+      : { rating: -1 };
+
     const [data, total] = await Promise.all([
-      Song.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Song.find(filter).sort(sortObj).skip(skip).limit(limit),
       Song.countDocuments(filter),
     ]);
 
@@ -492,6 +424,55 @@ export class SongService {
 
     const result = await Song.aggregate(pipeline);
     return result;
+  }
+
+  private async pushHistory(
+    song: ISong,
+    sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'manual',
+    importMeta?: Record<string, unknown>,
+  ): Promise<void> {
+    const snapshot: IHistorySnapshot = {
+      title: song.title,
+      artist: song.artist,
+      genres: song.genres,
+      grouping: song.grouping,
+      bpm: song.bpm,
+      key: song.key,
+      rating: song.rating,
+      year: song.year,
+      favorite: song.favorite,
+    };
+
+    const lastEntry = await HistoryEntry.findOne({ songId: song._id })
+      .sort({ dateEdited: -1 });
+
+    if (lastEntry) {
+      const snapFields: (keyof IHistorySnapshot)[] = [
+        'title', 'artist', 'genres', 'grouping',
+        'bpm', 'key', 'rating', 'year', 'favorite',
+      ];
+      const same = snapFields.every(
+        f => JSON.stringify(lastEntry.snapshot[f]) === JSON.stringify(snapshot[f]),
+      );
+      if (same) return;
+
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (lastEntry.sourceType === sourceType && lastEntry.dateEdited > fiveMinAgo) {
+        lastEntry.snapshot = snapshot;
+        lastEntry.dateEdited = new Date();
+        await lastEntry.save();
+        return;
+      }
+    }
+
+    await HistoryEntry.create({
+      songId: song._id,
+      dateEdited: new Date(),
+      sourceType,
+      entryType: lastEntry ? 'update' : 'create',
+      snapshot,
+      ...(importMeta ? { importMeta } : {}),
+    });
   }
 }
 

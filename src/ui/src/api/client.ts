@@ -18,6 +18,8 @@ function buildQueryString(params: ApiSongParams): string {
     ['shuffle', params.shuffle],
     ['page', params.page],
     ['limit', params.limit],
+    ['sort', params.sort],
+    ['sortOrder', params.sortOrder],
   ];
   for (const [key, val] of entries) {
     if (val !== undefined && val !== null && val !== '') {

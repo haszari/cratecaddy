@@ -164,7 +164,19 @@ Single toggle chip. When active, inserts `"NZ"` into genres array at the `locati
 
 ### Save model
 
-Auto-save on field blur. 800ms debounce — collects pending field changes into a single `PUT /api/songs/:id/metadata`. Prevent empty title/artist (revert to previous value on blur).
+Auto-save on any state change via debounced `useEffect` watching all form fields. 800ms debounce — collects pending field changes into a single `PUT /api/songs/:id/metadata`. Unmount flush via `latestRef` + `mutateRef` guarantees save before component unmounts (song switch/key-based remount). Prevent empty title/artist (revert to previous value on blur).
+
+No manual save calls in click/blur/key handlers — all state changes flow through the debounced effect. No stale closures, no double saves.
+
+### Tracking
+
+Edit mode tracks songs by `_id`, not array index. `useEditMode` exposes `selectedId: string | null`. `EditLayout` handles arrow-key navigation internally via `findIndex`. On entering edit mode, the first song in the list is auto-selected (handled by `EditLayout`).
+
+### Sort (non-edit view only)
+
+Sortable columns on `SongTable` (click header, asc↔desc toggle): Artist, Title, BPM, Key, Rating.
+Default: `rating: -1` (highest first). No clear mechanism.
+No sort during edit mode — sort is set before entering edit.
 
 ### Keyboard shortcuts
 
@@ -173,7 +185,6 @@ Global (no field focused):
 | Key | Action |
 |-----|--------|
 | `↑`/`↓` | Navigate songs |
-| `Escape` | Exit edit mode |
 | `1`–`5` | Set rating |
 | `d` | Toggle DJing grouping |
 | `l` | Toggle Listening grouping |
@@ -228,7 +239,8 @@ Genres serve dual purpose (classification + energy-level tags like "Warmup | Pea
 - `dateEdited`: semantic timestamp of the write.
 - `snapshot`: all editable fields (title, artist, genres, grouping, bpm, key, rating, year, favorite). Duration and album are on the Song doc but not editable — duration is a physical property of the audio file.
 - `importMeta`: heavy provenance data from imports. Not present for manual edits.
-- Server-side dedup: if the latest history entry for a song shares `sourceType: 'manual'` and is less than N minutes old, update its snapshot in-place rather than appending.
+- Server-side dedup: all history writes go through `createHistoryEntry`, which compares snapshot with the most recent entry (regardless of sourceType). If identical → skip. If same sourceType and <5 min old → update in-place. Otherwise → create new.
+- History UI renders **inline per-entry diff**: each entry shows only the fields that differ from the previous snapshot. First entry shows date+source only (values visible in form above). Genres and grouping tokenized as individual pills. Server prevents duplicate-snapshot entries so UI doesn't need to handle that case.
 
 Index: `{ songId: 1, dateEdited: -1 }`.
 
@@ -237,3 +249,7 @@ Index: `{ songId: 1, dateEdited: -1 }`.
 `'applemusic' | 'rekordbox' | 'djaypro' | 'manual'`
 
 `'manual'` is reserved for in-app user edits. All others are import sources.
+
+## Bulk edit
+
+Deferred — not in scope for this pass. Single-song edit robustness first.

@@ -9,6 +9,7 @@ import FilterBar from '../components/FilterBar';
 import SongTable from '../components/SongTable';
 import EditLayout from '../components/EditLayout';
 import type { TagInfo } from '../types';
+import type { SortField, SortOrder } from '../components/SongTable';
 import { withSearch } from '../utils/url';
 
 export default function Home() {
@@ -31,6 +32,20 @@ export default function Home() {
     prevEditActive.current = editMode.active;
   }, [editMode.active, queryClient]);
   const [page, setPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField | undefined>();
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+
+  const handleSortChange = useCallback((field: SortField) => {
+    setSortField(prev => {
+      if (prev === field) {
+        setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
+        return prev;
+      }
+      setSortOrder('asc');
+      return field;
+    });
+    setPage(1);
+  }, [setPage]);
 
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
@@ -40,6 +55,8 @@ export default function Home() {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(sortField && { sort: sortField }),
+    ...(sortOrder && { sortOrder }),
   };
 
   const { data: stats, isLoading, error } = useQuery({
@@ -105,10 +122,8 @@ export default function Home() {
         />
         <EditLayout
           songs={songs}
-          selectedIndex={editMode.selectedIndex}
-          onSelect={editMode.selectIndex}
-          onSelectNext={() => editMode.selectNext(songs.length)}
-          onSelectPrev={editMode.selectPrev}
+          selectedId={editMode.selectedId}
+          onSelect={editMode.selectId}
         />
       </div>
     );
@@ -161,6 +176,9 @@ export default function Home() {
           totalPages={paginated.totalPages}
           totalCount={paginated.total}
           onPageChange={setPage}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
         />
       )}
       

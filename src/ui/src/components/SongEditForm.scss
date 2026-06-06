@@ -222,11 +222,11 @@ $field-font-size: 1em;
     gap: 0.5em;
   }
 
-  .SongEditForm-export-msg {
+  .SongEditForm-status-msg {
     font-size: 0.8em;
     color: #4caf50;
 
-    &.SongEditForm-export-msg--error {
+    &.SongEditForm-status-msg--error {
       color: #e53935;
     }
   }

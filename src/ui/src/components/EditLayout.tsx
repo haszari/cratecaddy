@@ -14,26 +14,38 @@ const FIELD_FOCUS_MAP: Record<string, string> = {
 
 interface EditLayoutProps {
   songs: Song[];
-  selectedIndex: number;
-  onSelect: (index: number) => void;
-  onSelectNext: () => void;
-  onSelectPrev: () => void;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 }
 
 export default function EditLayout({
-  songs, selectedIndex, onSelect, onSelectNext, onSelectPrev,
+  songs, selectedId, onSelect,
 }: EditLayoutProps) {
+  // Auto-select first song when none selected or selection is stale
+  useEffect(() => {
+    if (songs.length > 0 && (!selectedId || !songs.some(s => s._id === selectedId))) {
+      const firstId = songs[0]._id;
+      if (firstId && firstId !== selectedId) {
+        onSelect(firstId);
+      }
+    }
+  }, [songs, selectedId, onSelect]);
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const tag = (e.target as HTMLElement).tagName;
     const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
     if (isInput) return;
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      onSelectNext();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      onSelectPrev();
+      const currentIndex = songs.findIndex(s => s._id === selectedId);
+      if (currentIndex === -1) return;
+      const nextIndex = e.key === 'ArrowDown'
+        ? Math.min(currentIndex + 1, songs.length - 1)
+        : Math.max(currentIndex - 1, 0);
+      if (nextIndex !== currentIndex) {
+        onSelect(songs[nextIndex]._id!);
+      }
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
       const fieldId = FIELD_FOCUS_MAP[e.key];
       if (fieldId) {
@@ -44,21 +56,21 @@ export default function EditLayout({
         }
       }
     }
-  }, [onSelectNext, onSelectPrev]);
+  }, [songs, selectedId, onSelect]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const selectedSong = songs[selectedIndex];
+  const selectedSong = selectedId ? songs.find(s => s._id === selectedId) : undefined;
 
   return (
     <div className="EditLayout">
       <div className="EditLayout-list">
         <CompactSongTable
           songs={songs}
-          selectedIndex={selectedIndex}
+          selectedId={selectedId}
           onSelect={onSelect}
         />
       </div>
