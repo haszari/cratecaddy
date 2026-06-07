@@ -51,7 +51,7 @@ export default function Song() {
         <Link to={`/artist/${encodeURIComponent(song.artist)}`} className="PageCriteria-artist">{song.artist}</Link>
         <span className="SongInfo-title">{song.title}</span>
         <span className="SongInfo-meta">
-          {song.bpm}<span className="SongInfo-meta-bpm">bpm</span> {song.key}
+          {song.bpm != null ? Math.round(song.bpm) : ''}<span className="SongInfo-meta-bpm">bpm</span> {song.key}
         </span>
       </div>
       {song.genres.length > 0 && <GenreTagCloud tags={tags} />}

@@ -84,7 +84,7 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
               <td className="col-title">
                 <Link to={`/song/${song._id}`} className="Song-link">{song.title}</Link>
               </td>
-              <td className="col-bpm">{song.bpm}</td>
+              <td className="col-bpm">{song.bpm != null ? Math.round(song.bpm) : ''}</td>
               <td className="col-key">{song.key}</td>
               <td className="col-rating">{formatRating(song.rating)}</td>
               <td className="col-genres">
