@@ -396,9 +396,16 @@ export class SongService {
       return { data, page, limit, total, totalPages: Math.ceil(total / limit), shuffleSeed };
     }
 
-    const sortObj: Record<string, 1 | -1> = sort
-      ? { [sort]: sortDirection === 'desc' ? -1 : 1 }
-      : { rating: -1 };
+    const FALLBACK_SORT_CHAIN = ['artist', 'year', 'title', 'rating', 'key', 'bpm'];
+    const sortObj: Record<string, 1 | -1> = {};
+    const primaryField = sort || FALLBACK_SORT_CHAIN[0];
+    const primaryDir: 1 | -1 = sort ? (sortDirection === 'desc' ? -1 : 1) : 1;
+    sortObj[primaryField] = primaryDir;
+    for (const field of FALLBACK_SORT_CHAIN) {
+      if (field !== primaryField) {
+        sortObj[field] = 1;
+      }
+    }
 
     const [data, total] = await Promise.all([
       Song.find(filter).sort(sortObj).skip(skip).limit(limit),
