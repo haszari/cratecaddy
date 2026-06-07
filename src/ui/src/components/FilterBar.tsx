@@ -8,7 +8,7 @@ interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
-  onRemoveExclude: (genre: string) => void;
+  onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
   shuffleActive?: boolean;
   onShuffleToggle?: (active: boolean) => void;
@@ -16,7 +16,6 @@ interface FilterBarProps {
   editHref?: string;
   doneHref?: string;
   readOnly?: boolean;
-  songCount?: number;
   className?: string;
 }
 
@@ -25,10 +24,9 @@ export default function FilterBar({
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
-  songCount,
 }: FilterBarProps) {
-  const [bpmMinStr, setBpmMinStr] = useState('');
-  const [bpmMaxStr, setBpmMaxStr] = useState('');
+  const [bpmMinStr, setBpmMinStr] = useState(bpmGte !== undefined ? String(bpmGte) : '');
+  const [bpmMaxStr, setBpmMaxStr] = useState(bpmLte !== undefined ? String(bpmLte) : '');
 
   const applyBpm = () => {
     if (!onBpmChange) return;
@@ -70,9 +68,6 @@ export default function FilterBar({
             onToggle={onShuffleToggle}
             onReseed={onShuffleReseed || (() => {})}
           />
-        )}
-        {songCount !== undefined && (
-          <span className="FilterBar-count">{songCount} songs</span>
         )}
       </div>
 
@@ -123,7 +118,7 @@ export default function FilterBar({
           <span
             key={`ex:${genre}`}
             className="FilterBar-chip FilterBar-chip-exclude"
-            onClick={readOnly ? undefined : () => onRemoveExclude(genre)}
+            onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
             title={readOnly ? undefined : `Remove ${genre}`}
           >
             {genre}

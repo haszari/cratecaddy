@@ -148,7 +148,6 @@ export default function Artist() {
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editHref={editHref}
-        songCount={songs.length}
       />
 
       {isLoading && <p>Loading songs...</p>}

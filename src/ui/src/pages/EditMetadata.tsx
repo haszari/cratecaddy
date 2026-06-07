@@ -4,6 +4,7 @@ import { useSongs } from '../hooks/useSongs';
 import { useSortShuffle } from '../hooks/useSortShuffle';
 import { buildViewUrl } from '../utils/urlBuilder';
 import FilterBar from '../components/FilterBar';
+import BasePageCriteria from '../components/BasePageCriteria';
 import EditLayout from '../components/EditLayout';
 
 export default function EditMetadata() {
@@ -47,6 +48,12 @@ export default function EditMetadata() {
 
   const doneHref = buildViewUrl(location.search);
 
+  const genres = [
+    ...(genreAll ? genreAll.split(',').map((g) => ({ name: g, mode: 'and' as const })) : []),
+    ...(genreAny ? genreAny.split(',').map((g) => ({ name: g, mode: 'or' as const })) : []),
+  ];
+  const artists = artistAny ? [artistAny] : undefined;
+
   return (
     <div className="EditMetadata">
       <FilterBar
@@ -55,7 +62,10 @@ export default function EditMetadata() {
         bpmLte={sanitisedBpmLte}
         readOnly
         doneHref={doneHref}
-        songCount={songs.length}
+      />
+      <BasePageCriteria
+        artists={artists}
+        genres={genres.length > 0 ? genres : undefined}
       />
       {isError && <p style={{ color: 'red' }}>Failed to load songs</p>}
       {isLoading && <p>Loading songs...</p>}
@@ -65,6 +75,9 @@ export default function EditMetadata() {
           selectedId={selectedId}
           onSelect={setSelectedId}
         />
+      )}
+      {!isLoading && !isError && (
+        <div className="EditMetadata-count">{songs.length} songs</div>
       )}
     </div>
   );

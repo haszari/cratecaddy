@@ -276,3 +276,90 @@ The oldest entry (last in array, no successor to compare against) gets `diff: []
 | `src/ui/src/hooks/useSortShuffle.ts` | Accept optional `{ defaultSortField, defaultSortDirection }` |
 
 **No changes:** EditLayout, CompactSongTable, SongTable, useFilters.ts, useSongs.ts, queryClient.ts, any models or services beyond the history route.
+
+---
+
+## Follow-up fixes
+
+Analysis of current implementation after build. All issues in `src/ui/src/`.
+
+### A — Song count location
+
+**Problem:** `songCount` is rendered in FilterBar top bar (line 74-76) and passed by Artist (line 151), GenreDetail (line 139), and EditMetadata (line 58). View pages get a redundant second count via SongTable pagination (`totalCount`). Edit pages have no count at the bottom (CompactSongTable has no pagination/display).
+
+**Fix:**
+1. Remove song count rendering from `FilterBar.tsx` — delete lines 74-76 and the `songCount` prop from `FilterBarProps`
+2. View pages already show `totalCount` in `SongTable`'s pagination footer (via `totalCount` prop) — no extra work needed
+3. Edit page: add a song count display at the bottom of the song list, just above EditLayout's closing tag, showing `songs.length` as text (e.g. "N songs"). No pagination controls since edit has no pagination
+
+### B — Missing PageCriteria on edit page
+
+**Problem:** `EditMetadata.tsx` does not render `BasePageCriteria` — users can't see which genre or artist filters are active while editing.
+
+**Fix:**
+1. Import `BasePageCriteria` in `EditMetadata.tsx`
+2. Render it between `FilterBar` and `EditLayout`
+3. Build genres prop from URL params:
+   - `genre.all` (comma-separated) → AND-mode pills
+   - `genre.any` (comma-separated) → OR-mode pills
+   - `artist.any` → artist display
+4. Omit `onRemoveGenre` (filter display is read-only on edit page; the callback is already optional in BasePageCriteriaProps)
+
+### C — genre.any/genre.all and exclude display on edit page
+
+**Problem:** The edit page parses `genre.not` into `genreNotList` and passes it to FilterBar, but the FilterBar's readOnly BPM display and genreNot chips are only conditionally rendered based on `(onBpmChange || (readOnly && hasBpm))`. Additionally, `genre.all`/`genre.any` criteria have no visual representation anywhere on the edit page.
+
+**Fix (combines with B):**
+- Exclude genres (`genre.not`) already render in FilterBar's right section when `genreNot` is passed — verify `genre.not` param is correctly read from URL (see E below)
+- Active genre criteria (`genre.all`, `genre.any`) shown via `BasePageCriteria` (see B)
+
+### D — FilterBar genre chips missing link to URL params
+
+**Problem:** The edit page builds `genreNotList` at line 46 from `searchParams.get('genre.not')`, but passes it to FilterBar without `onRemoveExclude`. `FilterBarProps` requires `onRemoveExclude: (genre: string) => void` — currently a TypeScript type error (the edit page compiles in practice because TS may not catch unused props in all configs, but the interface demands it).
+
+**Fix:**
+- Make `onRemoveExclude` optional in `FilterBarProps`: `onRemoveExclude?: (genre: string) => void`
+- Guard the onClick in FilterBar line 126: `onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}`
+- No change needed on the edit page call site — it already omits `onRemoveExclude`
+
+### E — FilterBar BPM inputs not initialised from URL props
+
+**Problem:** `FilterBar.tsx` initialises BPM input local state as empty strings:
+```tsx
+const [bpmMinStr, setBpmMinStr] = useState('');
+const [bpmMaxStr, setBpmMaxStr] = useState('');
+```
+These are never populated from `bpmGte`/`bpmLte` props. While readOnly mode on the edit page skips the inputs and renders a display span (correct), the non-readOnly view pages (Artist, GenreDetail) show blank BPM inputs even when `bpm.gte`/`bpm.lte` are active in the URL. Also, BPM display on the edit page uses `hasBpm` which checks `bpmGte !== undefined || bpmLte !== undefined` — this works correctly already.
+
+**Fix:** Initialise BPM input state from props with a `useEffect` or derive the local state:
+```tsx
+const [bpmMinStr, setBpmMinStr] = useState(bpmGte !== undefined ? String(bpmGte) : '');
+const [bpmLteStr, setBpmLteStr] = useState(bpmLte !== undefined ? String(bpmLte) : '');
+```
+(this also fixes the variable naming: currently both use `bpmMaxStr`).
+
+### F — BPM and exclude display on view pages (non-readOnly regression)
+
+**Problem:** The readOnly BPM display branch in FilterBar (`{readOnly ? (...display...) : (...inputs...)}`) works for the edit page. But `bpmGte`/`bpmLte` props are also passed by Artist and GenreDetail (non-readOnly). These pages currently don't show the current BPM range because the inputs start blank. After fixing E (initialise from props), the non-readOnly inputs will pre-fill on initial render but state won't stay in sync if props change (which they don't — URL-driven, stable per page load). This is acceptable.
+
+**No change needed beyond E** for the non-readOnly path.
+
+### G — Song count removal: update FilterBar call sites
+
+After removing `songCount` from FilterBarProps:
+- `Artist.tsx` line 151: remove `songCount={songs.length}` prop
+- `GenreDetail.tsx` line 139: remove `songCount={songs.length}` prop
+- `EditMetadata.tsx` line 58: remove `songCount={songs.length}` prop
+- `Home.tsx`: no change (doesn't pass it)
+- `EditMetadata.tsx`: add song count text below CompactSongTable area in EditLayout
+
+### Summary of files to change
+
+| File | Changes |
+|------|---------|
+| `components/FilterBar.tsx` | Remove `songCount` prop; make `onRemoveExclude` optional; init BPM state from `bpmGte`/`bpmLte` props |
+| `pages/EditMetadata.tsx` | Import and render `BasePageCriteria`; remove `songCount` from FilterBar call; add count at bottom of list |
+| `pages/Artist.tsx` | Remove `songCount` from FilterBar call |
+| `pages/GenreDetail.tsx` | Remove `songCount` from FilterBar call |
+
+**No changes needed:** EditLayout, CompactSongTable, SongTable, client.ts, songService.ts, urlBuilder.ts, App.tsx, useSortShuffle.ts

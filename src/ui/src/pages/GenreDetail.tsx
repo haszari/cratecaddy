@@ -136,7 +136,6 @@ export default function GenreDetail() {
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editHref={editHref}
-        songCount={songs.length}
       />
 
       {isLoading && <p>Loading songs...</p>}
