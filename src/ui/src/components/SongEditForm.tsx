@@ -7,7 +7,7 @@ import type { PaginatedResponse, Song } from '../types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import './SongEditForm.scss';
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -32,6 +32,17 @@ function formatKeyField(root: string, minor: boolean): string {
   return root + (minor ? 'm' : '');
 }
 
+interface SnapshotData {
+  artist: string;
+  title: string;
+  genres: string[];
+  grouping: string[];
+  bpm: number | null;
+  key: string;
+  year: number | null;
+  rating: number;
+}
+
 interface SongEditFormProps {
   song: Song;
 }
@@ -54,14 +65,37 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const [keyMinor, setKeyMinor] = useState(initKey.minor);
   const [year, setYear] = useState(song.year ?? null);
   const [rating, setRating] = useState(song.rating ?? 0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+  const [saveIsError, setSaveIsError] = useState(false);
   const [exportMsg, setExportMsg] = useState('');
   const [exportIsError, setExportIsError] = useState(false);
 
   const keyFieldRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
+  const dirtyRef = useRef(false);
 
-  const [saveMsg, setSaveMsg] = useState('');
-  const [saveIsError, setSaveIsError] = useState(false);
+  const [initialSnapshot, setInitialSnapshot] = useState<SnapshotData>({
+    artist: song.artist,
+    title: song.title,
+    genres: song.genres,
+    grouping: song.grouping ?? [],
+    bpm: song.bpm ?? null,
+    key: song.key ?? '',
+    year: song.year ?? null,
+    rating: song.rating ?? 0,
+  });
+
+  const isDirty = (
+    artist !== initialSnapshot.artist ||
+    title !== initialSnapshot.title ||
+    JSON.stringify(reassembleGenres(stage, setField, locationNz, listening, styles)) !== JSON.stringify(initialSnapshot.genres) ||
+    JSON.stringify(grouping) !== JSON.stringify(initialSnapshot.grouping) ||
+    (bpm ?? null) !== initialSnapshot.bpm ||
+    formatKeyField(keyRoot, keyMinor) !== initialSnapshot.key ||
+    (year ?? null) !== initialSnapshot.year ||
+    rating !== initialSnapshot.rating
+  );
 
   const patchSongsCache = useCallback((updated: Song) => {
     queryClient.setQueriesData<PaginatedResponse<Song>>(
@@ -78,12 +112,28 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     );
   }, [queryClient]);
 
+  function resetSnapshot(f: typeof latestRef.current) {
+    setInitialSnapshot({
+      artist: f.artist,
+      title: f.title,
+      genres: reassembleGenres(f.stage, f.setField, f.locationNz, f.listening, f.styles),
+      grouping: f.grouping,
+      bpm: f.bpm ?? null,
+      key: formatKeyField(f.keyRoot, f.keyMinor),
+      year: f.year ?? null,
+      rating: f.rating,
+    });
+  }
+
   const saveMutation = useMutation({
     mutationFn: (data: Partial<Song>) => updateSongMetadata(song._id!, data),
     onSuccess: (updated) => {
       patchSongsCache(updated);
+      dirtyRef.current = false;
+      resetSnapshot(latestRef.current);
       setSaveMsg('');
       setSaveIsError(false);
+      queryClient.invalidateQueries({ queryKey: ['song-history', song._id] });
     },
     onError: (err) => {
       console.error('Save failed', err);
@@ -103,6 +153,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       return;
     }
     const timer = setTimeout(() => {
+      dirtyRef.current = true;
       const genres = reassembleGenres(stage, setField, locationNz, listening, styles);
       const key = formatKeyField(keyRoot, keyMinor);
       mutateRef.current({
@@ -152,6 +203,18 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       });
     };
   }, []);
+
+  // Warn on tab close / reload when there are unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current || saveMutation.isPending || isExporting) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [saveMutation.isPending, isExporting]);
 
   const { data: allGenreStats } = useQuery({
     queryKey: ['genres', 'stats'],
@@ -282,6 +345,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   }, [handleKeyDown]);
 
   const handleExport = useCallback(async () => {
+    setIsExporting(true);
     setExportMsg('');
     setExportIsError(false);
     try {
@@ -299,14 +363,41 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         rating: f.rating > 0 ? f.rating : undefined,
       });
       patchSongsCache(updated);
+      dirtyRef.current = false;
+      resetSnapshot(latestRef.current);
       const result = await writeToAppleMusic(f.id!);
+      setIsExporting(false);
       setExportMsg(result.message);
       setExportIsError(!result.success);
     } catch {
+      setIsExporting(false);
       setExportMsg('Write to Apple Music failed');
       setExportIsError(true);
     }
   }, [patchSongsCache]);
+
+  const statusMode: 'idle' | 'saving' | 'exporting' | 'save-result' | 'export-result' = (() => {
+    if (isExporting) return 'exporting';
+    if (saveMutation.isPending || isDirty) return 'saving';
+    if (saveMsg) return 'save-result';
+    if (exportMsg) return 'export-result';
+    return 'idle';
+  })();
+
+  const statusText = statusMode === 'exporting'
+    ? 'Writing metadata to Apple Music library…'
+    : statusMode === 'saving'
+      ? 'Saving changes…'
+      : statusMode === 'save-result'
+        ? saveMsg
+        : statusMode === 'export-result'
+          ? exportMsg
+          : '';
+
+  const statusIsError = (statusMode === 'save-result' && saveIsError)
+    || (statusMode === 'export-result' && exportIsError);
+
+  const statusSpinner = statusMode === 'saving' || statusMode === 'exporting';
 
   return (
     <Box className="SongEditForm">
@@ -527,15 +618,22 @@ export default function SongEditForm({ song }: SongEditFormProps) {
         )}
 
         <Box className="SongEditForm-export">
-          {saveMsg && (
-            <Box component="span" className={`SongEditForm-status-msg${saveIsError ? ' SongEditForm-status-msg--error' : ''}`}>{saveMsg}</Box>
-          )}
-          <span className="SongEditForm-pill SongEditForm-pill--action" onClick={handleExport}>
+          <span
+            className={`SongEditForm-pill SongEditForm-pill--action${isExporting ? ' SongEditForm-pill--disabled' : ''}`}
+            onClick={isExporting ? undefined : handleExport}
+          >
             Save to Apple Music
           </span>
-          {exportMsg && (
-            <Box component="span" className={`SongEditForm-status-msg${exportIsError ? ' SongEditForm-status-msg--error' : ''}`}>{exportMsg}</Box>
-          )}
+          <span className={`SongEditForm-status${
+            statusSpinner
+              ? ' SongEditForm-status--visible'
+              : statusMode !== 'idle'
+                ? ` SongEditForm-status--result${statusIsError ? ' SongEditForm-status--error' : ''}`
+                : ''
+          }`}>
+            {statusSpinner && <Loader2 className="SongEditForm-spinner" size={14} />}
+            {statusText}
+          </span>
         </Box>
 
         {history && history.length > 0 && (

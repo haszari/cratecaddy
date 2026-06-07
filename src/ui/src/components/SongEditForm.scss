@@ -216,19 +216,44 @@ $field-font-size: 1em;
     }
   }
 
-  .SongEditForm-export {
-    display: flex;
+  .SongEditForm-status {
+    display: inline-flex;
     align-items: center;
-    gap: 0.5em;
-  }
-
-  .SongEditForm-status-msg {
+    gap: 0.3em;
     font-size: 0.8em;
-    color: #4caf50;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 3em;
+    opacity: 0;
+    transition: opacity 400ms;
 
-    &.SongEditForm-status-msg--error {
+    &.SongEditForm-status--visible {
+      opacity: 1;
+      transition: opacity 250ms;
+    }
+
+    &.SongEditForm-status--result {
+      opacity: 1;
+      transition: none;
+      color: #4caf50;
+    }
+
+    &.SongEditForm-status--error {
       color: #e53935;
     }
+  }
+
+  .SongEditForm-spinner {
+    animation: SongEditForm-spin 1s linear infinite;
+  }
+
+  @keyframes SongEditForm-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .SongEditForm-pill--disabled {
+    opacity: 0.4;
+    pointer-events: none;
   }
 
   .SongEditForm-history {
