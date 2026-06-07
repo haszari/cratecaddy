@@ -1,14 +1,28 @@
+import { useRef, useCallback } from 'react';
 import { SourcesIcons } from './SourcesIcons';
 import type { Song } from '../types';
 import './CompactSongTable.scss';
 
 interface CompactSongTableProps {
   songs: Song[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedIds: Set<string>;
+  onSelect: (id: string, mode?: 'toggle' | 'range') => void;
 }
 
-export default function CompactSongTable({ songs, selectedId, onSelect }: CompactSongTableProps) {
+export default function CompactSongTable({ songs, selectedIds, onSelect }: CompactSongTableProps) {
+  const lastClickedIdRef = useRef<string | null>(null);
+
+  const handleRowClick = useCallback((id: string, e: React.MouseEvent) => {
+    if (e.shiftKey && lastClickedIdRef.current) {
+      onSelect(id, 'range');
+    } else if (e.metaKey || e.ctrlKey) {
+      onSelect(id, 'toggle');
+    } else {
+      onSelect(id);
+    }
+    lastClickedIdRef.current = id;
+  }, [onSelect]);
+
   return (
     <div className="CompactSongTable">
       <table>
@@ -23,8 +37,8 @@ export default function CompactSongTable({ songs, selectedId, onSelect }: Compac
           {songs.map((song) => (
             <tr
               key={song._id}
-              className={song._id === selectedId ? 'CompactSongTable-row--selected' : ''}
-              onClick={() => song._id && onSelect(song._id)}
+              className={song._id && selectedIds.has(song._id) ? 'CompactSongTable-row--selected' : ''}
+              onClick={(e) => song._id && handleRowClick(song._id, e)}
             >
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />

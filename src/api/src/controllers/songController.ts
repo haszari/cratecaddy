@@ -116,6 +116,52 @@ export class SongController {
     }
   }
 
+  private readonly ALLOWED_BATCH_FIELDS = new Set([
+    'artist', 'genres', 'grouping', 'bpm', 'key', 'year', 'rating',
+  ]);
+
+  private sanitiseBatchData(data: Record<string, unknown>): Record<string, unknown> {
+    const clean: Record<string, unknown> = {};
+    for (const key of Object.keys(data)) {
+      if (this.ALLOWED_BATCH_FIELDS.has(key)) {
+        clean[key] = data[key];
+      }
+    }
+    return clean;
+  }
+
+  async updateMetadataBatch(req: Request, res: Response) {
+    try {
+      const { updates } = req.body as { updates: { id: string; data: Record<string, unknown> }[] };
+      if (!Array.isArray(updates) || updates.length === 0) {
+        res.status(400).json({ error: 'Missing or empty updates array' });
+        return;
+      }
+
+      const updated: Record<string, unknown>[] = [];
+      const errors: { id: string; error: string }[] = [];
+
+      for (const { id, data } of updates) {
+        try {
+          const sanitised = this.sanitiseBatchData(data);
+          if (Object.keys(sanitised).length === 0) continue;
+          const song = await songService.updateSongMetadata(id, sanitised);
+          if (song) {
+            updated.push(song.toObject ? song.toObject() : song);
+          } else {
+            errors.push({ id, error: 'Song not found' });
+          }
+        } catch (err) {
+          errors.push({ id, error: err instanceof Error ? err.message : 'Unknown error' });
+        }
+      }
+
+      res.json({ success: true, updated, errors });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update batch metadata' });
+    }
+  }
+
   async writeToAppleMusic(req: Request, res: Response) {
     try {
       const result = await songService.writeToAppleMusic(req.params.id);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { useSongs } from '../hooks/useSongs';
 import { useSortShuffle } from '../hooks/useSortShuffle';
@@ -10,7 +10,7 @@ import EditLayout from '../components/EditLayout';
 export default function EditMetadata() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const { sortField, sortDirection } = useSortShuffle({
     defaultSortField: 'artist',
@@ -38,7 +38,50 @@ export default function EditMetadata() {
   };
 
   const { data: paginated, isLoading, isError } = useSongs(params);
-  const songs = paginated?.data ?? [];
+  const songs = useMemo(() => paginated?.data ?? [], [paginated]);
+
+  const handleSelect = useCallback((id: string, mode?: 'toggle' | 'range') => {
+    setSelectedIds(prev => {
+      if (mode === 'toggle') {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
+        return next;
+      }
+      if (mode === 'range') {
+        const clickedIdx = songs.findIndex(s => s._id === id);
+        if (clickedIdx === -1) return new Set([id]);
+        if (prev.size === 0) return new Set([id]);
+        const indices = Array.from(prev)
+          .map(sid => songs.findIndex(s => s._id === sid))
+          .filter(i => i !== -1);
+        if (indices.length === 0) return new Set([id]);
+        const minSelected = Math.min(...indices);
+        const maxSelected = Math.max(...indices);
+        let rangeMin: number;
+        let rangeMax: number;
+        if (clickedIdx < minSelected) {
+          rangeMin = clickedIdx;
+          rangeMax = maxSelected;
+        } else if (clickedIdx > maxSelected) {
+          rangeMin = minSelected;
+          rangeMax = clickedIdx;
+        } else {
+          rangeMin = minSelected;
+          rangeMax = maxSelected;
+        }
+        return new Set(
+          songs.slice(rangeMin, rangeMax + 1)
+            .map(s => s._id)
+            .filter((sId): sId is string => sId != null),
+        );
+      }
+      return new Set([id]);
+    });
+  }, [songs]);
 
   const bpmGteNum = bpmGte ? Number(bpmGte) : undefined;
   const bpmLteNum = bpmLte ? Number(bpmLte) : undefined;
@@ -72,8 +115,8 @@ export default function EditMetadata() {
       {!isLoading && !isError && (
         <EditLayout
           songs={songs}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
+          selectedIds={selectedIds}
+          onSelect={handleSelect}
         />
       )}
       {!isLoading && !isError && (

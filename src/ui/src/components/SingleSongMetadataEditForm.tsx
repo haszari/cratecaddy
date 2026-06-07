@@ -8,7 +8,7 @@ import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import { X, Loader2 } from 'lucide-react';
-import './SongEditForm.scss';
+import './SingleSongMetadataEditForm.scss';
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const STAGE_OPTIONS = ['Warmup', 'Peak', 'Later'];
@@ -43,11 +43,12 @@ interface SnapshotData {
   rating: number;
 }
 
-interface SongEditFormProps {
+interface SingleSongMetadataEditFormProps {
   song: Song;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export default function SongEditForm({ song }: SongEditFormProps) {
+export default function SingleSongMetadataEditForm({ song, onDirtyChange }: SingleSongMetadataEditFormProps) {
   const queryClient = useQueryClient();
   const init = useMemo(() => decomposeGenres(song.genres), [song.genres]);
   const initKey = useMemo(() => parseKeyField(song.key), [song.key]);
@@ -130,6 +131,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     onSuccess: (updated) => {
       patchSongsCache(updated);
       dirtyRef.current = false;
+      onDirtyChange?.(false);
       resetSnapshot(latestRef.current);
       setSaveMsg('');
       setSaveIsError(false);
@@ -154,6 +156,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     }
     const timer = setTimeout(() => {
       dirtyRef.current = true;
+      onDirtyChange?.(true);
       const genres = reassembleGenres(stage, setField, locationNz, listening, styles);
       const key = formatKeyField(keyRoot, keyMinor);
       mutateRef.current({
@@ -170,7 +173,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
     return () => clearTimeout(timer);
   }, [
     artist, title, stage, setField, locationNz, listening, styles,
-    grouping, bpm, keyRoot, keyMinor, year, rating,
+    grouping, bpm, keyRoot, keyMinor, year, rating, onDirtyChange,
   ]);
 
   // Latest-state ref (updated after every render) for unmount flush and export.
@@ -364,6 +367,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       });
       patchSongsCache(updated);
       dirtyRef.current = false;
+      onDirtyChange?.(false);
       resetSnapshot(latestRef.current);
       const result = await writeToAppleMusic(f.id!);
       setIsExporting(false);
@@ -374,7 +378,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
       setExportMsg('Write to Apple Music failed');
       setExportIsError(true);
     }
-  }, [patchSongsCache]);
+  }, [patchSongsCache, onDirtyChange]);
 
   const statusMode: 'idle' | 'saving' | 'exporting' | 'save-result' | 'export-result' = (() => {
     if (isExporting) return 'exporting';
@@ -400,10 +404,10 @@ export default function SongEditForm({ song }: SongEditFormProps) {
   const statusSpinner = statusMode === 'saving' || statusMode === 'exporting';
 
   return (
-    <Box className="SongEditForm">
-      <Box className="SongEditForm-row">
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">artist</span>
+    <Box className="SingleSongMetadataEditForm">
+      <Box className="SingleSongMetadataEditForm-row">
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">artist</span>
             <TextField
               id="edit-field-artist"
               value={artist}
@@ -413,8 +417,8 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               fullWidth
             />
           </Box>
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">title</span>
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">title</span>
             <TextField
               id="edit-field-title"
               value={title}
@@ -424,13 +428,13 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               fullWidth
             />
           </Box>
-          <Box className="SongEditForm-field SongEditForm-field--no-label" id="edit-field-rating">
-            <Box className="SongEditForm-rating" tabIndex={-1}>
+          <Box className="SingleSongMetadataEditForm-field SingleSongMetadataEditForm-field--no-label" id="edit-field-rating">
+            <Box className="SingleSongMetadataEditForm-rating" tabIndex={-1}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <Box
                   key={n}
                   component="span"
-                  className={`SongEditForm-star ${n <= rating ? 'SongEditForm-star--on' : ''}`}
+                  className={`SingleSongMetadataEditForm-star ${n <= rating ? 'SingleSongMetadataEditForm-star--on' : ''}`}
                   onClick={() => setRating(n)}
                 >
                   {n <= rating ? '\u2605' : '\u2606'}
@@ -440,14 +444,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
           </Box>
         </Box>
 
-        <Box className="SongEditForm-row">
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">grouping</span>
-            <span className="SongEditForm-composite-pill">
+        <Box className="SingleSongMetadataEditForm-row">
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">grouping</span>
+            <span className="SingleSongMetadataEditForm-composite-pill">
               {['DJing', 'Listening'].map((opt) => (
                 <span
                   key={opt}
-                  className={`SongEditForm-composite-segment ${grouping.includes(opt) ? 'SongEditForm-composite-segment--on' : ''}`}
+                  className={`SingleSongMetadataEditForm-composite-segment ${grouping.includes(opt) ? 'SingleSongMetadataEditForm-composite-segment--on' : ''}`}
                   onClick={() => toggleGroupingPill(opt)}
                 >
                   {opt}
@@ -455,8 +459,8 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               ))}
             </span>
           </Box>
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">bpm</span>
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">bpm</span>
             <TextField
               id="edit-field-bpm"
               type="number"
@@ -466,13 +470,13 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
             />
           </Box>
-          <Box className="SongEditForm-field" ref={keyFieldRef}>
-            <span className="SongEditForm-field-label">key</span>
-            <Box className="SongEditForm-key-row">
+          <Box className="SingleSongMetadataEditForm-field" ref={keyFieldRef}>
+            <span className="SingleSongMetadataEditForm-field-label">key</span>
+            <Box className="SingleSongMetadataEditForm-key-row">
               <select
                 value={keyRoot || ''}
                 onChange={handleKeyRootChange}
-                className="SongEditForm-key-select"
+                className="SingleSongMetadataEditForm-key-select"
               >
                 <option value="">—</option>
                 {KEY_ROOTS.map((r) => (
@@ -480,15 +484,15 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                 ))}
               </select>
               <span
-                className={`SongEditForm-pill SongEditForm-pill--sm ${keyMinor ? 'SongEditForm-pill--on' : ''}`}
+                className={`SingleSongMetadataEditForm-pill SingleSongMetadataEditForm-pill--sm ${keyMinor ? 'SingleSongMetadataEditForm-pill--on' : ''}`}
                 onClick={handleMinorToggle}
               >
                 m
               </span>
             </Box>
           </Box>
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">year</span>
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">year</span>
             <TextField
               id="edit-field-year"
               type="number"
@@ -500,14 +504,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
           </Box>
         </Box>
 
-        <Box className="SongEditForm-row">
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">set</span>
-            <span className="SongEditForm-composite-pill">
+        <Box className="SingleSongMetadataEditForm-row">
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">set</span>
+            <span className="SingleSongMetadataEditForm-composite-pill">
               {SET_OPTIONS.map((opt) => (
                 <span
                   key={opt}
-                  className={`SongEditForm-composite-segment ${setField.includes(opt) ? 'SongEditForm-composite-segment--on' : ''}`}
+                  className={`SingleSongMetadataEditForm-composite-segment ${setField.includes(opt) ? 'SingleSongMetadataEditForm-composite-segment--on' : ''}`}
                   onClick={() => toggleSet(opt)}
                 >
                   {opt}
@@ -515,13 +519,13 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               ))}
             </span>
           </Box>
-          <Box className="SongEditForm-field">
-            <span className="SongEditForm-field-label">stage</span>
-            <span className="SongEditForm-composite-pill">
+          <Box className="SingleSongMetadataEditForm-field">
+            <span className="SingleSongMetadataEditForm-field-label">stage</span>
+            <span className="SingleSongMetadataEditForm-composite-pill">
               {STAGE_OPTIONS.map((opt) => (
                 <span
                   key={opt}
-                  className={`SongEditForm-composite-segment ${stage.includes(opt) ? 'SongEditForm-composite-segment--on' : ''}`}
+                  className={`SingleSongMetadataEditForm-composite-segment ${stage.includes(opt) ? 'SingleSongMetadataEditForm-composite-segment--on' : ''}`}
                   onClick={() => toggleStage(opt)}
                 >
                   {opt}
@@ -529,9 +533,9 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               ))}
             </span>
           </Box>
-          <Box className="SongEditForm-field SongEditForm-field--nz SongEditForm-field--no-label">
+          <Box className="SingleSongMetadataEditForm-field SingleSongMetadataEditForm-field--nz SingleSongMetadataEditForm-field--no-label">
             <span
-              className={`SongEditForm-pill SongEditForm-pill--nz ${locationNz ? 'SongEditForm-pill--on' : ''}`}
+              className={`SingleSongMetadataEditForm-pill SingleSongMetadataEditForm-pill--nz ${locationNz ? 'SingleSongMetadataEditForm-pill--on' : ''}`}
               onClick={() => setLocationNz((prev) => !prev)}
             >
               NZ
@@ -539,13 +543,13 @@ export default function SongEditForm({ song }: SongEditFormProps) {
           </Box>
         </Box>
 
-        <Box className="SongEditForm-row">
-          <Box className="SongEditForm-field SongEditForm-field--styles">
-            <span className="SongEditForm-field-label">styles</span>
+        <Box className="SingleSongMetadataEditForm-row">
+          <Box className="SingleSongMetadataEditForm-field SingleSongMetadataEditForm-field--styles">
+            <span className="SingleSongMetadataEditForm-field-label">styles</span>
             {styles.length > 0 && (
-              <span className="SongEditForm-styles-pills">
+              <span className="SingleSongMetadataEditForm-styles-pills">
                 {styles.map((opt) => (
-                  <span key={opt} className="SongEditForm-pill SongEditForm-pill--on SongEditForm-pill--removable" onClick={() => setStyles(prev => prev.filter(s => s !== opt))}>
+                  <span key={opt} className="SingleSongMetadataEditForm-pill SingleSongMetadataEditForm-pill--on SingleSongMetadataEditForm-pill--removable" onClick={() => setStyles(prev => prev.filter(s => s !== opt))}>
                     <X size={18} />{opt}
                   </span>
                 ))}
@@ -583,14 +587,14 @@ export default function SongEditForm({ song }: SongEditFormProps) {
 
         {grouping.includes('Listening') && (
           <>
-            <Box className="SongEditForm-row">
-              <Box className="SongEditForm-field">
-                <span className="SongEditForm-field-label">listening</span>
-                <span className="SongEditForm-pill-group">
+            <Box className="SingleSongMetadataEditForm-row">
+              <Box className="SingleSongMetadataEditForm-field">
+                <span className="SingleSongMetadataEditForm-field-label">listening</span>
+                <span className="SingleSongMetadataEditForm-pill-group">
                   {LISTENING_ROW1.map((opt) => (
                     <span
                       key={opt}
-                      className={`SongEditForm-pill ${listening.includes(opt) ? 'SongEditForm-pill--on' : ''}`}
+                      className={`SingleSongMetadataEditForm-pill ${listening.includes(opt) ? 'SingleSongMetadataEditForm-pill--on' : ''}`}
                       onClick={() => toggleListening(opt)}
                     >
                       {opt}
@@ -599,13 +603,13 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                 </span>
               </Box>
             </Box>
-            <Box className="SongEditForm-row SongEditForm-row--tight">
-              <Box className="SongEditForm-field">
-                <span className="SongEditForm-pill-group">
+            <Box className="SingleSongMetadataEditForm-row SingleSongMetadataEditForm-row--tight">
+              <Box className="SingleSongMetadataEditForm-field">
+                <span className="SingleSongMetadataEditForm-pill-group">
                   {LISTENING_ROW2.map((opt) => (
                     <span
                       key={opt}
-                      className={`SongEditForm-pill ${listening.includes(opt) ? 'SongEditForm-pill--on' : ''}`}
+                      className={`SingleSongMetadataEditForm-pill ${listening.includes(opt) ? 'SingleSongMetadataEditForm-pill--on' : ''}`}
                       onClick={() => toggleListening(opt)}
                     >
                       {opt}
@@ -617,50 +621,50 @@ export default function SongEditForm({ song }: SongEditFormProps) {
           </>
         )}
 
-        <Box className="SongEditForm-export">
+        <Box className="SingleSongMetadataEditForm-export">
           <span
-            className={`SongEditForm-pill SongEditForm-pill--action${isExporting ? ' SongEditForm-pill--disabled' : ''}`}
+            className={`SingleSongMetadataEditForm-pill SingleSongMetadataEditForm-pill--action${isExporting ? ' SingleSongMetadataEditForm-pill--disabled' : ''}`}
             onClick={isExporting ? undefined : handleExport}
           >
             Save to Apple Music
           </span>
-          <span className={`SongEditForm-status${
+          <span className={`SingleSongMetadataEditForm-status${
             statusSpinner
-              ? ' SongEditForm-status--visible'
+              ? ' SingleSongMetadataEditForm-status--visible'
               : statusMode !== 'idle'
-                ? ` SongEditForm-status--result${statusIsError ? ' SongEditForm-status--error' : ''}`
+                ? ` SingleSongMetadataEditForm-status--result${statusIsError ? ' SingleSongMetadataEditForm-status--error' : ''}`
                 : ''
           }`}>
-            {statusSpinner && <Loader2 className="SongEditForm-spinner" size={14} />}
+            {statusSpinner && <Loader2 className="SingleSongMetadataEditForm-spinner" size={14} />}
             {statusText}
           </span>
         </Box>
 
         {history && history.length > 0 && (
-          <details className="SongEditForm-history">
-            <summary className="SongEditForm-history-summary">
+          <details className="SingleSongMetadataEditForm-history">
+            <summary className="SingleSongMetadataEditForm-history-summary">
               edit history ({history.length})
             </summary>
-            <Box className="SongEditForm-history-list">
+            <Box className="SingleSongMetadataEditForm-history-list">
               {history.map((entry) => (
-                  <Box key={entry._id} className="SongEditForm-history-entry">
-                    <span className="SongEditForm-history-date">
+                  <Box key={entry._id} className="SingleSongMetadataEditForm-history-entry">
+                    <span className="SingleSongMetadataEditForm-history-date">
                       {new Date(entry.dateEdited).toLocaleString()}
                     </span>
-                    <span className="SongEditForm-history-source">
+                    <span className="SingleSongMetadataEditForm-history-source">
                       {entry.sourceType}
                     </span>
                     {entry.diff.length > 0 && (
-                      <span className="SongEditForm-history-diffs">
+                      <span className="SingleSongMetadataEditForm-history-diffs">
                         {entry.diff.map((d) => (
-                          <span key={d.field} className="SongEditForm-history-field">
-                            <span className="SongEditForm-history-field-label">{d.field}:</span>
+                          <span key={d.field} className="SingleSongMetadataEditForm-history-field">
+                            <span className="SingleSongMetadataEditForm-history-field-label">{d.field}:</span>
                             {Array.isArray(d.value) ? (
                               d.value.map((v) => (
-                                <span key={v} className="SongEditForm-history-token">{v}</span>
+                                <span key={v} className="SingleSongMetadataEditForm-history-token">{v}</span>
                               ))
                             ) : (
-                              <span className="SongEditForm-history-value">{d.value}</span>
+                              <span className="SingleSongMetadataEditForm-history-value">{d.value}</span>
                             )}
                           </span>
                         ))}

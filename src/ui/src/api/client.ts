@@ -115,6 +115,22 @@ export async function fetchSongHistory(id: string): Promise<HistoryEntry[]> {
   return response.json();
 }
 
+export async function updateSongsBatch(
+  updates: { id: string; data: Partial<Song> }[],
+): Promise<{ success: boolean; updated: Song[]; errors: { id: string; error: string }[] }> {
+  const response = await fetch(`${API_URL}/api/songs/metadata/batch`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update batch metadata: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function fetchGenreStats(params?: ApiGenreStatsParams): Promise<Array<{ genre: string; count: number }>> {
   const qs = params ? buildQueryString(params as ApiSongParams) : '';
   const response = await fetch(`${API_URL}/api/songs/stats/genres${qs}`);

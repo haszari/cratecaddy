@@ -302,7 +302,7 @@ export class SongService {
       rating?: number;
       year?: number;
       favorite?: 'starred' | 'normal' | 'disliked';
-    }
+    },
   ): Promise<ISong | null> {
     const song = await Song.findById(id);
     if (!song) return null;
