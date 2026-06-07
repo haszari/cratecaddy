@@ -68,8 +68,23 @@ export async function updateSongMetadata(
 }
 
 export async function writeToAppleMusic(id: string): Promise<{ success: boolean; message: string }> {
-  const response = await fetch(`${API_URL}/api/songs/${id}/write-to-apple-music`, {
+  const response = await fetch(`${API_URL}/api/songs/write-to-apple-music/${id}`, {
     method: 'POST',
+  });
+
+  if (!response.ok) {
+    const body = await response.json();
+    throw new Error(body.error ?? body.message ?? 'Failed to write to Apple Music');
+  }
+
+  return response.json();
+}
+
+export async function writeToAppleMusicBatch(ids: string[]): Promise<{ results: { id: string; success: boolean; message: string }[] }> {
+  const response = await fetch(`${API_URL}/api/songs/write-to-apple-music`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
   });
 
   if (!response.ok) {

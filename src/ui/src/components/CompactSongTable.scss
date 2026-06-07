@@ -35,9 +35,23 @@
     &:first-child {
       border-radius: 0.4em 0 0 0.4em;
     }
+  }
 
-    &:last-child {
-      border-radius: 0 0.4em 0.4em 0;
+  .col-export-status {
+    width: 2em;
+    text-align: center;
+  }
+
+  .CompactSongTable-export-status {
+    font-size: 0.85em;
+    user-select: none;
+
+    &--success {
+      color: #4caf50;
+    }
+
+    &--error {
+      color: #e53935;
     }
   }
 }

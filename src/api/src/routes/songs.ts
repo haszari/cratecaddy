@@ -11,7 +11,8 @@ router.post('/', (req, res) => songController.createSong(req, res));
 router.put('/:id', (req, res) => songController.updateSong(req, res));
 router.put('/metadata/batch', (req, res) => songController.updateMetadataBatch(req, res));
 router.put('/:id/metadata', (req, res) => songController.updateMetadata(req, res));
-router.post('/:id/write-to-apple-music', (req, res) => songController.writeToAppleMusic(req, res));
+router.post('/write-to-apple-music', (req, res) => songController.writeToAppleMusicBatch(req, res));
+router.post('/write-to-apple-music/:id', (req, res) => songController.writeToAppleMusic(req, res));
 router.delete('/:id', (req, res) => songController.deleteSong(req, res));
 
 export default router;

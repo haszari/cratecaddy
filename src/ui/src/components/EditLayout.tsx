@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import type { Song } from '../types';
 import CompactSongTable from './CompactSongTable';
 import SingleSongMetadataEditForm from './SingleSongMetadataEditForm';
@@ -24,9 +24,22 @@ export default function EditLayout({
 }: EditLayoutProps) {
   const dirtyRef = useRef(false);
 
+  const [songExportStatuses, setSongExportStatuses] = useState<Map<string, { success: boolean; message: string }>>(new Map());
+
   const handleDirtyChange = useCallback((dirty: boolean) => {
     dirtyRef.current = dirty;
   }, []);
+
+  const handleExportComplete = useCallback(
+    (results: { id: string; success: boolean; message: string }[]) => {
+      setSongExportStatuses(prev => {
+        const next = new Map(prev);
+        for (const r of results) {
+          next.set(r.id, { success: r.success, message: r.message });
+        }
+        return next;
+      });
+    }, []);
 
   const handleSelect = useCallback((id: string, mode?: 'toggle' | 'range') => {
     if (dirtyRef.current) return;
@@ -88,6 +101,7 @@ export default function EditLayout({
           songs={songs}
           selectedIds={selectedIds}
           onSelect={handleSelect}
+          exportStatuses={songExportStatuses}
         />
       </div>
       <div className="EditLayout-detail">
@@ -106,6 +120,7 @@ export default function EditLayout({
             key={selectedSongs.map(s => s._id).join(',')}
             songs={selectedSongs}
             onDirtyChange={handleDirtyChange}
+            onExportComplete={handleExportComplete}
           />
         )}
       </div>

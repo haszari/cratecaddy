@@ -334,6 +334,15 @@ export class SongService {
     return runWrite(song);
   }
 
+  async writeToAppleMusicBatch(ids: string[]): Promise<{ results: { id: string; success: boolean; message: string }[] }> {
+    const results: { id: string; success: boolean; message: string }[] = [];
+    for (const id of ids) {
+      const result = await this.writeToAppleMusic(id);
+      results.push({ id, ...result });
+    }
+    return { results };
+  }
+
   async createSong(data: Partial<ISong>): Promise<ISong> {
     const song = new Song(data);
     return await song.save();

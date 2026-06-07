@@ -221,6 +221,32 @@ $field-font-size: 1em;
     margin-top: 1em;
   }
 
+  .MultiSongMetadataEditForm-actions-gap {
+    display: inline-block;
+    width: 3em;
+  }
+
+  .MultiSongMetadataEditForm-export {
+    background: #43423c;
+    color: #bbb;
+    border: none;
+    border-radius: 0.5em;
+    padding: 0.5em 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: orange;
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
   .MultiSongMetadataEditForm-save {
     background: #43423c;
     color: #bbb;
@@ -278,6 +304,7 @@ $field-font-size: 1em;
     gap: 0.3em;
     font-size: 0.8em;
     color: rgba(255, 255, 255, 0.5);
+    margin-left: auto;
     opacity: 0;
     transition: opacity 400ms;
 

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { updateSongsBatch, fetchGenreStats } from '../api/client';
+import { updateSongsBatch, fetchGenreStats, writeToAppleMusicBatch } from '../api/client';
 import { decomposeGenres } from '../hooks/useGenreDecomposition';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
@@ -51,27 +51,13 @@ function groupingInAllSongs(songs: Song[], tag: string, addTags: string[], remov
   });
 }
 
-function effectiveGroupingList(songs: Song[], addGrouping: string[], removeGrouping: string[]): string[] {
-  const result: string[] = [];
-  for (const s of songs) {
-    for (const g of (s.grouping ?? [])) {
-      if (!removeGrouping.includes(g) && !result.includes(g)) {
-        result.push(g);
-      }
-    }
-  }
-  for (const g of addGrouping) {
-    if (!result.includes(g)) result.push(g);
-  }
-  return result;
-}
-
 interface MultiSongMetadataEditFormProps {
   songs: Song[];
   onDirtyChange?: (dirty: boolean) => void;
+  onExportComplete?: (results: { id: string; success: boolean; message: string }[]) => void;
 }
 
-export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: MultiSongMetadataEditFormProps) {
+export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExportComplete }: MultiSongMetadataEditFormProps) {
   const queryClient = useQueryClient();
 
   const commonInit = useMemo(() => {
@@ -108,7 +94,11 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
   const [rating, setRating] = useState(0);
   const [dirtyFields, setDirtyFields] = useState<Set<ScalarField>>(new Set());
   const [statusMsg, setStatusMsg] = useState('');
-  const [statusIsError, setStatusIsError] = useState(false);
+  const [saveIsError, setSaveIsError] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMsg, setExportMsg] = useState('');
+  const [exportIsError, setExportIsError] = useState(false);
+  const [hasSavedBefore, setHasSavedBefore] = useState(false);
 
   const hasChanges = dirtyFields.size > 0
     || addGenres.length > 0 || removeGenres.length > 0
@@ -152,9 +142,10 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
     },
     onSuccess: () => {
       onDirtyChange?.(false);
+      setHasSavedBefore(true);
       queryClient.invalidateQueries({ queryKey: ['songs'] });
       setStatusMsg(`${songs.length} song${songs.length > 1 ? 's' : ''} updated`);
-      setStatusIsError(false);
+      setSaveIsError(false);
       setAddGenres([]);
       setRemoveGenres([]);
       setAddGrouping([]);
@@ -169,7 +160,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
     },
     onError: (err) => {
       setStatusMsg(err instanceof Error ? err.message : 'Save failed');
-      setStatusIsError(true);
+      setSaveIsError(true);
     },
   });
 
@@ -213,12 +204,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
     }
   }, [songs, addGrouping, removeGrouping, onDirtyChange]);
 
-  const effectiveGrouping = useMemo(
-    () => effectiveGroupingList(songs, addGrouping, removeGrouping),
-    [songs, addGrouping, removeGrouping],
-  );
-
-  const showListeningSection = effectiveGrouping.includes('Listening');
+  const showListeningSection = groupingInAllSongs(songs, 'Listening', addGrouping, removeGrouping);
 
   const markDirty = useCallback((field: ScalarField) => {
     onDirtyChange?.(true);
@@ -244,8 +230,33 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
     setRating(0);
     setDirtyFields(new Set());
     setStatusMsg('');
-    setStatusIsError(false);
+    setSaveIsError(false);
+    setExportMsg('');
+    setExportIsError(false);
   }, [onDirtyChange]);
+
+  const handleExportBatch = useCallback(async () => {
+    setIsExporting(true);
+    onDirtyChange?.(true);
+    try {
+      const { results } = await writeToAppleMusicBatch(songs.map(s => s._id!));
+      const errors = results.filter(r => !r.success);
+      if (errors.length === 0) {
+        setExportMsg(`Written to ${results.length} song${results.length > 1 ? 's' : ''} in Apple Music`);
+        setExportIsError(false);
+      } else {
+        setExportMsg(`${errors.length} song(s) failed: ${errors[0].message}`);
+        setExportIsError(true);
+      }
+      onExportComplete?.(results);
+    } catch (err) {
+      setExportMsg(err instanceof Error ? err.message : 'Write to Apple Music failed');
+      setExportIsError(true);
+    } finally {
+      setIsExporting(false);
+      onDirtyChange?.(false);
+    }
+  }, [songs, onDirtyChange, onExportComplete]);
 
   const { data: allGenreStats } = useQuery({
     queryKey: ['genres', 'stats'],
@@ -275,19 +286,28 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
   const displayKeyMinor = dirtyFields.has('key') ? keyMinor : commonInit.keyMinor;
   const displayRating = dirtyFields.has('rating') ? rating : commonInit.rating;
 
-  const statusMode: 'saving' | 'save-result' | 'idle' = saveMutation.isPending
-    ? 'saving'
-    : statusMsg
-      ? 'save-result'
-      : 'idle';
+  const statusMode: 'idle' | 'saving' | 'exporting' | 'save-result' | 'export-result' = (() => {
+    if (isExporting) return 'exporting';
+    if (saveMutation.isPending) return 'saving';
+    if (statusMsg) return 'save-result';
+    if (exportMsg) return 'export-result';
+    return 'idle';
+  })();
 
-  const statusText = statusMode === 'saving'
-    ? 'Saving changes…'
-    : statusMode === 'save-result'
-      ? statusMsg
-      : '';
+  const statusText = statusMode === 'exporting'
+    ? 'Writing to Apple Music…'
+    : statusMode === 'saving'
+      ? 'Saving changes…'
+      : statusMode === 'save-result'
+        ? statusMsg
+        : statusMode === 'export-result'
+          ? exportMsg
+          : '';
 
-  const statusSpinner = statusMode === 'saving';
+  const statusIsError = (statusMode === 'save-result' && saveIsError)
+    || (statusMode === 'export-result' && exportIsError);
+
+  const statusSpinner = statusMode === 'saving' || statusMode === 'exporting';
 
   return (
     <Box className="MultiSongMetadataEditForm">
@@ -429,7 +449,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
             ))}
           </span>
         </Box>
-        <Box className="MultiSongMetadataEditForm-field MultiSongMetadataEditForm-field--nz">
+        <Box className="MultiSongMetadataEditForm-field MultiSongMetadataEditForm-field--nz MultiSongMetadataEditForm-field--no-label">
           <span
             className={`MultiSongMetadataEditForm-pill MultiSongMetadataEditForm-pill--nz ${isTagOn('NZ') ? 'MultiSongMetadataEditForm-pill--on' : ''}`}
             onClick={() => toggleTag('NZ')}
@@ -532,7 +552,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
       <Box className="MultiSongMetadataEditForm-actions">
         <button
           className="MultiSongMetadataEditForm-save"
-          disabled={!hasChanges || saveMutation.isPending}
+          disabled={!hasChanges || saveMutation.isPending || isExporting}
           onClick={() => saveMutation.mutate()}
         >
           {saveMutation.isPending ? (
@@ -543,15 +563,27 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
         </button>
         <button
           className="MultiSongMetadataEditForm-cancel"
-          disabled={!hasChanges || saveMutation.isPending}
+          disabled={!hasChanges || saveMutation.isPending || isExporting}
           onClick={handleCancel}
         >
           Cancel
         </button>
+        <span className="MultiSongMetadataEditForm-actions-gap" />
+        <button
+          className="MultiSongMetadataEditForm-export"
+          disabled={!hasSavedBefore || hasChanges || saveMutation.isPending || isExporting}
+          onClick={handleExportBatch}
+        >
+          {isExporting ? (
+            <><Loader2 className="MultiSongMetadataEditForm-spinner" size={14} /> Writing…</>
+          ) : (
+            'Save to Apple Music'
+          )}
+        </button>
         <span className={`MultiSongMetadataEditForm-status${
           statusSpinner
             ? ' MultiSongMetadataEditForm-status--visible'
-            : statusMode === 'save-result'
+            : statusMode === 'save-result' || statusMode === 'export-result'
               ? ` MultiSongMetadataEditForm-status--result${statusIsError ? ' MultiSongMetadataEditForm-status--error' : ''}`
               : ''
         }`}>
