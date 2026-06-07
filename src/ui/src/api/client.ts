@@ -80,6 +80,11 @@ export async function writeToAppleMusic(id: string): Promise<{ success: boolean;
   return response.json();
 }
 
+export interface SnapshotDiff {
+  field: string;
+  value: string | string[];
+}
+
 export interface HistoryEntry {
   _id: string;
   songId: string;
@@ -96,6 +101,7 @@ export interface HistoryEntry {
     year?: number;
     favorite?: 'starred' | 'normal' | 'disliked';
   };
+  diff: SnapshotDiff[];
   importMeta?: Record<string, unknown>;
 }
 

@@ -1,17 +1,16 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
 import { useFilters } from '../hooks/useFilters';
 import { useSortShuffle } from '../hooks/useSortShuffle';
-import { useEditMode } from '../hooks/useEditMode';
+import { buildEditUrl } from '../utils/urlBuilder';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
-import EditLayout from '../components/EditLayout';
 import type { TagInfo } from '../types';
 import type { SortField, SortDirection } from '../components/SongTable';
 import { withSearch } from '../utils/url';
@@ -19,6 +18,7 @@ import { withSearch } from '../utils/url';
 export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const separator = genrePath && genrePath.includes(',') ? ',' : '+';
   const isOrMode = separator === ',';
@@ -43,29 +43,6 @@ export default function GenreDetail() {
     toggleShuffle(on);
     setPage(1);
   }, [toggleShuffle, setPage]);
-
-  const editMode = useEditMode();
-  const editToggleRef = useRef(editMode.toggle);
-  useEffect(() => { editToggleRef.current = editMode.toggle; });
-  const queryClient = useQueryClient();
-  const prevEditActive = useRef(editMode.active);
-  useEffect(() => {
-    if (prevEditActive.current && !editMode.active) {
-      queryClient.invalidateQueries({ queryKey: ['songs'] });
-    }
-    prevEditActive.current = editMode.active;
-  }, [editMode.active, queryClient]);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'e' && !e.ctrlKey && !e.metaKey && !isInputFocused()) {
-        e.preventDefault();
-        editToggleRef.current();
-      }
-    }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, []);
 
   const {
     filters, addExclude,
@@ -136,35 +113,11 @@ export default function GenreDetail() {
 
   const songs = paginated?.data ?? [];
 
-  if (editMode.active && paginated) {
-    return (
-      <div className="GenreDetail">
-        <BasePageCriteria
-          genres={decodedGenres.map((g) => ({ name: g, mode: isOrMode ? 'or' : 'and' }))}
-          onRemoveGenre={handleRemoveInclude}
-        />
-
-        <FilterBar
-          genreNot={filters.genreNot}
-          bpmGte={filters.bpmGte}
-          bpmLte={filters.bpmLte}
-          onRemoveExclude={removeExclude}
-          onBpmChange={setBpmRange}
-          shuffleActive={shuffleMode}
-          onShuffleToggle={handleShuffleToggle}
-          onShuffleReseed={reshuffle}
-          editMode={editMode.active}
-          onEditToggle={editMode.toggle}
-        />
-
-        <EditLayout
-          songs={songs}
-          selectedId={editMode.selectedId}
-          onSelect={editMode.selectId}
-        />
-      </div>
-    );
-  }
+  const editHref = buildEditUrl(
+    location.search,
+    'genre',
+    isOrMode ? { genreAny: decodedGenres.join(',') } : { genreAll: decodedGenres.join(',') },
+  );
 
   return (
     <div className="GenreDetail">
@@ -182,8 +135,8 @@ export default function GenreDetail() {
         shuffleActive={shuffleMode}
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
-        editMode={editMode.active}
-        onEditToggle={editMode.toggle}
+        editHref={editHref}
+        songCount={songs.length}
       />
 
       {isLoading && <p>Loading songs...</p>}
@@ -214,9 +167,4 @@ export default function GenreDetail() {
       )}
     </div>
   );
-}
-
-function isInputFocused(): boolean {
-  const tag = document.activeElement?.tagName;
-  return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
 }

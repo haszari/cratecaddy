@@ -6,6 +6,7 @@ import {
   FILTER_PARAM_KEYS,
   PAGINATION_PARAM_KEYS,
 } from '../helpers/apiParams.js';
+import { IHistorySnapshot } from '../models/History.js';
 
 function extractFilterParams(query: Record<string, unknown>): ApiFilterParams {
   const filters: ApiFilterParams = {};
@@ -131,7 +132,35 @@ export class SongController {
   async getHistory(req: Request, res: Response) {
     try {
       const history = await songService.getHistory(req.params.id);
-      res.json(history);
+
+      const diffFields: (keyof IHistorySnapshot)[] = [
+        'title', 'artist', 'genres', 'grouping',
+        'bpm', 'key', 'rating', 'year', 'favorite',
+      ];
+
+      type SnapshotDiff = { field: string; value: string | string[] };
+
+      const withDiffs = history.map((entry, i) => {
+        const obj = entry.toObject();
+        let diffs: SnapshotDiff[] = [];
+        if (i > 0) {
+          const prev = history[i - 1].snapshot;
+          for (const field of diffFields) {
+            const curr = obj.snapshot[field];
+            const prevVal = prev[field];
+            if (JSON.stringify(curr) !== JSON.stringify(prevVal)) {
+              if (Array.isArray(curr)) {
+                diffs.push({ field, value: curr.slice() });
+              } else if (curr !== undefined && curr !== null && curr !== '') {
+                diffs.push({ field, value: String(curr) });
+              }
+            }
+          }
+        }
+        return { ...obj, diff: diffs };
+      });
+
+      res.json(withDiffs);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch history' });
     }

@@ -6,8 +6,16 @@ function generateSeed(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export function useSortShuffle() {
+interface UseSortShuffleDefaults {
+  defaultSortField?: SortField;
+  defaultSortDirection?: SortDirection;
+}
+
+export function useSortShuffle(defaults?: UseSortShuffleDefaults) {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const defaultSortField = defaults?.defaultSortField ?? 'rating';
+  const defaultSortDirection = defaults?.defaultSortDirection ?? 'desc';
 
   const rawSortField = searchParams.get('sort') as SortField | null;
   const rawSortDirection = searchParams.get('sortDirection') as SortDirection | null;
@@ -24,9 +32,9 @@ export function useSortShuffle() {
     hasSortConflict ? undefined : (rawSortDirection ?? undefined);
 
   const sortField: SortField | undefined =
-    resolvedSortField ?? (shuffleMode ? undefined : 'rating');
+    resolvedSortField ?? (shuffleMode ? undefined : defaultSortField);
   const sortDirection: SortDirection | undefined =
-    resolvedSortDirection ?? (shuffleMode ? undefined : 'desc');
+    resolvedSortDirection ?? (shuffleMode ? undefined : defaultSortDirection);
 
   const setSort = useCallback((field: SortField, direction: SortDirection) => {
     setSearchParams(prev => {
@@ -48,12 +56,12 @@ export function useSortShuffle() {
         next.delete('sortDirection');
       } else {
         next.set('shuffle', 'false');
-        next.set('sort', 'rating');
-        next.set('sortDirection', 'desc');
+        next.set('sort', defaultSortField);
+        next.set('sortDirection', defaultSortDirection);
       }
       return next;
     }, { replace: true });
-  }, [setSearchParams]);
+  }, [setSearchParams, defaultSortField, defaultSortDirection]);
 
   const reshuffle = useCallback(() => {
     setSearchParams(prev => {

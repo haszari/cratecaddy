@@ -8,6 +8,7 @@ import GenreDetail from './pages/GenreDetail';
 import Home from './pages/Home';
 import Artist from './pages/Artist';
 import Song from './pages/Song';
+import EditMetadata from './pages/EditMetadata';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/edit-metadata" element={<EditMetadata />} />
             <Route path="/genre/:genrePath" element={<GenreDetail />} />
             <Route path="/artist/:artistName" element={<Artist />} />
             <Route path="/song/:id" element={<Song />} />

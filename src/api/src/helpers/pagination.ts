@@ -13,7 +13,7 @@ export interface PaginationResult {
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 50;
-const MAX_LIMIT = 200;
+const MAX_LIMIT = 500;
 
 function toPositiveInt(value: string | number | undefined, fallback: number): number {
   if (value === undefined || value === null) return fallback;

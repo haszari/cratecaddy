@@ -4,42 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { updateSongMetadata, writeToAppleMusic, fetchGenreStats, fetchSongHistory } from '../api/client';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
 import type { PaginatedResponse, Song } from '../types';
-import type { HistoryEntry } from '../api/client';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import { X } from 'lucide-react';
 import './SongEditForm.scss';
-
-interface SnapshotDiff {
-  field: string;
-  value: string | string[];
-}
-
-const DIFF_FIELDS: (keyof HistoryEntry['snapshot'])[] = [
-  'title', 'artist', 'genres', 'grouping', 'bpm', 'key', 'rating', 'year', 'favorite',
-];
-
-function computeSnapshotDiff(
-  current: HistoryEntry['snapshot'],
-  prev: HistoryEntry['snapshot'] | undefined,
-): SnapshotDiff[] {
-  const diffs: SnapshotDiff[] = [];
-  for (const field of DIFF_FIELDS) {
-    const curr = current[field];
-    const prevVal = prev?.[field];
-    const currJson = JSON.stringify(curr);
-    const prevJson = JSON.stringify(prevVal);
-    if (currJson !== prevJson) {
-      if (Array.isArray(curr)) {
-        diffs.push({ field, value: curr.slice() });
-      } else if (curr !== undefined && curr !== null && curr !== '') {
-        diffs.push({ field, value: String(curr) });
-      }
-    }
-  }
-  return diffs;
-}
 
 const KEY_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const STAGE_OPTIONS = ['Warmup', 'Peak', 'Later'];
@@ -575,10 +544,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
               edit history ({history.length})
             </summary>
             <Box className="SongEditForm-history-list">
-              {history.map((entry, i) => {
-                const prev = i > 0 ? history[i - 1].snapshot : undefined;
-                const diffs = prev ? computeSnapshotDiff(entry.snapshot, prev) : [];
-                return (
+              {history.map((entry) => (
                   <Box key={entry._id} className="SongEditForm-history-entry">
                     <span className="SongEditForm-history-date">
                       {new Date(entry.dateEdited).toLocaleString()}
@@ -586,9 +552,9 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                     <span className="SongEditForm-history-source">
                       {entry.sourceType}
                     </span>
-                    {diffs.length > 0 && (
+                    {entry.diff.length > 0 && (
                       <span className="SongEditForm-history-diffs">
-                        {diffs.map((d) => (
+                        {entry.diff.map((d) => (
                           <span key={d.field} className="SongEditForm-history-field">
                             <span className="SongEditForm-history-field-label">{d.field}:</span>
                             {Array.isArray(d.value) ? (
@@ -603,8 +569,7 @@ export default function SongEditForm({ song }: SongEditFormProps) {
                       </span>
                     )}
                   </Box>
-                );
-              })}
+                ))}
             </Box>
           </details>
         )}
