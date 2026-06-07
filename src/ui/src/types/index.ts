@@ -1,5 +1,8 @@
+export type SourceFormat = 'aiff' | 'wav' | 'alac' | 'aac' | 'mp3' | 'applemusicstream';
+
 export interface ISource {
   sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  format?: SourceFormat;
   filePath?: string;
   fileSize?: number;
   bitRate?: number;

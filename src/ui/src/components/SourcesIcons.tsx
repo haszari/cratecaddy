@@ -2,12 +2,14 @@ import { Cloud, Gem } from 'lucide-react';
 
 interface ISource {
   sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  format?: 'aiff' | 'wav' | 'alac' | 'aac' | 'mp3' | 'applemusicstream';
   filePath?: string;
   fileSize?: number;
   bitRate?: number;
   fileType?: string;
   sourceMetadata?: {
     isAppleMusic?: boolean;
+    fileType?: string;
     [key: string]: unknown;
   };
   lastImportDate: Date;
@@ -18,60 +20,63 @@ interface SourcesIconsProps {
 }
 
 export function SourcesIcons({ sources }: SourcesIconsProps) {
-  const isLocalFile = sources.length > 0 && sources.some(s => 
-    s.sourceMetadata?.isAppleMusic === false
-  );
+  const isLocalFile = sources.length > 0 && sources.some(s => {
+    if (s.format && s.format !== 'applemusicstream') return true;
+    if (s.filePath && /^file:\/\/(localhost\/|\/)\/Users\//.test(s.filePath)) return true;
+    return false;
+  });
 
-  // Show gem icon if ANY source has lossless format (lowercase matching, support AIF/AIFF)
+  const cloudMode = !isLocalFile && sources.some(s => s.format === 'applemusicstream')
+    ? sources.some(s => s.sourceMetadata?.fileType === 'Apple Music AAC audio file')
+      ? 'streaming'
+      : 'uploaded'
+    : null;
+
+  // Show gem icon if ANY source has lossless format
   const hasLossless = sources.some(s => {
-    if (!s.fileType) return false;
-    const fileType = s.fileType.toLowerCase();
-    return fileType.includes('aiff') || fileType.includes('aif') || 
-           fileType.includes('wav') || fileType.includes('flac') || 
-           fileType.includes('alac');
+    if (s.format === 'alac' || s.format === 'aiff' || s.format === 'wav') return true;
+    const ft = s.sourceMetadata?.fileType || s.fileType || '';
+    return ft.toLowerCase().includes('flac');
   });
 
   // Get specific lossless format for tooltip
   const getLosslessFormat = () => {
-    const losslessSource = sources.find(s => {
-      if (!s.fileType) return false;
-      const fileType = s.fileType.toLowerCase();
-      return fileType.includes('aiff') || fileType.includes('aif') || 
-             fileType.includes('wav') || fileType.includes('flac') || 
-             fileType.includes('alac');
+    const src = sources.find(s => {
+      if (s.format === 'alac' || s.format === 'aiff' || s.format === 'wav') return true;
+      const ft = s.sourceMetadata?.fileType || s.fileType || '';
+      return ft.toLowerCase().includes('flac');
     });
-    
-    if (!losslessSource?.fileType) return '';
-    
-    const fileType = losslessSource.fileType.toLowerCase();
-    if (fileType.includes('aiff') || fileType.includes('aif')) return 'AIFF';
-    if (fileType.includes('wav')) return 'WAV';
-    if (fileType.includes('flac')) return 'FLAC';
-    if (fileType.includes('alac')) return 'ALAC';
+    if (!src) return '';
+    if (src.format === 'aiff') return 'AIFF';
+    if (src.format === 'wav') return 'WAV';
+    if (src.format === 'alac') return 'ALAC';
+    const ft = (src.sourceMetadata?.fileType || src.fileType || '').toLowerCase();
+    if (ft.includes('flac')) return 'FLAC';
     return '';
   };
 
   return (
     <div className="sources-icons">
-      {!isLocalFile && (
+      {cloudMode && (
         <div 
-          className="icon-wrapper"
-          title="Cloud only - Apple Music"
+          className={`icon-wrapper${cloudMode === 'streaming' ? ' cloud--filled' : ' cloud--outline'}`}
+          title={cloudMode === 'streaming' ? 'Streaming collection' : 'Own file, uploaded'}
         >
           <Cloud 
             size={16} 
-            aria-label="Cloud only - Apple Music"
+            fill={cloudMode === 'streaming' ? 'currentColor' : 'none'}
+            aria-label={cloudMode === 'streaming' ? 'Streaming collection' : 'Own file, uploaded'}
           />
         </div>
       )}
       {hasLossless && (
         <div 
           className="icon-wrapper"
-          title={`Lossless available - ${getLosslessFormat()}`}
+          title={`Lossless format available - ${getLosslessFormat()}`}
         >
           <Gem 
             size={16} 
-            aria-label={`Lossless available - ${getLosslessFormat()}`}
+            aria-label={`Lossless format available - ${getLosslessFormat()}`}
           />
         </div>
       )}

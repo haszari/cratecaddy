@@ -8,4 +8,12 @@
     display: inline-block;
     cursor: help;
   }
+
+  .cloud--filled svg {
+    fill: currentColor;
+  }
+
+  .cloud--outline svg {
+    opacity: 0.55;
+  }
 }
