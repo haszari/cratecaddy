@@ -7,10 +7,9 @@ interface CompactSongTableProps {
   songs: Song[];
   selectedIds: Set<string>;
   onSelect: (id: string, mode?: 'toggle' | 'range') => void;
-  exportStatuses?: Map<string, { success: boolean; message: string }>;
 }
 
-export default function CompactSongTable({ songs, selectedIds, onSelect, exportStatuses }: CompactSongTableProps) {
+export default function CompactSongTable({ songs, selectedIds, onSelect }: CompactSongTableProps) {
   const lastClickedIdRef = useRef<string | null>(null);
 
   const handleRowClick = useCallback((id: string, e: React.MouseEvent) => {
@@ -32,7 +31,6 @@ export default function CompactSongTable({ songs, selectedIds, onSelect, exportS
             <th className="col-sources">Sources</th>
             <th className="col-artist">Artist</th>
             <th className="col-title">Title</th>
-            <th className="col-export-status">Export</th>
           </tr>
         </thead>
         <tbody>
@@ -47,16 +45,6 @@ export default function CompactSongTable({ songs, selectedIds, onSelect, exportS
               </td>
               <td className="col-artist"><span className="Artist-link">{song.artist}</span></td>
               <td className="col-title"><span className="Song-link">{song.title}</span></td>
-              <td className="col-export-status">
-                {song._id && exportStatuses?.has(song._id) && (
-                  <span
-                    className={`CompactSongTable-export-status CompactSongTable-export-status--${exportStatuses.get(song._id)!.success ? 'success' : 'error'}`}
-                    title={exportStatuses.get(song._id)!.message}
-                  >
-                    {exportStatuses.get(song._id)!.success ? '\u2713' : '\u2717'}
-                  </span>
-                )}
-              </td>
             </tr>
           ))}
         </tbody>

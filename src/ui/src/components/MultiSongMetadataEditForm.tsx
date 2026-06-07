@@ -54,10 +54,9 @@ function groupingInAllSongs(songs: Song[], tag: string, addTags: string[], remov
 interface MultiSongMetadataEditFormProps {
   songs: Song[];
   onDirtyChange?: (dirty: boolean) => void;
-  onExportComplete?: (results: { id: string; success: boolean; message: string }[]) => void;
 }
 
-export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExportComplete }: MultiSongMetadataEditFormProps) {
+export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: MultiSongMetadataEditFormProps) {
   const queryClient = useQueryClient();
 
   const commonInit = useMemo(() => {
@@ -99,6 +98,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExpo
   const [exportMsg, setExportMsg] = useState('');
   const [exportIsError, setExportIsError] = useState(false);
   const [hasSavedBefore, setHasSavedBefore] = useState(false);
+  const [exportResults, setExportResults] = useState<Map<string, { success: boolean; message: string }>>(new Map());
 
   const hasChanges = dirtyFields.size > 0
     || addGenres.length > 0 || removeGenres.length > 0
@@ -240,6 +240,13 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExpo
     onDirtyChange?.(true);
     try {
       const { results } = await writeToAppleMusicBatch(songs.map(s => s._id!));
+      setExportResults(prev => {
+        const next = new Map(prev);
+        for (const r of results) {
+          next.set(r.id, { success: r.success, message: r.message });
+        }
+        return next;
+      });
       const errors = results.filter(r => !r.success);
       if (errors.length === 0) {
         setExportMsg(`Written to ${results.length} song${results.length > 1 ? 's' : ''} in Apple Music`);
@@ -248,7 +255,6 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExpo
         setExportMsg(`${errors.length} song(s) failed: ${errors[0].message}`);
         setExportIsError(true);
       }
-      onExportComplete?.(results);
     } catch (err) {
       setExportMsg(err instanceof Error ? err.message : 'Write to Apple Music failed');
       setExportIsError(true);
@@ -256,7 +262,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExpo
       setIsExporting(false);
       onDirtyChange?.(false);
     }
-  }, [songs, onDirtyChange, onExportComplete]);
+  }, [songs, onDirtyChange]);
 
   const { data: allGenreStats } = useQuery({
     queryKey: ['genres', 'stats'],
@@ -595,6 +601,14 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange, onExpo
       <Box className="MultiSongMetadataEditForm-song-list">
         {songs.map(s => (
           <div key={s._id} className="MultiSongMetadataEditForm-song-item">
+            {s._id && exportResults.has(s._id) ? (
+              <span
+                className={`MultiSongMetadataEditForm-song-export-status--${exportResults.get(s._id)!.success ? 'success' : 'error'}`}
+                title={exportResults.get(s._id)!.message}
+              >
+                {exportResults.get(s._id)!.success ? '\u2713' : '\u2717'}
+              </span>
+            ) : null}
             {s.artist} — {s.title}
           </div>
         ))}

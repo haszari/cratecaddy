@@ -338,6 +338,18 @@ $field-font-size: 1em;
     padding: 0.15em 0;
   }
 
+  .MultiSongMetadataEditForm-song-export-status--success {
+    color: #4caf50;
+    margin-right: 0.4em;
+    font-size: 0.85em;
+  }
+
+  .MultiSongMetadataEditForm-song-export-status--error {
+    color: #e53935;
+    margin-right: 0.4em;
+    font-size: 0.85em;
+  }
+
   .MuiInputBase-input {
     font-size: $field-font-size !important;
   }
