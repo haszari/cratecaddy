@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDebouncedValue } from '@mantine/hooks';
-import { ActionIcon, TextInput } from '@mantine/core';
+import { TextInput } from '@mantine/core';
 import './FilterBar.scss';
 import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
+import TempoControl from './TempoControl';
 
 interface FilterBarProps {
   genreNot: string[];
@@ -32,8 +33,6 @@ export default function FilterBar({
   favoriteActive, onFavoriteToggle,
   search, onSearchChange,
 }: FilterBarProps) {
-  const [bpmMinStr, setBpmMinStr] = useState(bpmGte !== undefined ? String(bpmGte) : '');
-  const [bpmMaxStr, setBpmMaxStr] = useState(bpmLte !== undefined ? String(bpmLte) : '');
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
 
@@ -41,41 +40,24 @@ export default function FilterBar({
     if (onSearchChange) onSearchChange(debouncedSearch);
   }, [debouncedSearch, onSearchChange]);
 
-  const applyBpm = () => {
-    if (!onBpmChange) return;
-    const gte = bpmMinStr ? parseFloat(bpmMinStr) : undefined;
-    const lte = bpmMaxStr ? parseFloat(bpmMaxStr) : undefined;
-    onBpmChange(
-      gte !== undefined && !isNaN(gte) ? gte : undefined,
-      lte !== undefined && !isNaN(lte) ? lte : undefined,
-    );
-  };
-
-  const clearBpm = () => {
-    setBpmMinStr('');
-    setBpmMaxStr('');
-    if (onBpmChange) onBpmChange(undefined, undefined);
-  };
-
   const hasBpm = bpmGte !== undefined || bpmLte !== undefined;
-
-  const showHeart = favoriteActive !== undefined || onFavoriteToggle;
   const showSearch = search !== undefined || onSearchChange;
+  const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
 
   return (
     <div className="FilterBar">
       <div className="FilterBar-navGroup">
         <Link to="/" className="iconButton" title="Home">
-          <House size={16} />
+          <House size={20} />
         </Link>
         {editHref && (
           <Link to={editHref} className="iconButton" title="Edit metadata">
-            <Pencil size={16} />
+            <Pencil size={20} />
           </Link>
         )}
         {doneHref && (
           <Link to={doneHref} className="iconButton" title="Done editing">
-            <ArrowLeft size={16} />
+            <ArrowLeft size={20} />
           </Link>
         )}
         {!readOnly && onShuffleToggle && (
@@ -98,7 +80,7 @@ export default function FilterBar({
             {genre}
             {!readOnly && (
               <span className="FilterBar-chip-x">
-                <X size={12} />
+                <X size={14} />
               </span>
             )}
           </span>
@@ -106,63 +88,24 @@ export default function FilterBar({
       </div>
 
       <div className="FilterBar-filterGroup">
-        {showHeart && (
-          <span className="FilterBar-heart">
-            {readOnly ? (
-              <ActionIcon variant={favoriteActive ? 'filled' : 'subtle'} color="red" disabled>
-                <Heart size={16} fill={favoriteActive ? 'currentColor' : 'none'} />
-              </ActionIcon>
-            ) : (
-              <ActionIcon
-                variant={favoriteActive ? 'filled' : 'subtle'}
-                color="red"
-                onClick={onFavoriteToggle}
-                title={favoriteActive ? 'Show all songs' : 'Show favorites only'}
-              >
-                <Heart size={16} fill={favoriteActive ? 'currentColor' : 'none'} />
-              </ActionIcon>
-            )}
-          </span>
+        {(!readOnly || favoriteActive) && (
+          <button
+            className={`iconButton ${favoriteActive ? 'iconButton--favorite' : ''}`}
+            onClick={readOnly ? undefined : onFavoriteToggle}
+            title={favoriteActive ? 'Show all songs' : 'Show favorites only'}
+          >
+            <Heart size={20} fill={favoriteActive ? 'currentColor' : 'none'} />
+          </button>
         )}
 
-        {(onBpmChange || (readOnly && hasBpm)) && (
-          <span className="FilterBar-bpm">
-            {readOnly ? (
-              <span className="FilterBar-bpm-display">
-                {bpmGte ?? '?'}–{bpmLte ?? '?'} bpm
-              </span>
-            ) : (
-              <>
-                <input
-                  type="number"
-                  placeholder="min"
-                  value={bpmMinStr}
-                  onChange={(e) => setBpmMinStr(e.target.value)}
-                  onBlur={applyBpm}
-                  onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
-                  min={0} max={999}
-                  className="FilterBar-bpm-input"
-                />
-                <span className="FilterBar-bpm-sep">–</span>
-                <input
-                  type="number"
-                  placeholder="max"
-                  value={bpmMaxStr}
-                  onChange={(e) => setBpmMaxStr(e.target.value)}
-                  onBlur={applyBpm}
-                  onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
-                  min={0} max={999}
-                  className="FilterBar-bpm-input"
-                />
-                <span className="FilterBar-bpm-label">bpm</span>
-                {hasBpm && (
-                  <button className="FilterBar-bpm-clear" onClick={clearBpm} title="Clear BPM">
-                    <X size={12} />
-                  </button>
-                )}
-              </>
-            )}
-          </span>
+        {showTempo && (
+          <TempoControl
+            key={`bpm-${bpmGte ?? ''}-${bpmLte ?? ''}`}
+            bpmGte={bpmGte}
+            bpmLte={bpmLte}
+            onChange={readOnly ? undefined : onBpmChange}
+            readOnly={readOnly}
+          />
         )}
 
         {showSearch && (
@@ -174,7 +117,7 @@ export default function FilterBar({
             <TextInput
               className="FilterBar-search"
               placeholder=""
-              leftSection={<Search size={14} />}
+              rightSection={searchInput === '' ? <Search size={18} /> : undefined}
               value={searchInput}
               onChange={(e) => setSearchInput(e.currentTarget.value)}
               size="sm"

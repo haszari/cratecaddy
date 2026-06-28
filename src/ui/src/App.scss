@@ -1,6 +1,6 @@
 .App {
   text-align: center;
-  padding: 3em 1em 1em;
+  padding: 4em 1em 1em;
 }
 
 .page-footer {
@@ -283,6 +283,18 @@ thead th:last-child {
     svg {
       stroke: orange;
     }
+  }
+}
+
+.iconButton--favorite {
+  svg {
+    stroke: #e03131;
+    fill: #e03131;
+  }
+
+  &:hover svg {
+    stroke: #e03131;
+    fill: #e03131;
   }
 }
 

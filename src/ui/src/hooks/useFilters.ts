@@ -51,7 +51,7 @@ export function useFilters() {
         const current = splitCSV(prev.get('genre.not'));
         if (current.includes(genre)) return prev;
         return setParam(prev, 'genre.not', [...current, genre].join(','));
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
@@ -61,7 +61,7 @@ export function useFilters() {
       setSearchParams((prev) => {
         const current = splitCSV(prev.get('genre.not')).filter((g) => g !== genre);
         return setParam(prev, 'genre.not', current.length > 0 ? current.join(',') : null);
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
@@ -72,7 +72,7 @@ export function useFilters() {
         let next = setParam(prev, 'bpm.gte', gte !== undefined ? String(gte) : null);
         next = setParam(next, 'bpm.lte', lte !== undefined ? String(lte) : null);
         return next;
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
@@ -87,14 +87,14 @@ export function useFilters() {
         next.set('favorite', 'true');
       }
       return next;
-    }, { replace: true });
+    });
   }, [setSearchParams]);
 
   const setSearch = useCallback(
     (value: string) => {
       setSearchParams((prev) =>
         setParam(prev, 'search', value || null),
-        { replace: true },
+
       );
     },
     [setSearchParams],
@@ -108,7 +108,7 @@ export function useFilters() {
       next = setParam(next, 'favorite', null);
       next = setParam(next, 'search', null);
       return next;
-    }, { replace: true });
+    });
   }, [setSearchParams]);
 
   const hasActiveFilters =

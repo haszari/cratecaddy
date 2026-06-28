@@ -110,7 +110,7 @@ export default function Artist() {
         const current = splitCSV(prev.get('genre.all'));
         if (current.includes(genre)) return prev;
         return setParam(prev, 'genre.all', [...current, genre].join(','));
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
@@ -120,7 +120,7 @@ export default function Artist() {
       setSearchParams((prev) => {
         const current = splitCSV(prev.get('genre.all')).filter((g) => g !== genre);
         return setParam(prev, 'genre.all', current.length > 0 ? current.join(',') : null);
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
