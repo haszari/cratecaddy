@@ -1,6 +1,7 @@
 import { MantineProvider } from '@mantine/core';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './styles/theme';
+import { mantineTheme } from './styles/mantineTheme';
 import './App.scss';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -13,7 +14,7 @@ import EditMetadata from './pages/EditMetadata';
 
 function App() {
   return (
-    <MantineProvider forceColorScheme="dark">
+    <MantineProvider theme={mantineTheme} forceColorScheme="dark">
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <div className="App">
