@@ -2,6 +2,8 @@
 
 Simple ways to inspect and query the MongoDB database.
 
+MongoDB runs in Docker (`docker compose up -d`). The API runs on the host.
+
 ## Option 1: MongoDB Shell (mongosh) - Simplest
 
 Connect directly to the MongoDB container:

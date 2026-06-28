@@ -1,47 +1,53 @@
 #!/usr/bin/env ts-node
+/**
+ * Rekordbox XML Importer
+ * 
+ * Imports songs from Rekordbox XML export into CrateCaddy database.
+ * Uses the same dedup and merge pipeline as the Apple Music importer
+ * (findMatchingSong + updateWithHistory).
+ * 
+ * Environment Variables:
+ *   MONGODB_URI - MongoDB connection string (default: mongodb://localhost:27017/cratecaddy)
+ * 
+ * Parameters:
+ *   xmlPath - Path to Rekordbox XML file (optional, defaults to ../../data/rekordbox.xml)
+ * 
+ * Usage:
+ *   npm run import:rekordbox [path/to/rekordbox.xml]
+ * 
+ * Imports all tracks from the XML (no filter).
+ */
 
 import mongoose from 'mongoose';
 import { readFileSync } from 'fs';
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ISource } from '../src/models/Song.js';
-import { songService, normalizeArtistTitle } from '../src/services/songService.js';
+import { songService } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 interface RekordboxTrack {
-  $: {
-    TrackID: string;
-    Name: string;
-    Artist?: string;
-    Album?: string;
-    Grouping?: string;
-    Genre?: string;
-    Composer?: string;
-    Label?: string;
-    Remixer?: string;
-    Tonality?: string;
-    Kind?: string;
-    TotalTime?: string;
-    Year?: string;
-    AverageBpm?: string;
-    BitRate?: string;
-    SampleRate?: string;
-    PlayCount?: string;
-    Rating?: string;
-    DateAdded?: string;
-    Location?: string;
-  };
-}
-
-interface RekordboxXML {
-  DJ_PLAYLISTS: {
-    COLLECTION: Array<{
-      TRACK: RekordboxTrack[];
-    }>;
-  };
+  Name?: string;
+  Artist?: string;
+  Album?: string;
+  Grouping?: string;
+  Genre?: string;
+  Tonality?: string;
+  TotalTime?: string;
+  Year?: string;
+  AverageBpm?: string;
+  Rating?: string;
+  Location?: string;
+  Kind?: string;
+  Composer?: string;
+  Remixer?: string;
+  Label?: string;
+  SampleRate?: string;
+  BitRate?: string;
+  PlayCount?: string;
+  DateAdded?: string;
 }
 
 const connectDB = async () => {
@@ -50,12 +56,37 @@ const connectDB = async () => {
   console.log('Connected to MongoDB');
 };
 
-const parseGenres = (genreStr?: string): string[] => {
-  if (!genreStr || genreStr.trim() === '') return [];
-  return genreStr
+const splitTagsField = (fieldStr?: string): string[] => {
+  if (!fieldStr || fieldStr.trim() === '') return [];
+  return fieldStr
     .split(',')
-    .map((g) => g.trim())
-    .filter((g) => g !== '');
+    .map((tag) => tag.trim())
+    .filter((tag) => tag !== '');
+};
+
+// Rekordbox stores rating on a 0-255 scale (Pioneer ecosystem standard).
+// Converts to CrateCaddy's 0-5 score using 255/5 = 51 divisor.
+// Note: Apple Music uses 0-100 scale with /20 divisor — that's a different conversion.
+const rekordboxRatingToScore = (rating?: string): number | undefined => {
+  if (!rating) return undefined;
+  const num = parseInt(rating, 10);
+  if (isNaN(num)) return undefined;
+  return num / 51;
+};
+
+const camelotToKey: Record<string, string> = {
+  '1A': 'Gm', '2A': 'Dm', '3A': 'Am', '4A': 'Em', '5A': 'Bm', '6A': 'F#m',
+  '7A': 'C#m', '8A': 'G#m', '9A': 'D#m', '10A': 'A#m', '11A': 'Fm', '12A': 'Cm',
+  '1B': 'C', '2B': 'G', '3B': 'D', '4B': 'A', '5B': 'E', '6B': 'B',
+  '7B': 'F#', '8B': 'C#', '9B': 'G#', '10B': 'D#', '11B': 'A#', '12B': 'F',
+};
+
+const convertKey = (tonality?: string): string | undefined => {
+  if (!tonality || tonality.trim() === '') return undefined;
+  const trimmed = tonality.trim();
+  const camelotMatch = trimmed.match(/^(\d{1,2})([AB])$/);
+  if (camelotMatch) return camelotToKey[trimmed];
+  return trimmed;
 };
 
 const importSongs = async (xmlPath: string) => {
@@ -64,99 +95,98 @@ const importSongs = async (xmlPath: string) => {
 
     console.log(`Importing songs from: ${xmlPath}`);
     const xmlData = readFileSync(xmlPath, 'utf-8');
-    const parsed = (await parseStringPromise(xmlData)) as RekordboxXML;
+    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '', isArray: (name) => name === 'TRACK' });
+    const parsed = parser.parse(xmlData);
 
-    const tracks = parsed.DJ_PLAYLISTS.COLLECTION[0].TRACK;
+    const collection = parsed.DJ_PLAYLISTS?.COLLECTION;
+    if (!collection || !collection.TRACK) {
+      throw new Error('Failed to find COLLECTION/TRACK in XML');
+    }
+
+    const tracks = collection.TRACK as RekordboxTrack[];
     console.log(`Found ${tracks.length} tracks in XML`);
 
     let imported = 0;
     let updated = 0;
     let skipped = 0;
-    let skippedNoArtist = 0;
+    let errors = 0;
 
     for (const track of tracks) {
-      const attrs = track.$;
-
-      // Skip tracks without names
-      if (!attrs.Name || attrs.Name.trim() === '') {
+      if (!track.Name || track.Name.trim() === '') {
         skipped++;
         continue;
       }
 
-      const title = attrs.Name;
-      const artist = attrs.Artist || '';
+      const title = track.Name.trim();
+      const artist = track.Artist?.trim() || '';
 
-      // Skip tracks without artist (matching requires both artist and title)
-      if (!artist || artist.trim() === '') {
-        skippedNoArtist++;
+      if (!artist) {
+        skipped++;
         continue;
       }
-      const album = attrs.Album || '';
-      const genres = parseGenres(attrs.Genre);
-      const grouping = attrs.Grouping ? [attrs.Grouping] : [];
-      const tonality = attrs.Tonality || '';
-      const fileType = attrs.Kind || '';
-      const totalTime = parseInt(attrs.TotalTime || '0', 10) || undefined;
-      const year = attrs.Year ? parseInt(attrs.Year, 10) || undefined : undefined;
-      const bpm = attrs.AverageBpm ? parseFloat(attrs.AverageBpm) || undefined : undefined;
-      const bitRate = attrs.BitRate ? parseInt(attrs.BitRate, 10) || undefined : undefined;
-      const rating = attrs.Rating ? parseInt(attrs.Rating, 10) || undefined : undefined;
-      const location = attrs.Location || '';
-      const dateAdded = attrs.DateAdded ? new Date(attrs.DateAdded) : undefined;
 
-      // Create source object
-      const source: ISource = {
-        sourceType: 'rekordbox',
-        filePath: location,
-        bitRate,
-        fileType,
-        sourceMetadata: {
-          trackId: attrs.TrackID,
-          location,
-          dateAdded,
-          composer: attrs.Composer,
-          remixer: attrs.Remixer,
-          label: attrs.Label,
-          sampleRate: attrs.SampleRate ? parseInt(attrs.SampleRate, 10) : undefined,
-          playCount: attrs.PlayCount ? parseInt(attrs.PlayCount, 10) : undefined,
-        },
-        lastImportDate: new Date(),
-      };
+      const album = track.Album?.trim() || '';
+      const genres = splitTagsField(track.Genre);
+      const grouping = splitTagsField(track.Grouping);
+      const totalTimeSec = parseInt(track.TotalTime || '0', 10) || undefined;
+      const duration = totalTimeSec ? totalTimeSec * 1000 : undefined;
+      const year = track.Year ? parseInt(track.Year, 10) || undefined : undefined;
+      const bpm = track.AverageBpm ? parseFloat(track.AverageBpm) || undefined : undefined;
+      const rating = rekordboxRatingToScore(track.Rating);
+      const location = track.Location || '';
 
-      // Create song data (song-level fields only)
-      const songData = {
-        title,
-        album,
-        genres,
-        grouping,
-        bpm,
-        duration: totalTime,
-        year,
-        key: tonality || undefined, // Extract key from Tonality field
-        rating,
-        artistTitleNormalized: normalizeArtistTitle(artist, title),
-      };
+      try {
+        const existing = await songService.findMatchingSong(artist, title, duration);
+        const isNew = !existing;
 
-      // Check if song already exists (by matching)
-      const existing = await songService.findMatchingSong(artist, title, totalTime);
-      const isNew = !existing;
+        await songService.updateWithHistory(
+          artist,
+          title,
+          duration,
+          {
+            genres,
+            grouping,
+            bpm,
+            year,
+            rating,
+            album,
+            key: convertKey(track.Tonality),
+          },
+          {
+            sourceType: 'rekordbox',
+            filePath: location,
+            importMeta: {
+              location,
+              dateAdded: track.DateAdded ? new Date(track.DateAdded) : undefined,
+              composer: track.Composer,
+              remixer: track.Remixer,
+              label: track.Label,
+              sampleRate: track.SampleRate ? parseInt(track.SampleRate, 10) : undefined,
+              playCount: track.PlayCount ? parseInt(track.PlayCount, 10) : undefined,
+              bitRate: track.BitRate ? parseInt(track.BitRate, 10) : undefined,
+              fileType: track.Kind,
+            },
+          }
+        );
 
-      // Upsert with merge
-      await songService.upsertSongWithMerge(artist, title, totalTime, songData, source);
-
-      if (isNew) {
-        imported++;
-      } else {
-        updated++;
+        if (isNew) {
+          imported++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error(`  Error importing "${artist} – ${title}":`, (err as Error).message);
+        errors++;
       }
     }
 
     console.log(`\nImport complete!`);
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
-    console.log(`  Skipped (no name): ${skipped}`);
-    console.log(`  Skipped (no artist): ${skippedNoArtist}`);
-    console.log(`  Total: ${imported + updated + skipped + skippedNoArtist}`);
+    console.log(`  Errors: ${errors}`);
+    console.log(`  Skipped: ${skipped}`);
+    console.log(`  Total processed: ${imported + updated + errors + skipped}`);
+    console.log(`  Total in file: ${tracks.length}`);
 
     await mongoose.disconnect();
   } catch (error) {
@@ -165,6 +195,5 @@ const importSongs = async (xmlPath: string) => {
   }
 };
 
-// Get XML file path from command line or use default
 const xmlPath = process.argv[2] || path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'rekordbox.xml');
 importSongs(xmlPath);

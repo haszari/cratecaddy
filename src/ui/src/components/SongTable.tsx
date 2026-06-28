@@ -3,17 +3,52 @@ import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
 
+export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
+export type SortDirection = 'asc' | 'desc';
+
 interface SongTableProps {
   songs: Song[];
   page?: number;
   totalPages?: number;
   totalCount?: number;
   onPageChange?: (page: number) => void;
+  sortField?: SortField;
+  sortDirection?: SortDirection;
+  onSortChange?: (field: SortField, direction: SortDirection) => void;
 }
 
-export default function SongTable({ songs, page, totalPages, totalCount, onPageChange }: SongTableProps) {
+function SortIcon({ sortDirection }: { field: SortField; sortField?: SortField; sortDirection?: SortDirection }) {
+  return (
+    <span className="SongTable-sort-icon SongTable-sort-icon--active">
+      {sortDirection === 'desc' ? '\u25B2' : '\u25BC'}
+    </span>
+  );
+}
+
+function SortableHeader({ field, label, sortField, sortDirection, onSortChange }: {
+  field: SortField;
+  label: string;
+  sortField?: SortField;
+  sortDirection?: SortDirection;
+  onSortChange?: (field: SortField, direction: SortDirection) => void;
+}) {
+  const sortButton = (field === sortField) && <SortIcon field={field} sortField={sortField} sortDirection={sortDirection} />;
+  return (
+    <th
+    className={`col-${field} SongTable-sortable`}
+    onClick={() => {
+      const nextDirection = (field === sortField && sortDirection === 'asc') ? 'desc' : 'asc';
+      onSortChange?.(field, nextDirection);
+    }}
+    >
+      {label}
+      {sortButton}
+    </th>
+  );
+}
+
+export default function SongTable({ songs, page, totalPages, totalCount, onPageChange, sortField, sortDirection, onSortChange }: SongTableProps) {
   const showPagination = totalPages !== undefined && totalPages > 1;
-  const sortedSongs = [...songs].sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
   const formatRating = (rating: number | undefined) => {
     if (rating === undefined) return '';
@@ -26,16 +61,16 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
         <thead>
           <tr>
             <th className="col-sources">Sources</th>
-            <th className="col-artist">Artist</th>
-            <th className="col-title">Title</th>
-            <th className="col-bpm">BPM</th>
-            <th className="col-key">Key</th>
-            <th className="col-rating">Rating</th>
+            <SortableHeader field="artist" label="Artist" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="title" label="Title" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="bpm" label="BPM" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="key" label="Key" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="rating" label="Rating" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
             <th className="col-genres">Genres</th>
           </tr>
         </thead>
         <tbody>
-          {sortedSongs.map((song) => (
+            {songs.map((song) => (
             <tr key={song._id}>
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />
@@ -49,7 +84,7 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
               <td className="col-title">
                 <Link to={`/song/${song._id}`} className="Song-link">{song.title}</Link>
               </td>
-              <td className="col-bpm">{song.bpm}</td>
+              <td className="col-bpm">{song.bpm != null ? Math.round(song.bpm) : ''}</td>
               <td className="col-key">{song.key}</td>
               <td className="col-rating">{formatRating(song.rating)}</td>
               <td className="col-genres">

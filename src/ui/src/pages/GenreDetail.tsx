@@ -1,20 +1,24 @@
 import { useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
 import { useFilters } from '../hooks/useFilters';
+import { useSortShuffle } from '../hooks/useSortShuffle';
+import { buildEditUrl } from '../utils/urlBuilder';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
+import type { SortField, SortDirection } from '../components/SongTable';
 import { withSearch } from '../utils/url';
 
 export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const separator = genrePath && genrePath.includes(',') ? ',' : '+';
   const isOrMode = separator === ',';
@@ -24,9 +28,21 @@ export default function GenreDetail() {
     : [];
 
   const [page, setPage] = useState(1);
-  const [shuffleMode, setShuffleMode] = useState(true);
-  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random().toString(36).slice(2, 10));
-  const reshuffle = useCallback(() => setShuffleSeed(Math.random().toString(36).slice(2, 10)), []);
+
+  const {
+    sortField, sortDirection, shuffleSeed, shuffleMode,
+    setSort, toggleShuffle, reshuffle,
+  } = useSortShuffle();
+
+  const handleSort = useCallback((field: SortField, direction: SortDirection) => {
+    setSort(field, direction);
+    setPage(1);
+  }, [setSort, setPage]);
+
+  const handleShuffleToggle = useCallback((on: boolean) => {
+    toggleShuffle(on);
+    setPage(1);
+  }, [toggleShuffle, setPage]);
 
   const {
     filters, addExclude,
@@ -37,18 +53,19 @@ export default function GenreDetail() {
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const shuffleParam = shuffleMode ? shuffleSeed : undefined;
 
   const extraParams = {
     ...(genreParam && (isOrMode ? { 'genre.any': genreParam } : { 'genre.all': genreParam })),
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(sortField && { sort: sortField }),
+    ...(sortDirection && { sortDirection }),
   };
 
   const { data: paginated, isLoading, error } = useSongs({
     ...extraParams,
-    shuffle: shuffleParam,
+    shuffle: shuffleSeed,
     page,
     limit: 50,
   });
@@ -96,6 +113,12 @@ export default function GenreDetail() {
 
   const songs = paginated?.data ?? [];
 
+  const editHref = buildEditUrl(
+    location.search,
+    'genre',
+    isOrMode ? { genreAny: decodedGenres.join(',') } : { genreAll: decodedGenres.join(',') },
+  );
+
   return (
     <div className="GenreDetail">
       <BasePageCriteria
@@ -110,8 +133,9 @@ export default function GenreDetail() {
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
         shuffleActive={shuffleMode}
-        onShuffleToggle={setShuffleMode}
+        onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
+        editHref={editHref}
       />
 
       {isLoading && <p>Loading songs...</p>}
@@ -125,6 +149,9 @@ export default function GenreDetail() {
               totalPages={paginated.totalPages}
               totalCount={paginated.total}
               onPageChange={setPage}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSortChange={handleSort}
             />
           )}
 

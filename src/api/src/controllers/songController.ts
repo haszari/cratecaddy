@@ -6,6 +6,7 @@ import {
   FILTER_PARAM_KEYS,
   PAGINATION_PARAM_KEYS,
 } from '../helpers/apiParams.js';
+import { IHistorySnapshot } from '../models/History.js';
 
 function extractFilterParams(query: Record<string, unknown>): ApiFilterParams {
   const filters: ApiFilterParams = {};
@@ -99,6 +100,129 @@ export class SongController {
       res.json({ message: 'Song deleted' });
     } catch (error) {
       res.status(500).json({ error: 'Failed to delete song' });
+    }
+  }
+
+  async updateMetadata(req: Request, res: Response) {
+    try {
+      const song = await songService.updateSongMetadata(req.params.id, req.body);
+      if (!song) {
+        res.status(404).json({ error: 'Song not found' });
+        return;
+      }
+      res.json(song);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update metadata' });
+    }
+  }
+
+  private readonly ALLOWED_BATCH_FIELDS = new Set([
+    'artist', 'genres', 'grouping', 'bpm', 'key', 'year', 'rating',
+  ]);
+
+  private sanitiseBatchData(data: Record<string, unknown>): Record<string, unknown> {
+    const clean: Record<string, unknown> = {};
+    for (const key of Object.keys(data)) {
+      if (this.ALLOWED_BATCH_FIELDS.has(key)) {
+        clean[key] = data[key];
+      }
+    }
+    return clean;
+  }
+
+  async updateMetadataBatch(req: Request, res: Response) {
+    try {
+      const { updates } = req.body as { updates: { id: string; data: Record<string, unknown> }[] };
+      if (!Array.isArray(updates) || updates.length === 0) {
+        res.status(400).json({ error: 'Missing or empty updates array' });
+        return;
+      }
+
+      const updated: Record<string, unknown>[] = [];
+      const errors: { id: string; error: string }[] = [];
+
+      for (const { id, data } of updates) {
+        try {
+          const sanitised = this.sanitiseBatchData(data);
+          if (Object.keys(sanitised).length === 0) continue;
+          const song = await songService.updateSongMetadata(id, sanitised);
+          if (song) {
+            updated.push(song.toObject ? song.toObject() : song);
+          } else {
+            errors.push({ id, error: 'Song not found' });
+          }
+        } catch (err) {
+          errors.push({ id, error: err instanceof Error ? err.message : 'Unknown error' });
+        }
+      }
+
+      res.json({ success: true, updated, errors });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update batch metadata' });
+    }
+  }
+
+  async writeToAppleMusic(req: Request, res: Response) {
+    try {
+      const result = await songService.writeToAppleMusic(req.params.id);
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to write to Apple Music' });
+    }
+  }
+
+  async writeToAppleMusicBatch(req: Request, res: Response) {
+    try {
+      const { ids } = req.body as { ids: string[] };
+      if (!Array.isArray(ids) || ids.length === 0) {
+        res.status(400).json({ error: 'ids array is required' });
+        return;
+      }
+      const result = await songService.writeToAppleMusicBatch(ids);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to write to Apple Music' });
+    }
+  }
+
+  async getHistory(req: Request, res: Response) {
+    try {
+      const history = await songService.getHistory(req.params.id);
+
+      const diffFields: (keyof IHistorySnapshot)[] = [
+        'title', 'artist', 'genres', 'grouping',
+        'bpm', 'key', 'rating', 'year', 'favorite',
+      ];
+
+      type SnapshotDiff = { field: string; value: string | string[] };
+
+      const withDiffs = history.map((entry, i) => {
+        const obj = entry.toObject();
+        let diffs: SnapshotDiff[] = [];
+        if (i > 0) {
+          const prev = history[i - 1].snapshot;
+          for (const field of diffFields) {
+            const curr = obj.snapshot[field];
+            const prevVal = prev[field];
+            if (JSON.stringify(curr) !== JSON.stringify(prevVal)) {
+              if (Array.isArray(curr)) {
+                diffs.push({ field, value: curr.slice() });
+              } else if (curr !== undefined && curr !== null && curr !== '') {
+                diffs.push({ field, value: String(curr) });
+              }
+            }
+          }
+        }
+        return { ...obj, diff: diffs };
+      });
+
+      res.json(withDiffs);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch history' });
     }
   }
 

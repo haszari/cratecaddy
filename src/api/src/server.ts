@@ -1,10 +1,11 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { connectDB } from './config/database.js';
 import songRoutes from './routes/songs.js';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 
 const app: Express = express();
 const PORT = process.env.API_PORT || 3000;

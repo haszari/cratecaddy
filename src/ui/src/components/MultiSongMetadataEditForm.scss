@@ -1,0 +1,356 @@
+$pill-on: orange;
+$pill-off-bg: #43423c;
+$pill-off-text: #bbb;
+$field-font-size: 1em;
+
+.MultiSongMetadataEditForm {
+  padding: 1em;
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  text-align: left;
+
+  .MultiSongMetadataEditForm-header {
+    font-weight: 700;
+    font-size: 1.1em;
+    margin-bottom: 0.5em;
+  }
+
+  .MultiSongMetadataEditForm-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+
+    &.MultiSongMetadataEditForm-section--no-label::before {
+      content: '';
+      display: block;
+      height: 0.78em;
+    }
+  }
+
+  .MultiSongMetadataEditForm-section-label {
+    font-size: 0.65em;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+  }
+
+  .MultiSongMetadataEditForm-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75em;
+    align-items: center;
+
+    > * {
+      flex: 0 1 auto;
+    }
+
+    &.MultiSongMetadataEditForm-row--tight {
+      margin-top: -0.45em;
+    }
+  }
+
+  .MultiSongMetadataEditForm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+
+    &.MultiSongMetadataEditForm-field--nz {
+      align-items: center;
+    }
+
+    &.MultiSongMetadataEditForm-field--styles {
+      width: 100%;
+    }
+
+    &.MultiSongMetadataEditForm-field--no-label::before {
+      content: '';
+      display: block;
+      height: 0.78em;
+    }
+  }
+
+  .MultiSongMetadataEditForm-field-label {
+    font-size: 0.65em;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+    text-align: left;
+    display: block;
+  }
+
+  .MultiSongMetadataEditForm-composite-pill {
+    display: inline-flex;
+    border-radius: 0.5em;
+    overflow: hidden;
+    align-self: flex-start;
+  }
+
+  .MultiSongMetadataEditForm-composite-segment {
+    padding: 0 0.55em;
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    font-size: $field-font-size;
+    font-weight: 600;
+    height: 2em;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &.MultiSongMetadataEditForm-composite-segment--on {
+      background: $pill-on;
+      color: #fff;
+    }
+  }
+
+  .MultiSongMetadataEditForm-pill-group {
+    display: flex;
+    gap: 0.3em;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .MultiSongMetadataEditForm-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    padding: 0 0.55em;
+    border-radius: 0.5em;
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    font-size: $field-font-size;
+    font-weight: 600;
+    height: 2em;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &.MultiSongMetadataEditForm-pill--on {
+      background: $pill-on;
+      color: #fff;
+    }
+
+    &.MultiSongMetadataEditForm-pill--removable {
+      gap: 0;
+    }
+  }
+
+  .MultiSongMetadataEditForm-pill--sm {
+    font-size: 0.72em;
+    padding: 0 0.5em;
+    height: 2em;
+  }
+
+  .MultiSongMetadataEditForm-pill--nz {
+    min-width: 2.2em;
+    justify-content: center;
+  }
+
+  .MultiSongMetadataEditForm-styles-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+    margin-bottom: 0.3em;
+  }
+
+  .MultiSongMetadataEditForm-key-row {
+    display: flex;
+    gap: 0.3em;
+    align-items: center;
+  }
+
+  .MultiSongMetadataEditForm-key-select {
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    border: none;
+    border-radius: 0.5em;
+    padding: 0 0.5em;
+    font-size: $field-font-size;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    min-width: 5em;
+    height: 2em;
+  }
+
+  .MultiSongMetadataEditForm-rating {
+    display: flex;
+    gap: 1px;
+    cursor: pointer;
+    outline: none;
+    align-items: center;
+    line-height: 1;
+
+    .MultiSongMetadataEditForm-star {
+      font-size: 1.25em;
+      color: #ccc;
+      user-select: none;
+      line-height: 1;
+
+      &--on {
+        color: #ff9800;
+      }
+
+      &:hover {
+        color: #ffb74d;
+      }
+    }
+  }
+
+  .MultiSongMetadataEditForm-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-top: 1em;
+  }
+
+  .MultiSongMetadataEditForm-actions-gap {
+    display: inline-block;
+    width: 3em;
+  }
+
+  .MultiSongMetadataEditForm-export {
+    background: #43423c;
+    color: #bbb;
+    border: none;
+    border-radius: 0.5em;
+    padding: 0.5em 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: orange;
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .MultiSongMetadataEditForm-save {
+    background: #43423c;
+    color: #bbb;
+    border: none;
+    border-radius: 0.5em;
+    padding: 0.5em 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: orange;
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .MultiSongMetadataEditForm-cancel {
+    background: transparent;
+    color: #bbb;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5em;
+    padding: 0.5em 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: #e53935;
+      color: #e53935;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .MultiSongMetadataEditForm-spinner {
+    animation: MultiSongMetadataEditForm-spin 1s linear infinite;
+  }
+
+  @keyframes MultiSongMetadataEditForm-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .MultiSongMetadataEditForm-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 400ms;
+
+    &.MultiSongMetadataEditForm-status--visible {
+      opacity: 1;
+      transition: opacity 250ms;
+    }
+
+    &.MultiSongMetadataEditForm-status--result {
+      opacity: 1;
+      transition: none;
+      color: #4caf50;
+    }
+
+    &.MultiSongMetadataEditForm-status--error {
+      color: #e53935;
+    }
+  }
+
+  .MultiSongMetadataEditForm-field--styles .MuiChip-root {
+    display: none;
+  }
+
+  .MultiSongMetadataEditForm-song-list {
+    margin-top: 1.5em;
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .MultiSongMetadataEditForm-song-item {
+    padding: 0.15em 0;
+  }
+
+  .MultiSongMetadataEditForm-song-export-status--success {
+    color: #4caf50;
+    margin-right: 0.4em;
+    font-size: 0.85em;
+  }
+
+  .MultiSongMetadataEditForm-song-export-status--error {
+    color: #e53935;
+    margin-right: 0.4em;
+    font-size: 0.85em;
+  }
+
+  .MuiInputBase-input {
+    font-size: $field-font-size !important;
+  }
+}

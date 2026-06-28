@@ -1,12 +1,17 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { normalizeArtistTitle, normalizeGenres } from '../services/songService.js';
 
+export type SourceFormat = 'aiff' | 'wav' | 'alac' | 'aac' | 'mp3' | 'applemusicstream';
+
 export interface ISource {
-  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local' | 'manual';
+  format?: SourceFormat;
+  appleMusicId?: string;
   filePath?: string;
   fileSize?: number;
   bitRate?: number;
   fileType?: string;
+  dateModified?: Date;
   sourceMetadata?: Record<string, any>;
   lastImportDate: Date;
 }
@@ -22,7 +27,10 @@ export interface ISong extends Document {
   year?: number;
   key?: string; // Musical key (e.g., "Am", "G", "F#m")
   rating?: number; // 0-5 scale (can be fractional)
+  favorite?: 'starred' | 'normal' | 'disliked'; // Triage marker
   artistTitleNormalized: string; // Normalized artist + title for fast matching
+  appleMusicId?: string; // Canonical Apple Music persistent ID for export targeting
+  appleMusicIds: string[]; // All known Apple Music persistent IDs
   sources: ISource[];
   createdAt: Date;
   updatedAt: Date;
@@ -33,7 +41,15 @@ const sourceSchema = new Schema<ISource>(
     sourceType: {
       type: String,
       required: true,
-      enum: ['applemusic', 'rekordbox', 'djaypro', 'local'],
+      enum: ['applemusic', 'rekordbox', 'djaypro', 'local', 'manual'],
+    },
+    format: {
+      type: String,
+      enum: ['aiff', 'wav', 'alac', 'aac', 'mp3', 'applemusicstream'],
+    },
+    appleMusicId: {
+      type: String,
+      trim: true,
     },
     filePath: {
       type: String,
@@ -48,6 +64,9 @@ const sourceSchema = new Schema<ISource>(
     fileType: {
       type: String,
       trim: true,
+    },
+    dateModified: {
+      type: Date,
     },
     sourceMetadata: {
       type: Schema.Types.Mixed,
@@ -103,6 +122,19 @@ const songSchema = new Schema<ISong>(
     },
     rating: {
       type: Number, // 0-5 scale (can be fractional)
+    },
+    favorite: {
+      type: String,
+      enum: ['starred', 'normal', 'disliked'],
+    },
+    appleMusicId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    appleMusicIds: {
+      type: [String],
+      default: [],
     },
     artistTitleNormalized: {
       type: String,

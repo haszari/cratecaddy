@@ -1,0 +1,303 @@
+$pill-on: orange;
+$pill-off-bg: #43423c;
+$pill-off-text: #bbb;
+$field-font-size: 1em;
+
+.SingleSongMetadataEditForm {
+  padding: 1em;
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+
+  .SingleSongMetadataEditForm-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75em;
+    align-items: center;
+
+    > * {
+      flex: 0 1 auto;
+    }
+
+    &.SingleSongMetadataEditForm-row--tight {
+      margin-top: -0.45em;
+    }
+  }
+
+  .SingleSongMetadataEditForm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+
+    &.SingleSongMetadataEditForm-field--styles {
+      width: 100%;
+    }
+
+    &.SingleSongMetadataEditForm-field--nz {
+      align-items: center;
+    }
+
+    &.SingleSongMetadataEditForm-field--no-label::before {
+      content: '';
+      display: block;
+      height: 0.78em;
+    }
+
+    .SingleSongMetadataEditForm-key-row {
+      display: flex;
+      gap: 0.3em;
+      align-items: center;
+    }
+
+    .SingleSongMetadataEditForm-key-select {
+      background: $pill-off-bg;
+      color: $pill-off-text;
+      border: none;
+      border-radius: 0.5em;
+      padding: 0 0.5em;
+      font-size: $field-font-size;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      min-width: 5em;
+      height: 2em;
+    }
+  }
+
+  .SingleSongMetadataEditForm-field-label {
+    font-size: 0.65em;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.4);
+    white-space: nowrap;
+    text-align: left;
+    display: block;
+  }
+
+  .SingleSongMetadataEditForm-composite-pill {
+    display: inline-flex;
+    border-radius: 0.5em;
+    overflow: hidden;
+    align-self: flex-start;
+  }
+
+  .SingleSongMetadataEditForm-composite-segment {
+    padding: 0 0.55em;
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    font-size: $field-font-size;
+    font-weight: 600;
+    height: 2em;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &.SingleSongMetadataEditForm-composite-segment--on {
+      background: $pill-on;
+      color: #fff;
+    }
+  }
+
+  .SingleSongMetadataEditForm-pill-group {
+    display: flex;
+    gap: 0.3em;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .SingleSongMetadataEditForm-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    padding: 0 0.55em;
+    border-radius: 0.5em;
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    font-size: $field-font-size;
+    font-weight: 600;
+    height: 2em;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &.SingleSongMetadataEditForm-pill--on {
+      background: $pill-on;
+      color: #fff;
+    }
+
+    &.SingleSongMetadataEditForm-pill--removable {
+      gap: 0;
+    }
+  }
+
+  .SingleSongMetadataEditForm-pill--sm {
+    font-size: 0.72em;
+    padding: 0 0.5em;
+    height: 2em;
+  }
+
+  .SingleSongMetadataEditForm-pill--nz {
+    min-width: 2.2em;
+    justify-content: center;
+  }
+
+  .SingleSongMetadataEditForm-pill--action {
+    background: $pill-off-bg;
+    color: $pill-off-text;
+    padding: 0 0.7em;
+    font-size: $field-font-size;
+    height: 2em;
+
+    &:hover {
+      background: $pill-on;
+      color: #fff;
+    }
+  }
+
+  .SingleSongMetadataEditForm-styles-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+    margin-bottom: 0.3em;
+  }
+
+  .SingleSongMetadataEditForm-field--styles .MuiChip-root {
+    display: none;
+  }
+
+  .MuiInputBase-input {
+    font-size: $field-font-size !important;
+  }
+
+  .SingleSongMetadataEditForm-export {
+    margin-top: 1.125em;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .SingleSongMetadataEditForm-rating {
+    display: flex;
+    gap: 1px;
+    cursor: pointer;
+    outline: none;
+    align-items: center;
+    line-height: 1;
+
+    .SingleSongMetadataEditForm-star {
+      font-size: 1.25em;
+      color: #ccc;
+      user-select: none;
+      line-height: 1;
+
+      &--on {
+        color: #ff9800;
+      }
+
+      &:hover {
+        color: #ffb74d;
+      }
+    }
+  }
+
+  .SingleSongMetadataEditForm-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 3em;
+    opacity: 0;
+    transition: opacity 400ms;
+
+    &.SingleSongMetadataEditForm-status--visible {
+      opacity: 1;
+      transition: opacity 250ms;
+    }
+
+    &.SingleSongMetadataEditForm-status--result {
+      opacity: 1;
+      transition: none;
+      color: #4caf50;
+    }
+
+    &.SingleSongMetadataEditForm-status--error {
+      color: #e53935;
+    }
+  }
+
+  .SingleSongMetadataEditForm-spinner {
+    animation: SingleSongMetadataEditForm-spin 1s linear infinite;
+  }
+
+  @keyframes SingleSongMetadataEditForm-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .SingleSongMetadataEditForm-pill--disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .SingleSongMetadataEditForm-history {
+    margin-top: 1.5em;
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .SingleSongMetadataEditForm-history-summary {
+    cursor: pointer;
+    user-select: none;
+    padding: 0.25em 0;
+  }
+
+  .SingleSongMetadataEditForm-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    margin-top: 0.3em;
+    max-height: 10em;
+    overflow-y: auto;
+  }
+
+  .SingleSongMetadataEditForm-history-entry {
+    display: flex;
+    gap: 0.5em;
+    align-items: baseline;
+    line-height: 1.4;
+  }
+
+  .SingleSongMetadataEditForm-history-date {
+    white-space: nowrap;
+    opacity: 0.6;
+    min-width: 8em;
+  }
+
+  .SingleSongMetadataEditForm-history-source {
+    white-space: nowrap;
+    opacity: 0.7;
+    min-width: 6em;
+  }
+
+  .SingleSongMetadataEditForm-history-genres {
+    opacity: 0.8;
+  }
+
+}

@@ -7,7 +7,14 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  gap: 0;
+  gap: 0.15em;
+
+  .FilterBar-edit {
+    &--active {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+    }
+  }
 
   .FilterBar-section {
     flex: 1;
@@ -84,6 +91,7 @@
       background: none;
       cursor: pointer;
       border-radius: 0.2em;
+      color: var(--foreground);
       transition: all 0.1s ease;
     }
   }

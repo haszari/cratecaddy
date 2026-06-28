@@ -10,6 +10,12 @@
   margin-top: 2em;
 }
 
+.song-count {
+  text-align: center;
+  font-size: 0.85em;
+  margin: 0 0 1.5em;
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -22,6 +28,7 @@
     border-radius: 0.3em;
     cursor: pointer;
     font-size: 0.85em;
+    color: var(--foreground);
 
     &:disabled {
       opacity: 0.4;
@@ -98,6 +105,47 @@ thead .col-sources {
   text-align: center;
   overflow: hidden;
   color: #b3b3b3;
+}
+
+thead th {
+  padding: 0.15em 0.3em;
+}
+
+.SongTable-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.SongTable-sortable:hover {
+  opacity: 1;
+}
+
+.SongTable-sort-icon {
+  margin-left: 0.25em;
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+
+.SongTable-sort-icon--inactive {
+  opacity: 0.3;
+}
+
+.SongTable-sort-icon--active {
+  opacity: 1;
+}
+
+table tbody td {
+  padding: 0.15em 0.3em;
+}
+
+table tbody td:first-child,
+thead th:first-child {
+  padding-left: 0.3em;
+}
+
+table tbody td:last-child,
+thead th:last-child {
+  padding-right: 0.3em;
 }
 
 .col-sources .sources-icons {

@@ -29,7 +29,7 @@ export default function Song() {
   if (isLoading) {
     return (
       <div className="App">
-        <FilterBar genreNot={[]} />
+        <FilterBar genreNot={[]} onRemoveExclude={() => {}} />
         <p>Loading...</p>
       </div>
     );
@@ -38,7 +38,7 @@ export default function Song() {
   if (error || !song) {
     return (
       <div className="App">
-        <FilterBar genreNot={[]} />
+        <FilterBar genreNot={[]} onRemoveExclude={() => {}} />
         <p>Song not found</p>
       </div>
     );
@@ -46,12 +46,12 @@ export default function Song() {
 
   return (
     <div className="App">
-      <FilterBar genreNot={[]} />
+      <FilterBar genreNot={[]} onRemoveExclude={() => {}} />
       <div className="SongInfo">
         <Link to={`/artist/${encodeURIComponent(song.artist)}`} className="PageCriteria-artist">{song.artist}</Link>
         <span className="SongInfo-title">{song.title}</span>
         <span className="SongInfo-meta">
-          {song.bpm}<span className="SongInfo-meta-bpm">bpm</span> {song.key}
+          {song.bpm != null ? Math.round(song.bpm) : ''}<span className="SongInfo-meta-bpm">bpm</span> {song.key}
         </span>
       </div>
       {song.genres.length > 0 && <GenreTagCloud tags={tags} />}

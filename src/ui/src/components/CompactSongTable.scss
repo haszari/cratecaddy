@@ -1,0 +1,39 @@
+.CompactSongTable {
+  overflow-y: auto;
+  height: 100%;
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  th, td {
+    border: none;
+    background-clip: padding-box;
+  }
+
+  tbody tr {
+    cursor: pointer;
+
+    td {
+      background: transparent;
+      transition: background 0.1s ease;
+    }
+
+    &:hover td {
+      background: #43423c;
+      color: #fff;
+    }
+  }
+
+  .CompactSongTable-row--selected td {
+    background: #43423c;
+    color: orange;
+    font-weight: 600;
+
+    &:first-child {
+      border-radius: 0.4em 0 0 0.4em;
+    }
+  }
+}

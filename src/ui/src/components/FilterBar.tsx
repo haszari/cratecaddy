@@ -1,32 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './FilterBar.scss';
-import { X, House } from 'lucide-react';
+import { X, House, Pencil, ArrowLeft } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 
 interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
-  onRemoveExclude: (genre: string) => void;
+  onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
   shuffleActive?: boolean;
   onShuffleToggle?: (active: boolean) => void;
   onShuffleReseed?: () => void;
+  editHref?: string;
+  doneHref?: string;
+  readOnly?: boolean;
+  className?: string;
 }
 
 export default function FilterBar({
   genreNot, bpmGte, bpmLte,
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
+  editHref, doneHref, readOnly,
 }: FilterBarProps) {
-  const [bpmMinStr, setBpmMinStr] = useState('');
-  const [bpmMaxStr, setBpmMaxStr] = useState('');
-
-  useEffect(() => {
-    setBpmMinStr(bpmGte !== undefined ? String(bpmGte) : '');
-    setBpmMaxStr(bpmLte !== undefined ? String(bpmLte) : '');
-  }, [bpmGte, bpmLte]);
+  const [bpmMinStr, setBpmMinStr] = useState(bpmGte !== undefined ? String(bpmGte) : '');
+  const [bpmMaxStr, setBpmMaxStr] = useState(bpmLte !== undefined ? String(bpmLte) : '');
 
   const applyBpm = () => {
     if (!onBpmChange) return;
@@ -52,7 +52,17 @@ export default function FilterBar({
         <Link to="/" className="FilterBar-home iconButton" title="Home">
           <House size={16} />
         </Link>
-        {onShuffleToggle && (
+        {editHref && (
+          <Link to={editHref} className="FilterBar-edit iconButton" title="Edit metadata">
+            <Pencil size={16} />
+          </Link>
+        )}
+        {doneHref && (
+          <Link to={doneHref} className="FilterBar-done iconButton" title="Done editing">
+            <ArrowLeft size={16} />
+          </Link>
+        )}
+        {!readOnly && onShuffleToggle && (
           <ShuffleControl
             active={!!shuffleActive}
             onToggle={onShuffleToggle}
@@ -62,34 +72,42 @@ export default function FilterBar({
       </div>
 
       <div className="FilterBar-section FilterBar-section-center">
-        {onBpmChange && (
+        {(onBpmChange || (readOnly && hasBpm)) && (
           <span className="FilterBar-bpm">
-            <input
-              type="number"
-              placeholder="min"
-              value={bpmMinStr}
-              onChange={(e) => setBpmMinStr(e.target.value)}
-              onBlur={applyBpm}
-              onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
-              min={0} max={999}
-              className="FilterBar-bpm-input"
-            />
-            <span className="FilterBar-bpm-sep">–</span>
-            <input
-              type="number"
-              placeholder="max"
-              value={bpmMaxStr}
-              onChange={(e) => setBpmMaxStr(e.target.value)}
-              onBlur={applyBpm}
-              onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
-              min={0} max={999}
-              className="FilterBar-bpm-input"
-            />
-            <span className="FilterBar-bpm-label">bpm</span>
-            {hasBpm && (
-              <button className="FilterBar-bpm-clear" onClick={clearBpm} title="Clear BPM">
-                <X size={12} />
-              </button>
+            {readOnly ? (
+              <span className="FilterBar-bpm-display">
+                {bpmGte ?? '?'}–{bpmLte ?? '?'} bpm
+              </span>
+            ) : (
+              <>
+                <input
+                  type="number"
+                  placeholder="min"
+                  value={bpmMinStr}
+                  onChange={(e) => setBpmMinStr(e.target.value)}
+                  onBlur={applyBpm}
+                  onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
+                  min={0} max={999}
+                  className="FilterBar-bpm-input"
+                />
+                <span className="FilterBar-bpm-sep">–</span>
+                <input
+                  type="number"
+                  placeholder="max"
+                  value={bpmMaxStr}
+                  onChange={(e) => setBpmMaxStr(e.target.value)}
+                  onBlur={applyBpm}
+                  onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
+                  min={0} max={999}
+                  className="FilterBar-bpm-input"
+                />
+                <span className="FilterBar-bpm-label">bpm</span>
+                {hasBpm && (
+                  <button className="FilterBar-bpm-clear" onClick={clearBpm} title="Clear BPM">
+                    <X size={12} />
+                  </button>
+                )}
+              </>
             )}
           </span>
         )}
@@ -100,13 +118,15 @@ export default function FilterBar({
           <span
             key={`ex:${genre}`}
             className="FilterBar-chip FilterBar-chip-exclude"
-            onClick={() => onRemoveExclude(genre)}
-            title={`Remove ${genre}`}
+            onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
+            title={readOnly ? undefined : `Remove ${genre}`}
           >
             {genre}
-            <span className="FilterBar-chip-x">
-              <X size={12} />
-            </span>
+            {!readOnly && (
+              <span className="FilterBar-chip-x">
+                <X size={12} />
+              </span>
+            )}
           </span>
         ))}
       </div>

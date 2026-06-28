@@ -1,15 +1,19 @@
 import { ApiPaginationParams } from './apiParams.js';
 
+const VALID_SORT_FIELDS = ['artist', 'title', 'bpm', 'key', 'rating', 'year', 'createdAt'];
+
 export interface PaginationResult {
   page: number;
   limit: number;
   skip: number;
   shuffleSeed?: string;
+  sort?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 50;
-const MAX_LIMIT = 200;
+const MAX_LIMIT = 500;
 
 function toPositiveInt(value: string | number | undefined, fallback: number): number {
   if (value === undefined || value === null) return fallback;
@@ -34,5 +38,12 @@ export function parsePagination(query: ApiPaginationParams): PaginationResult {
       : query.shuffle;
   }
 
-  return { page, limit, skip, shuffleSeed };
+  let sort: string | undefined;
+  let sortDirection: 'asc' | 'desc' | undefined;
+  if (query.sort && VALID_SORT_FIELDS.includes(query.sort as string)) {
+    sort = query.sort as string;
+    sortDirection = query.sortDirection === 'desc' ? 'desc' : 'asc';
+  }
+
+  return { page, limit, skip, shuffleSeed, sort, sortDirection };
 }

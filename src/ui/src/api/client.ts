@@ -18,6 +18,8 @@ function buildQueryString(params: ApiSongParams): string {
     ['shuffle', params.shuffle],
     ['page', params.page],
     ['limit', params.limit],
+    ['sort', params.sort],
+    ['sortDirection', params.sortDirection],
   ];
   for (const [key, val] of entries) {
     if (val !== undefined && val !== null && val !== '') {
@@ -43,6 +45,102 @@ export async function fetchSongById(id: string): Promise<Song> {
 
   if (!response.ok) {
     throw new Error(`Failed to fetch song: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function updateSongMetadata(
+  id: string,
+  data: Partial<Song>,
+): Promise<Song> {
+  const response = await fetch(`${API_URL}/api/songs/${id}/metadata`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update metadata: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function writeToAppleMusic(id: string): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_URL}/api/songs/write-to-apple-music/${id}`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const body = await response.json();
+    throw new Error(body.error ?? body.message ?? 'Failed to write to Apple Music');
+  }
+
+  return response.json();
+}
+
+export async function writeToAppleMusicBatch(ids: string[]): Promise<{ results: { id: string; success: boolean; message: string }[] }> {
+  const response = await fetch(`${API_URL}/api/songs/write-to-apple-music`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json();
+    throw new Error(body.error ?? body.message ?? 'Failed to write to Apple Music');
+  }
+
+  return response.json();
+}
+
+export interface SnapshotDiff {
+  field: string;
+  value: string | string[];
+}
+
+export interface HistoryEntry {
+  _id: string;
+  songId: string;
+  dateEdited: string;
+  sourceType: string;
+  snapshot: {
+    title: string;
+    artist: string;
+    genres: string[];
+    grouping: string[];
+    bpm?: number;
+    key?: string;
+    rating?: number;
+    year?: number;
+    favorite?: 'starred' | 'normal' | 'disliked';
+  };
+  diff: SnapshotDiff[];
+  importMeta?: Record<string, unknown>;
+}
+
+export async function fetchSongHistory(id: string): Promise<HistoryEntry[]> {
+  const response = await fetch(`${API_URL}/api/songs/${id}/history`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch history: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function updateSongsBatch(
+  updates: { id: string; data: Partial<Song> }[],
+): Promise<{ success: boolean; updated: Song[]; errors: { id: string; error: string }[] }> {
+  const response = await fetch(`${API_URL}/api/songs/metadata/batch`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update batch metadata: ${response.statusText}`);
   }
 
   return response.json();
