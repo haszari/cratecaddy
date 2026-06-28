@@ -59,13 +59,15 @@ export default function Artist() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange,
+    removeExclude, setBpmRange, toggleFavorite, setSearch,
   } = useFilters();
 
   const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
+  const favoriteParam = filters.favoriteActive ? 'true' : undefined;
+  const searchParam = filters.search || undefined;
 
   const extraParams = {
     'artist.any': decodedArtist || undefined,
@@ -73,6 +75,8 @@ export default function Artist() {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(favoriteParam && { 'favorite': favoriteParam }),
+    ...(searchParam && { 'search': searchParam }),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
   };
@@ -85,7 +89,7 @@ export default function Artist() {
   });
 
   const { data: relateStats } = useQuery({
-    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam],
+    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
     enabled: !!decodedArtist,
   });
@@ -148,6 +152,10 @@ export default function Artist() {
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editHref={editHref}
+        favoriteActive={filters.favoriteActive}
+        onFavoriteToggle={toggleFavorite}
+        search={filters.search}
+        onSearchChange={setSearch}
       />
 
       {isLoading && <p>Loading songs...</p>}

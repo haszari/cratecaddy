@@ -5,6 +5,8 @@ export interface FilterState {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  favoriteActive: boolean;
+  search: string;
 }
 
 function splitCSV(val: string | null): string[] {
@@ -39,6 +41,8 @@ export function useFilters() {
       const v = searchParams.get('bpm.lte');
       return v ? parseFloat(v) : undefined;
     })(),
+    favoriteActive: searchParams.get('favorite') === 'true',
+    search: searchParams.get('search') ?? '',
   };
 
   const addExclude = useCallback(
@@ -73,11 +77,36 @@ export function useFilters() {
     [setSearchParams],
   );
 
+  const toggleFavorite = useCallback(() => {
+    setSearchParams((prev) => {
+      const current = prev.get('favorite');
+      const next = new URLSearchParams(prev);
+      if (current === 'true') {
+        next.delete('favorite');
+      } else {
+        next.set('favorite', 'true');
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setSearch = useCallback(
+    (value: string) => {
+      setSearchParams((prev) =>
+        setParam(prev, 'search', value || null),
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const clearFilters = useCallback(() => {
     setSearchParams((prev) => {
       let next = setParam(prev, 'genre.not', null);
       next = setParam(next, 'bpm.gte', null);
       next = setParam(next, 'bpm.lte', null);
+      next = setParam(next, 'favorite', null);
+      next = setParam(next, 'search', null);
       return next;
     }, { replace: true });
   }, [setSearchParams]);
@@ -85,13 +114,17 @@ export function useFilters() {
   const hasActiveFilters =
     filters.genreNot.length > 0 ||
     filters.bpmGte !== undefined ||
-    filters.bpmLte !== undefined;
+    filters.bpmLte !== undefined ||
+    filters.favoriteActive ||
+    filters.search !== '';
 
   return {
     filters,
     addExclude,
     removeExclude,
     setBpmRange,
+    toggleFavorite,
+    setSearch,
     clearFilters,
     hasActiveFilters,
   };

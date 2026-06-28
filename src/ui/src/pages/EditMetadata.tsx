@@ -23,6 +23,8 @@ export default function EditMetadata() {
   const genreNot = searchParams.get('genre.not');
   const bpmGte = searchParams.get('bpm.gte');
   const bpmLte = searchParams.get('bpm.lte');
+  const favorite = searchParams.get('favorite');
+  const search = searchParams.get('search');
 
   const params = {
     ...(genreAll && { 'genre.all': genreAll }),
@@ -31,6 +33,8 @@ export default function EditMetadata() {
     ...(genreNot && { 'genre.not': genreNot }),
     ...(bpmGte && { 'bpm.gte': bpmGte }),
     ...(bpmLte && { 'bpm.lte': bpmLte }),
+    ...(favorite && { 'favorite': favorite }),
+    ...(search && { 'search': search }),
     sort: sortField ?? 'artist',
     sortDirection: sortDirection ?? 'asc',
     limit: 500,
@@ -105,6 +109,8 @@ export default function EditMetadata() {
         bpmLte={sanitisedBpmLte}
         readOnly
         doneHref={doneHref}
+        favoriteActive={favorite === 'true'}
+        search={search ?? ''}
       />
       <BasePageCriteria
         artists={artists}

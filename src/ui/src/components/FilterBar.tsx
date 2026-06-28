@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useDebouncedValue } from '@mantine/hooks';
+import { ActionIcon, TextInput } from '@mantine/core';
 import './FilterBar.scss';
-import { X, House, Pencil, ArrowLeft } from 'lucide-react';
+import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 
 interface FilterBarProps {
@@ -16,7 +18,10 @@ interface FilterBarProps {
   editHref?: string;
   doneHref?: string;
   readOnly?: boolean;
-  className?: string;
+  favoriteActive?: boolean;
+  onFavoriteToggle?: () => void;
+  search?: string;
+  onSearchChange?: (val: string) => void;
 }
 
 export default function FilterBar({
@@ -24,9 +29,17 @@ export default function FilterBar({
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
+  favoriteActive, onFavoriteToggle,
+  search, onSearchChange,
 }: FilterBarProps) {
   const [bpmMinStr, setBpmMinStr] = useState(bpmGte !== undefined ? String(bpmGte) : '');
   const [bpmMaxStr, setBpmMaxStr] = useState(bpmLte !== undefined ? String(bpmLte) : '');
+  const [searchInput, setSearchInput] = useState(search ?? '');
+  const [debouncedSearch] = useDebouncedValue(searchInput, 300);
+
+  useEffect(() => {
+    if (onSearchChange) onSearchChange(debouncedSearch);
+  }, [debouncedSearch, onSearchChange]);
 
   const applyBpm = () => {
     if (!onBpmChange) return;
@@ -46,19 +59,22 @@ export default function FilterBar({
 
   const hasBpm = bpmGte !== undefined || bpmLte !== undefined;
 
+  const showHeart = favoriteActive !== undefined || onFavoriteToggle;
+  const showSearch = search !== undefined || onSearchChange;
+
   return (
     <div className="FilterBar">
-      <div className="FilterBar-section FilterBar-section-left">
-        <Link to="/" className="FilterBar-home iconButton" title="Home">
+      <div className="FilterBar-navGroup">
+        <Link to="/" className="iconButton" title="Home">
           <House size={16} />
         </Link>
         {editHref && (
-          <Link to={editHref} className="FilterBar-edit iconButton" title="Edit metadata">
+          <Link to={editHref} className="iconButton" title="Edit metadata">
             <Pencil size={16} />
           </Link>
         )}
         {doneHref && (
-          <Link to={doneHref} className="FilterBar-done iconButton" title="Done editing">
+          <Link to={doneHref} className="iconButton" title="Done editing">
             <ArrowLeft size={16} />
           </Link>
         )}
@@ -71,7 +87,44 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="FilterBar-section FilterBar-section-center">
+      <div className="FilterBar-excludeGroup">
+        {genreNot.map((genre) => (
+          <span
+            key={`ex:${genre}`}
+            className="FilterBar-chip FilterBar-chip-exclude"
+            onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
+            title={readOnly ? undefined : `Remove ${genre}`}
+          >
+            {genre}
+            {!readOnly && (
+              <span className="FilterBar-chip-x">
+                <X size={12} />
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+
+      <div className="FilterBar-filterGroup">
+        {showHeart && (
+          <span className="FilterBar-heart">
+            {readOnly ? (
+              <ActionIcon variant={favoriteActive ? 'filled' : 'subtle'} color="red" disabled>
+                <Heart size={16} fill={favoriteActive ? 'currentColor' : 'none'} />
+              </ActionIcon>
+            ) : (
+              <ActionIcon
+                variant={favoriteActive ? 'filled' : 'subtle'}
+                color="red"
+                onClick={onFavoriteToggle}
+                title={favoriteActive ? 'Show all songs' : 'Show favorites only'}
+              >
+                <Heart size={16} fill={favoriteActive ? 'currentColor' : 'none'} />
+              </ActionIcon>
+            )}
+          </span>
+        )}
+
         {(onBpmChange || (readOnly && hasBpm)) && (
           <span className="FilterBar-bpm">
             {readOnly ? (
@@ -111,24 +164,23 @@ export default function FilterBar({
             )}
           </span>
         )}
-      </div>
 
-      <div className="FilterBar-section FilterBar-section-right">
-        {genreNot.map((genre) => (
-          <span
-            key={`ex:${genre}`}
-            className="FilterBar-chip FilterBar-chip-exclude"
-            onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
-            title={readOnly ? undefined : `Remove ${genre}`}
-          >
-            {genre}
-            {!readOnly && (
-              <span className="FilterBar-chip-x">
-                <X size={12} />
-              </span>
-            )}
-          </span>
-        ))}
+        {showSearch && (
+          readOnly ? (
+            search ? (
+              <span className="FilterBar-search-static">{search}</span>
+            ) : null
+          ) : (
+            <TextInput
+              className="FilterBar-search"
+              placeholder=""
+              leftSection={<Search size={14} />}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.currentTarget.value)}
+              size="sm"
+            />
+          )
+        )}
       </div>
     </div>
   );

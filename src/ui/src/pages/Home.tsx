@@ -4,31 +4,37 @@ import { useNavigate } from 'react-router-dom';
 import { fetchGenreStats } from '../api/client';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useFilters } from '../hooks/useFilters';
+import { useSortShuffle } from '../hooks/useSortShuffle';
 import FilterBar from '../components/FilterBar';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { shuffleMode, toggleShuffle, reshuffle } = useSortShuffle();
   const {
     filters,
     addExclude,
     removeExclude,
-    setBpmRange,
+    setBpmRange, toggleFavorite, setSearch,
   } = useFilters();
 
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
+  const favoriteParam = filters.favoriteActive ? 'true' : undefined;
+  const searchParam = filters.search || undefined;
 
   const extraParams = {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(favoriteParam && { 'favorite': favoriteParam }),
+    ...(searchParam && { 'search': searchParam }),
   };
 
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam],
+    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
@@ -65,6 +71,13 @@ export default function Home() {
         bpmLte={filters.bpmLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        shuffleActive={shuffleMode}
+        onShuffleToggle={toggleShuffle}
+        onShuffleReseed={reshuffle}
+        favoriteActive={filters.favoriteActive}
+        onFavoriteToggle={toggleFavorite}
+        search={filters.search}
+        onSearchChange={setSearch}
       />
       <p className="home-help">
         Combine genres with <code>+</code> (AND) or <code>,</code> (OR) — e.g.{' '}

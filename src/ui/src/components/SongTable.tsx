@@ -2,6 +2,7 @@ import { SourcesIcons } from './SourcesIcons';
 import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
 export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
 export type SortDirection = 'asc' | 'desc';
@@ -60,6 +61,7 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
       <table>
         <thead>
           <tr>
+            <th className="col-heart" />
             <th className="col-sources">Sources</th>
             <SortableHeader field="artist" label="Artist" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
             <SortableHeader field="title" label="Title" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
@@ -72,6 +74,9 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
         <tbody>
             {songs.map((song) => (
             <tr key={song._id}>
+              <td className="col-heart">
+                {song.favorite === 'starred' && <Heart size={12} />}
+              </td>
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />
               </td>

@@ -1,38 +1,39 @@
 .FilterBar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0.35em 0.75em;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  gap: 0.15em;
+  gap: 0.5em;
 
-  .FilterBar-edit {
-    &--active {
-      background: #e3f2fd;
-      border: 1px solid #2196f3;
-    }
-  }
-
-  .FilterBar-section {
-    flex: 1;
+  .FilterBar-navGroup {
     display: flex;
     align-items: center;
-  }
-
-  .FilterBar-section-left {
     justify-content: flex-start;
-    gap: 0.6em;
+    gap: 0.4em;
+    flex-shrink: 0;
   }
 
-  .FilterBar-section-center {
+  .FilterBar-excludeGroup {
+    display: flex;
+    align-items: center;
     justify-content: center;
+    gap: 0.3em;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
-  .FilterBar-section-right {
+  .FilterBar-filterGroup {
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: 0.5em;
+    flex-shrink: 0;
   }
 
   .FilterBar-chip {
@@ -43,7 +44,6 @@
     border-radius: 0.3em;
     font-size: 0.8em;
     font-weight: 500;
-    margin-left: 0.3em;
 
     .FilterBar-chip-x {
       display: inline-flex;
@@ -91,8 +91,26 @@
       background: none;
       cursor: pointer;
       border-radius: 0.2em;
-      color: var(--foreground);
       transition: all 0.1s ease;
     }
+  }
+
+  .FilterBar-heart {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .FilterBar-search {
+    width: 12em;
+  }
+
+  .FilterBar-search-static {
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  .FilterBar-bpm-display {
+    font-size: 0.8em;
+    color: #666;
   }
 }

@@ -95,6 +95,17 @@ table thead th {
   opacity: 0.5;
 }
 
+thead .col-heart {
+  opacity: 0;
+  font-size: 0;
+}
+
+.col-heart {
+  width: 16px;
+  text-align: center;
+  color: #b3b3b3;
+}
+
 thead .col-sources {
   opacity: 0;
   font-size: 0;
