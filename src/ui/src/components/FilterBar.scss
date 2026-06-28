@@ -10,6 +10,7 @@
   z-index: 1000;
   gap: 0.5em;
   background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
   font-size: 1.25em;
 
   .FilterBar-navGroup {
