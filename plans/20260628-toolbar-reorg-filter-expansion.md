@@ -1,9 +1,5 @@
 # Toolbar Reorganisation + Filter Expansion
 
-## BEFORE EXECUTING PLAN
-- confirm if using live-refresh-whiletyping (like search) OR hit-enter-to-search (as current)
-- decide based on human operator discussion, best practice, and internal app consistency
-
 ## Overview
 Adopt Mantine UI (trial), reorganise FilterBar into three groups with space-between, add heart toggle (favorite filter), add debounced text search.
 
