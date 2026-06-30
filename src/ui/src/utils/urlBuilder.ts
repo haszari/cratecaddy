@@ -1,4 +1,4 @@
-export type ViewType = 'artist' | 'genre' | 'home';
+export type ViewType = 'artist' | 'genre' | 'home' | 'favourited';
 
 export function buildEditUrl(
   currentSearch: string,
@@ -7,7 +7,7 @@ export function buildEditUrl(
     genreAll?: string;
     genreAny?: string;
     artistAny?: string;
-  },
+  } = {},
 ): string {
   const params = new URLSearchParams(currentSearch);
   params.delete('edit');
@@ -34,7 +34,7 @@ export function buildViewUrl(editSearch: string): string {
   let viewType = params.get('fromViewType');
   viewType = viewType?.toLowerCase() ?? null;
 
-  if (!viewType || !['artist', 'genre', 'home'].includes(viewType)) {
+  if (!viewType || !['artist', 'genre', 'home', 'favourited'].includes(viewType)) {
     if (params.has('artist.any')) viewType = 'artist';
     else if (params.has('genre.all') || params.has('genre.any')) viewType = 'genre';
     else viewType = 'home';
@@ -62,6 +62,10 @@ export function buildViewUrl(editSearch: string): string {
       }
       break;
     }
+    case 'favourited':
+      path = '/favourited';
+      params.delete('favorite');
+      break;
     default:
       path = '/';
   }

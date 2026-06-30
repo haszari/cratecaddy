@@ -109,7 +109,6 @@ export default function EditMetadata() {
         bpmLte={sanitisedBpmLte}
         readOnly
         doneHref={doneHref}
-        favoriteActive={favorite === 'true'}
         search={search ?? ''}
       />
       <BasePageCriteria

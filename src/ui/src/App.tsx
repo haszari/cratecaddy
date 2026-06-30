@@ -10,6 +10,7 @@ import GenreDetail from './pages/GenreDetail';
 import Home from './pages/Home';
 import Artist from './pages/Artist';
 import Song from './pages/Song';
+import Favourited from './pages/Favourited';
 import EditMetadata from './pages/EditMetadata';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/edit-metadata" element={<EditMetadata />} />
+              <Route path="/favourited" element={<Favourited />} />
               <Route path="/genre/:genrePath" element={<GenreDetail />} />
               <Route path="/artist/:artistName" element={<Artist />} />
               <Route path="/song/:id" element={<Song />} />

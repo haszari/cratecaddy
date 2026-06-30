@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
@@ -8,35 +8,12 @@ import { useSortShuffle } from '../hooks/useSortShuffle';
 import { buildEditUrl } from '../utils/urlBuilder';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
-import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
 import type { SortField, SortDirection } from '../components/SongTable';
 
-function splitCSV(val: string | null): string[] {
-  if (!val) return [];
-  return val.split(',').map((s) => s.trim()).filter(Boolean);
-}
-
-function setParam(
-  params: URLSearchParams,
-  key: string,
-  value: string | null,
-): URLSearchParams {
-  const next = new URLSearchParams(params);
-  if (value === null || value === '') {
-    next.delete(key);
-  } else {
-    next.set(key, value);
-  }
-  return next;
-}
-
-export default function Artist() {
-  const { artistName } = useParams<{ artistName: string }>();
-  const decodedArtist = artistName ? decodeURIComponent(artistName) : '';
-  const [searchParams, setSearchParams] = useSearchParams();
+export default function Favourited() {
   const location = useLocation();
   const [page, setPage] = useState(1);
 
@@ -55,27 +32,21 @@ export default function Artist() {
     setPage(1);
   }, [toggleShuffle, setPage]);
 
-  const requiredGenres = splitCSV(searchParams.get('genre.all'));
-
   const {
     filters, addExclude,
     removeExclude, setBpmRange, setSearch,
   } = useFilters();
 
-  const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const favoriteParam = filters.favoriteActive ? 'true' : undefined;
   const searchParam = filters.search || undefined;
 
   const extraParams = {
-    'artist.any': decodedArtist || undefined,
-    ...(requiredGenresParam && { 'genre.all': requiredGenresParam }),
+    'favorite': 'starred',
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(favoriteParam && { 'favorite': favoriteParam }),
     ...(searchParam && { 'search': searchParam }),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
@@ -88,60 +59,24 @@ export default function Artist() {
     limit: 50,
   });
 
-  const { data: relateStats } = useQuery({
-    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
+  const { data: relatedStats } = useQuery({
+    queryKey: ['genreStats', 'favourite', genreNotParam, bpmGteParam, bpmLteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
-    enabled: !!decodedArtist,
   });
 
   const relatedTags: Record<string, TagInfo> = {};
-  if (relateStats) {
-    const lowerRequired = new Set(requiredGenres.map((g) => g.toLowerCase()));
-    for (const { genre, count } of relateStats) {
-      if (!lowerRequired.has(genre.toLowerCase())) {
-        relatedTags[genre] = { count };
-      }
+  if (relatedStats) {
+    for (const { genre, count } of relatedStats) {
+      relatedTags[genre] = { count };
     }
   }
 
-  const handleAddRequired = useCallback(
-    (genre: string) => {
-      setSearchParams((prev) => {
-        const current = splitCSV(prev.get('genre.all'));
-        if (current.includes(genre)) return prev;
-        return setParam(prev, 'genre.all', [...current, genre].join(','));
-      });
-    },
-    [setSearchParams],
-  );
-
-  const handleRemoveRequired = useCallback(
-    (genre: string) => {
-      setSearchParams((prev) => {
-        const current = splitCSV(prev.get('genre.all')).filter((g) => g !== genre);
-        return setParam(prev, 'genre.all', current.length > 0 ? current.join(',') : null);
-      });
-    },
-    [setSearchParams],
-  );
-
   const songs = paginated?.data ?? [];
-  const hasTag = (genre: string) => filters.genreNot.includes(genre);
 
-  const editHref = buildEditUrl(
-    location.search,
-    'artist',
-    { artistAny: decodedArtist },
-  );
+  const editHref = buildEditUrl(location.search, 'favourited') + '&favorite=starred';
 
   return (
     <div className="GenreDetail">
-      <BasePageCriteria
-        artists={[decodedArtist]}
-        genres={requiredGenres.map((g) => ({ name: g, mode: 'and' }))}
-        onRemoveGenre={handleRemoveRequired}
-      />
-
       <FilterBar
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
@@ -152,6 +87,7 @@ export default function Artist() {
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editHref={editHref}
+        favouriteMode="indicator"
         search={filters.search}
         onSearchChange={setSearch}
       />
@@ -175,10 +111,7 @@ export default function Artist() {
 
           {Object.keys(relatedTags).length > 0 && (
             <GenreTagCloud
-              tags={Object.fromEntries(
-                Object.entries(relatedTags).filter(([g]) => !hasTag(g))
-              )}
-              onInclude={handleAddRequired}
+              tags={relatedTags}
               onExclude={addExclude}
             />
           )}

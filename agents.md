@@ -75,3 +75,4 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - Sentence case for all headings, labels, copy
 - File references as markdown links with workspace-relative paths
 - TypeScript ES modules, `tsx` runner for scripts
+- NZ/GB English spelling throughout (favourite, colour, centre, etc.)

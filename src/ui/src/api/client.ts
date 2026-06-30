@@ -17,6 +17,8 @@ function buildQueryString(params: ApiSongParams): string {
     ['favorite', params['favorite']],
     ['search', params.search],
     ['shuffle', params.shuffle],
+    ['sort', params.sort],
+    ['sortDirection', params.sortDirection],
     ['page', params.page],
     ['limit', params.limit],
   ];

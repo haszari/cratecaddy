@@ -16,25 +16,23 @@ export default function Home() {
     filters,
     addExclude,
     removeExclude,
-    setBpmRange, toggleFavorite, setSearch,
+    setBpmRange, setSearch,
   } = useFilters();
 
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const favoriteParam = filters.favoriteActive ? 'true' : undefined;
   const searchParam = filters.search || undefined;
 
   const extraParams = {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(favoriteParam && { 'favorite': favoriteParam }),
     ...(searchParam && { 'search': searchParam }),
   };
 
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
+    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
@@ -74,8 +72,7 @@ export default function Home() {
         shuffleActive={shuffleMode}
         onShuffleToggle={toggleShuffle}
         onShuffleReseed={reshuffle}
-        favoriteActive={filters.favoriteActive}
-        onFavoriteToggle={toggleFavorite}
+        favouriteMode="nav"
         search={filters.search}
         onSearchChange={setSearch}
       />

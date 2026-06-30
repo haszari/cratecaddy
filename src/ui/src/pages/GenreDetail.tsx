@@ -46,7 +46,7 @@ export default function GenreDetail() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, toggleFavorite, setSearch,
+    removeExclude, setBpmRange, setSearch,
   } = useFilters();
 
   const genreParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
@@ -140,8 +140,6 @@ export default function GenreDetail() {
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editHref={editHref}
-        favoriteActive={filters.favoriteActive}
-        onFavoriteToggle={toggleFavorite}
         search={filters.search}
         onSearchChange={setSearch}
       />

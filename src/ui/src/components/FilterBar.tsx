@@ -6,6 +6,7 @@ import './FilterBar.scss';
 import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 import TempoControl from './TempoControl';
+import { useFilters } from '../hooks/useFilters';
 
 interface FilterBarProps {
   genreNot: string[];
@@ -19,8 +20,7 @@ interface FilterBarProps {
   editHref?: string;
   doneHref?: string;
   readOnly?: boolean;
-  favoriteActive?: boolean;
-  onFavoriteToggle?: () => void;
+  favouriteMode?: 'filter' | 'nav' | 'indicator';
   search?: string;
   onSearchChange?: (val: string) => void;
 }
@@ -30,9 +30,10 @@ export default function FilterBar({
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
-  favoriteActive, onFavoriteToggle,
+  favouriteMode = 'filter',
   search, onSearchChange,
 }: FilterBarProps) {
+  const { filters, toggleFavorite } = useFilters();
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
 
@@ -43,6 +44,33 @@ export default function FilterBar({
   const hasBpm = bpmGte !== undefined || bpmLte !== undefined;
   const showSearch = search !== undefined || onSearchChange;
   const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
+
+  const renderHeart = () => {
+    if (favouriteMode === 'nav') {
+      return (
+        <Link to="/favourited" className="iconButton" title="View favourited songs">
+          <Heart size={20} fill="none" />
+        </Link>
+      );
+    }
+    if (favouriteMode === 'indicator') {
+      return (
+        <span className="iconButton iconButton--favourite" title="Showing favourited songs">
+          <Heart size={20} fill="currentColor" />
+        </span>
+      );
+    }
+    const active = filters.favoriteActive;
+    return (
+      <button
+        className={`iconButton ${active ? 'iconButton--favourite' : ''}`}
+        onClick={readOnly ? undefined : toggleFavorite}
+        title={active ? 'Show all songs' : 'Show favourites only'}
+      >
+        <Heart size={20} fill={active ? 'currentColor' : 'none'} />
+      </button>
+    );
+  };
 
   return (
     <div className="FilterBar">
@@ -88,15 +116,7 @@ export default function FilterBar({
       </div>
 
       <div className="FilterBar-filterGroup">
-        {(!readOnly || favoriteActive) && (
-          <button
-            className={`iconButton ${favoriteActive ? 'iconButton--favorite' : ''}`}
-            onClick={readOnly ? undefined : onFavoriteToggle}
-            title={favoriteActive ? 'Show all songs' : 'Show favorites only'}
-          >
-            <Heart size={20} fill={favoriteActive ? 'currentColor' : 'none'} />
-          </button>
-        )}
+        {(!readOnly || favouriteMode === 'indicator') && renderHeart()}
 
         {showTempo && (
           <TempoControl
