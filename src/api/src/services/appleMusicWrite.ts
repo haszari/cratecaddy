@@ -6,8 +6,8 @@ function escapeAppleScript(str: string): string {
 }
 
 export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean; message: string }> {
-  if (!song.appleMusicId) {
-    return { success: false, message: 'No appleMusicId — cannot identify track in Apple Music' };
+  if (!song.canonicalAppleMusicId) {
+    return { success: false, message: 'No canonicalAppleMusicId — cannot identify track in Apple Music' };
   }
 
   const title = escapeAppleScript(song.title);
@@ -18,7 +18,7 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
   const bpm = song.bpm ?? '';
   const rating = song.rating !== undefined ? Math.round(song.rating * 20) : '';
   const year = song.year ?? '';
-  const appleMusicId = escapeAppleScript(song.appleMusicId);
+  const appleMusicId = escapeAppleScript(song.canonicalAppleMusicId);
   const songKey = song.key?.trim() ? escapeAppleScript(song.key.trim()) : '';
   const isAIFF = song.sources?.some(s => s.format === 'aiff') ?? false;
 

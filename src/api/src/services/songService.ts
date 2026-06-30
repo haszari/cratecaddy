@@ -239,18 +239,18 @@ export class SongService {
         song.appleMusicIds = existingIds;
       }
 
-      // appleMusicId (canonical): elected by format hierarchy
+      // canonicalAppleMusicId: elected by format hierarchy
       if (source.appleMusicId && source.format) {
         const currentRank = formatRank(
-          song.appleMusicId
-            ? existingSources.find((s) => s.appleMusicId === song.appleMusicId)?.format
+          song.canonicalAppleMusicId
+            ? existingSources.find((s) => s.appleMusicId === song.canonicalAppleMusicId)?.format
             : undefined,
         );
         const incomingRank = formatRank(source.format);
         if (incomingRank > currentRank) {
-          song.appleMusicId = source.appleMusicId;
-        } else if (!song.appleMusicId) {
-          song.appleMusicId = source.appleMusicId;
+          song.canonicalAppleMusicId = source.appleMusicId;
+        } else if (!song.canonicalAppleMusicId) {
+          song.canonicalAppleMusicId = source.appleMusicId;
         }
       }
 
@@ -275,7 +275,7 @@ export class SongService {
       year: songData.year,
       album: songData.album,
       favorite: songData.favorite,
-      appleMusicId: songData.appleMusicId || source.appleMusicId,
+      canonicalAppleMusicId: songData.appleMusicId || source.appleMusicId,
       appleMusicIds: source.appleMusicId ? [source.appleMusicId] : [],
       sources: [{
         sourceType: source.sourceType,
