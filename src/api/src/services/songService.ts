@@ -274,6 +274,7 @@ export class SongService {
       rating: songData.rating,
       year: songData.year,
       album: songData.album,
+      favorite: songData.favorite,
       appleMusicId: songData.appleMusicId || source.appleMusicId,
       appleMusicIds: source.appleMusicId ? [source.appleMusicId] : [],
       sources: [{
