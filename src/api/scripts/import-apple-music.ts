@@ -24,7 +24,7 @@ import plist from 'plist';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { SourceFormat } from '../src/models/Song.js';
+import { SourceFormat, Song } from '../src/models/Song.js';
 import { songService } from '../src/services/songService.js';
 
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
@@ -98,6 +98,7 @@ const importSongs = async (xmlPath: string) => {
     let updated = 0;
     let skipped = 0;
     let filtered = 0;
+    let filteredVideos = 0;
     let errors = 0;
 
     for (const trackId of trackIds) {
@@ -105,6 +106,12 @@ const importSongs = async (xmlPath: string) => {
 
       if (!trackData || typeof trackData !== 'object') {
         skipped++;
+        continue;
+      }
+
+      // Skip music videos — audio tracks only
+      if (trackData['Has Video'] === true) {
+        filteredVideos++;
         continue;
       }
 
@@ -195,14 +202,56 @@ const importSongs = async (xmlPath: string) => {
       }
     }
 
+    // Favourite sync: un-star songs no longer loved in Apple Music
+    console.log(`\nRunning favourite sync...`);
+    const lovedIds = new Set<string>();
+    for (const trackId of trackIds) {
+      const track = tracksDict[trackId];
+      if (track && track['Loved'] === true && track['Persistent ID']) {
+        lovedIds.add(track['Persistent ID']);
+      }
+    }
+
+    let unstarred = 0;
+    let stayedStarred = 0;
+    let skippedNoSource = 0;
+    let syncErrors = 0;
+
+    const starredSongs = await Song.find({ favorite: 'starred' });
+    for (const song of starredSongs) {
+      const appleSource = song.sources?.find((s) => s.sourceType === 'applemusic');
+      if (!appleSource?.appleMusicId) {
+        skippedNoSource++;
+        continue;
+      }
+      if (lovedIds.has(appleSource.appleMusicId)) {
+        stayedStarred++;
+        continue;
+      }
+      try {
+        await songService.updateSongMetadata(String(song._id), { favorite: 'normal' }, 'applemusic');
+        console.log(`  Favourite sync: un-starred "${song.artist} – ${song.title}" (appleMusicId: ${appleSource.appleMusicId})`);
+        unstarred++;
+      } catch (err) {
+        console.error(`  Favourite sync error for "${song.artist} – ${song.title}":`, (err as Error).message);
+        syncErrors++;
+      }
+    }
+
     console.log(`\nImport complete!`);
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
     console.log(`  Errors: ${errors}`);
     console.log(`  Skipped (no name): ${skipped}`);
-    console.log(`  Filtered (no DJing/Listening/Starred): ${filtered}`);
+    console.log(`  Filtered (audio, no DJing/Listening/Starred): ${filtered}`);
+    console.log(`  Filtered (videos): ${filteredVideos}`);
     console.log(`  Total processed: ${imported + updated + errors + skipped}`);
     console.log(`  Total in file: ${trackIds.length}`);
+    console.log(`\nFavourite sync complete!`);
+    console.log(`  Un-starred: ${unstarred}`);
+    console.log(`  Stayed starred: ${stayedStarred}`);
+    console.log(`  Skipped (no applemusic source): ${skippedNoSource}`);
+    if (syncErrors > 0) console.log(`  Sync errors: ${syncErrors}`);
 
     await mongoose.disconnect();
   } catch (error) {

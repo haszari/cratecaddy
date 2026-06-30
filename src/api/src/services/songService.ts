@@ -202,11 +202,8 @@ export class SongService {
         song.grouping = unionMerge(song.grouping, songData.grouping);
       }
 
-      // Favorite: max rank wins
       if (songData.favorite !== undefined) {
-        if (favoriteRank(songData.favorite) > favoriteRank(song.favorite)) {
-          song.favorite = songData.favorite;
-        }
+        song.favorite = songData.favorite;
       }
 
       // Single-value fields: existing holds; incoming fills nulls;
@@ -310,6 +307,7 @@ export class SongService {
       year?: number;
       favorite?: 'starred' | 'normal' | 'disliked';
     },
+    sourceType?: 'applemusic' | 'rekordbox' | 'djaypro' | 'manual',
   ): Promise<ISong | null> {
     const song = await Song.findById(id);
     if (!song) return null;
@@ -325,7 +323,7 @@ export class SongService {
     if (songData.favorite !== undefined) song.favorite = songData.favorite;
 
     const saved = await song.save();
-    await this.pushHistory(saved, 'manual');
+    await this.pushHistory(saved, sourceType || 'manual');
     return saved;
   }
 
