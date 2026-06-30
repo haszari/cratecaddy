@@ -151,26 +151,6 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
         <span className="TempoControl-hint">{minHint}</span>
       )}
 
-      <button
-        className="TempoControl-btn TempoControl-btn--clear"
-        onClick={clear}
-        title="Clear BPM filter"
-      >
-        <X size={14} />
-      </button>
-
-      <input
-        type="number"
-        className="TempoControl-input"
-        value={inputBuf}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        min={0}
-        max={999}
-        step={1}
-        placeholder="bpm"
-      />
-
       <span className="TempoControl-stepper">
         <button
           className="TempoControl-stepper-btn"
@@ -187,6 +167,26 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
           <ChevronDown size={14} />
         </button>
       </span>
+
+      <input
+        type="number"
+        className="TempoControl-input"
+        value={inputBuf}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        min={0}
+        max={999}
+        step={1}
+        placeholder="bpm"
+      />
+
+      <button
+        className="TempoControl-btn TempoControl-btn--clear"
+        onClick={clear}
+        title="Clear BPM filter"
+      >
+        <X size={14} />
+      </button>
 
       {maxHint !== undefined && !isNaN(maxHint) && (
         <span className="TempoControl-hint">{maxHint}</span>

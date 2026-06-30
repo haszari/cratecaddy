@@ -88,12 +88,12 @@ $pill-height: 2.5em;
 
   .TempoControl-input {
     width: 3em;
-    padding: 0;
+    padding: 0 0 0 0.2em;
     border: none;
     background: none;
     color: $pill-fg;
     font-weight: 600;
-    text-align: center;
+    text-align: left;
     outline: none;
     -moz-appearance: textfield;
 
