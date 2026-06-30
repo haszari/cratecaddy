@@ -90,13 +90,20 @@ export class SongService {
    * @param artist - Artist name
    * @param title - Song title
    * @param duration - Duration in milliseconds (optional)
+   * @param appleMusicId - Apple Music persistent ID (optional, for accurate cross-source matching)
    * @returns Matching song or null if not found
    */
   async findMatchingSong(
     artist: string,
     title: string,
-    duration?: number
+    duration?: number,
+    appleMusicId?: string
   ): Promise<ISong | null> {
+    if (appleMusicId) {
+      const byId = await Song.findOne({ appleMusicIds: appleMusicId });
+      if (byId) return byId;
+    }
+
     const normalizedArtistTitle = normalizeArtistTitle(artist, title);
 
     if (!normalizedArtistTitle) {

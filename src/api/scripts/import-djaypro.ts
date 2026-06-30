@@ -3,7 +3,8 @@
  * dJay Pro CSV Importer
  * 
  * Imports songs from dJay Pro CSV export into CrateCaddy database.
- * Songs are matched by normalized artist+title+duration (see findMatchingSong).
+ * Songs are matched by Apple Music persistent ID (extracted from URL) when available,
+ * falling back to normalized artist+title+duration (see findMatchingSong).
  * BPM, key and album fill nulls only (passive merge — never overwrites existing values).
  * 
  * Imports:
@@ -95,6 +96,11 @@ const camelotToKey: Record<string, string> = {
 
 const standardKeyPattern = /^[A-G][b#]?(?:m|dim|aug|sus)?$/;
 
+const extractAppleMusicId = (url: string): string | undefined => {
+  const match = url.match(/^apple-music:library:track:i\.([a-zA-Z0-9]+)$/);
+  return match ? match[1] : undefined;
+};
+
 const convertKey = (value?: string): string | undefined => {
   if (!value) return undefined;
   const trimmed = value.trim();
@@ -146,9 +152,10 @@ const importSongs = async (csvPath: string) => {
       const duration = parseTimeToMs(timeStr);
       const bpmRaw = bpmStr ? parseFloat(bpmStr) : undefined;
       const bpm = bpmRaw !== undefined && !isNaN(bpmRaw) ? bpmRaw : undefined;
+      const appleMusicId = url ? extractAppleMusicId(url) : undefined;
 
       try {
-        const existing = await songService.findMatchingSong(artist, title, duration);
+        const existing = await songService.findMatchingSong(artist, title, duration, appleMusicId);
         const isNew = !existing;
 
         await songService.updateWithHistory(
@@ -159,10 +166,12 @@ const importSongs = async (csvPath: string) => {
             bpm,
             key: convertKey(keyRaw),
             album,
+            appleMusicId,
           },
           {
             sourceType: 'djaypro',
             filePath: url || undefined,
+            appleMusicId,
             importMeta: { url },
           }
         );
