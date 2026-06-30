@@ -5,20 +5,55 @@ function escapeAppleScript(str: string): string {
   return str.replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
 
+function writeToSingle(targetId: string, escaped: Record<string, string>, commentBlock: string): Promise<boolean> {
+  const scriptLines: string[] = [
+    `tell application "Music"`,
+    `  try`,
+    `    set t to (first track of library playlist 1 whose persistent ID is "${targetId}")`,
+    `    set name of t to "${escaped.title}"`,
+    `    set artist of t to "${escaped.artist}"`,
+  ];
+
+  if (escaped.album) scriptLines.push(`    set album of t to "${escaped.album}"`);
+  if (escaped.genre) scriptLines.push(`    set genre of t to "${escaped.genre}"`);
+  if (escaped.grouping) scriptLines.push(`    set grouping of t to "${escaped.grouping}"`);
+  if (escaped.bpm) scriptLines.push(`    set bpm of t to ${escaped.bpm}`);
+  if (escaped.rating) scriptLines.push(`    set rating of t to ${escaped.rating}`);
+  if (escaped.year) scriptLines.push(`    set year of t to ${escaped.year}`);
+
+  scriptLines.push(...commentBlock.trim().split('\n').map(l => `    ${l.trim()}`));
+  scriptLines.push(`    return "ok"`);
+  scriptLines.push(`  on error errMsg`);
+  scriptLines.push(`    return "error: " & errMsg`);
+  scriptLines.push(`  end try`);
+  scriptLines.push(`end tell`);
+
+  const script = scriptLines.join('\n');
+
+  return new Promise((resolve) => {
+    exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, { timeout: 15000 }, (error, stdout) => {
+      if (error) { resolve(false); return; }
+      resolve(!stdout.trim().startsWith('error:'));
+    });
+  });
+}
+
 export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean; message: string }> {
-  if (!song.canonicalAppleMusicId) {
-    return { success: false, message: 'No canonicalAppleMusicId — cannot identify track in Apple Music' };
+  const targetIds = [...new Set((song.appleMusicIds || []).filter(Boolean))];
+  if (targetIds.length === 0) {
+    return { success: false, message: 'No Apple Music IDs' };
   }
 
-  const title = escapeAppleScript(song.title);
-  const artist = escapeAppleScript(song.artist);
-  const album = escapeAppleScript(song.album || '');
-  const genre = escapeAppleScript((song.genres || []).join(', '));
-  const grouping = escapeAppleScript((song.grouping || []).join(', '));
-  const bpm = song.bpm ?? '';
-  const rating = song.rating !== undefined ? Math.round(song.rating * 20) : '';
-  const year = song.year ?? '';
-  const appleMusicId = escapeAppleScript(song.canonicalAppleMusicId);
+  const escaped = {
+    title: escapeAppleScript(song.title),
+    artist: escapeAppleScript(song.artist),
+    album: escapeAppleScript(song.album || ''),
+    genre: escapeAppleScript((song.genres || []).join(', ')),
+    grouping: escapeAppleScript((song.grouping || []).join(', ')),
+    bpm: String(song.bpm ?? ''),
+    rating: song.rating !== undefined ? String(Math.round(song.rating * 20)) : '',
+    year: String(song.year ?? ''),
+  };
   const songKey = song.key?.trim() ? escapeAppleScript(song.key.trim()) : '';
   const isAIFF = song.sources?.some(s => s.format === 'aiff') ?? false;
 
@@ -61,42 +96,23 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
   commentBlock += `
     set comment of t to newComment`;
 
-  const scriptLines: string[] = [
-    `tell application "Music"`,
-    `  try`,
-    `    set t to (first track of library playlist 1 whose persistent ID is "${appleMusicId}")`,
-    `    set name of t to "${title}"`,
-    `    set artist of t to "${artist}"`,
-  ];
+  let successCount = 0;
+  const errors: string[] = [];
 
-  if (album) scriptLines.push(`    set album of t to "${album}"`);
-  if (genre) scriptLines.push(`    set genre of t to "${genre}"`);
-  if (grouping) scriptLines.push(`    set grouping of t to "${grouping}"`);
-  if (bpm) scriptLines.push(`    set bpm of t to ${bpm}`);
-  if (rating) scriptLines.push(`    set rating of t to ${rating}`);
-  if (year) scriptLines.push(`    set year of t to ${year}`);
+  for (const pid of targetIds) {
+    const ok = await writeToSingle(escapeAppleScript(pid), escaped, commentBlock);
+    if (ok) {
+      successCount++;
+    } else {
+      errors.push(pid);
+    }
+  }
 
-  scriptLines.push(...commentBlock.trim().split('\n').map(l => `    ${l.trim()}`));
-  scriptLines.push(`    return "ok"`);
-  scriptLines.push(`  on error errMsg`);
-  scriptLines.push(`    return "error: " & errMsg`);
-  scriptLines.push(`  end try`);
-  scriptLines.push(`end tell`);
-
-  const script = scriptLines.join('\n');
-
-  return new Promise((resolve) => {
-    exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, { timeout: 15000 }, (error, stdout, stderr) => {
-      if (error) {
-        resolve({ success: false, message: `AppleScript error: ${error.message}` });
-        return;
-      }
-      const output = stdout.trim();
-      if (output.startsWith('error:')) {
-        resolve({ success: false, message: output });
-        return;
-      }
-      resolve({ success: true, message: 'Saved to Apple Music' });
-    });
-  });
+  const allOk = successCount === targetIds.length;
+  return {
+    success: allOk,
+    message: allOk
+      ? `Written to ${targetIds.length} track${targetIds.length > 1 ? 's' : ''}`
+      : `Written to ${successCount}/${targetIds.length} tracks. Failed: ${errors.join(', ')}`,
+  };
 }
