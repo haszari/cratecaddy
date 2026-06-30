@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { ChevronUp, ChevronDown, Plus, Minus, X } from 'lucide-react';
-import './TempoControl.scss';
+import './TempoRangeControl.scss';
 
-interface TempoControlProps {
+interface TempoRangeControlProps {
   bpmGte?: number;
   bpmLte?: number;
   onChange?: (gte?: number, lte?: number) => void;
   readOnly?: boolean;
 }
 
-export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: TempoControlProps) {
+export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }: TempoRangeControlProps) {
   const hasFilter = bpmGte !== undefined || bpmLte !== undefined;
 
   const computeCentre = (): number | undefined => {
@@ -110,14 +110,14 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
   if (readOnly) {
     if (!hasFilter) return null;
     return (
-      <span className="TempoControl TempoControl-readOnly">
-        <span className="TempoControl-hint">{bpmGte ?? '?'}</span>
-        <span className="TempoControl-centre">{computeCentre() ?? '?'}</span>
-        <span className="TempoControl-stepper">
-          <span className="TempoControl-stepper-btn TempoControl-stepper-btn--spacer" />
-          <span className="TempoControl-stepper-btn TempoControl-stepper-btn--spacer" />
+      <span className="TempoRangeControl TempoRangeControl-readOnly">
+        <span className="TempoRangeControl-hint">{bpmGte ?? '?'}</span>
+        <span className="TempoRangeControl-centre">{computeCentre() ?? '?'}</span>
+        <span className="TempoRangeControl-stepper">
+          <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
+          <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
         </span>
-        <span className="TempoControl-hint">{bpmLte ?? '?'}</span>
+        <span className="TempoRangeControl-hint">{bpmLte ?? '?'}</span>
       </span>
     );
   }
@@ -125,21 +125,21 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
   if (!active) {
     return (
       <span
-        className="TempoControl TempoControl-inactive"
+        className="TempoRangeControl TempoRangeControl-inactive"
         onClick={() => { setActive(true); setRange(5); }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && setActive(true)}
       >
-        <span className="TempoControl-placeholder">tempo</span>
+        <span className="TempoRangeControl-placeholder">tempo</span>
       </span>
     );
   }
 
   return (
-    <span className="TempoControl">
+    <span className="TempoRangeControl">
       <button
-        className="TempoControl-btn"
+        className="TempoRangeControl-btn"
         onClick={decRange}
         disabled={range <= 0}
         title="Narrow range"
@@ -148,19 +148,19 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
       </button>
 
       {minHint !== undefined && !isNaN(minHint) && (
-        <span className="TempoControl-hint">{minHint}</span>
+        <span className="TempoRangeControl-hint">{minHint}</span>
       )}
 
-      <span className="TempoControl-stepper">
+      <span className="TempoRangeControl-stepper">
         <button
-          className="TempoControl-stepper-btn"
+          className="TempoRangeControl-stepper-btn"
           onClick={incCentre}
           title="Increase tempo"
         >
           <ChevronUp size={14} />
         </button>
         <button
-          className="TempoControl-stepper-btn"
+          className="TempoRangeControl-stepper-btn"
           onClick={decCentre}
           title="Decrease tempo"
         >
@@ -170,7 +170,7 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
 
       <input
         type="number"
-        className="TempoControl-input"
+        className="TempoRangeControl-input"
         value={inputBuf}
         onChange={handleInputChange}
         onFocus={handleFocus}
@@ -181,7 +181,7 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
       />
 
       <button
-        className="TempoControl-btn TempoControl-btn--clear"
+        className="TempoRangeControl-btn TempoRangeControl-btn--clear"
         onClick={clear}
         title="Clear BPM filter"
       >
@@ -189,11 +189,11 @@ export default function TempoControl({ bpmGte, bpmLte, onChange, readOnly }: Tem
       </button>
 
       {maxHint !== undefined && !isNaN(maxHint) && (
-        <span className="TempoControl-hint">{maxHint}</span>
+        <span className="TempoRangeControl-hint">{maxHint}</span>
       )}
 
       <button
-        className="TempoControl-btn"
+        className="TempoRangeControl-btn"
         onClick={incRange}
         title="Widen range"
       >

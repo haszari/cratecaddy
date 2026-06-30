@@ -5,7 +5,7 @@ import { TextInput } from '@mantine/core';
 import './FilterBar.scss';
 import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
-import TempoControl from './TempoControl';
+import TempoRangeControl from './TempoRangeControl';
 import { useFilters } from '../hooks/useFilters';
 
 interface FilterBarProps {
@@ -119,7 +119,7 @@ export default function FilterBar({
         {(!readOnly || favouriteMode === 'indicator') && renderHeart()}
 
         {showTempo && (
-          <TempoControl
+          <TempoRangeControl
             key={`bpm-${bpmGte ?? ''}-${bpmLte ?? ''}`}
             bpmGte={bpmGte}
             bpmLte={bpmLte}
