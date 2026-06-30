@@ -13,8 +13,6 @@ export function buildEditUrl(
   params.delete('edit');
   params.delete('page');
   params.delete('limit');
-  params.delete('sort');
-  params.delete('sortDirection');
   params.delete('shuffle');
   params.set('fromViewType', viewType);
   if (pathParams.artistAny && !params.has('artist.any')) {

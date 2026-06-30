@@ -12,10 +12,7 @@ export default function EditMetadata() {
   const location = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const { sortField, sortDirection } = useSortShuffle({
-    defaultSortField: 'artist',
-    defaultSortDirection: 'asc',
-  });
+  const { sortField, sortDirection } = useSortShuffle();
 
   const genreAll = searchParams.get('genre.all');
   const genreAny = searchParams.get('genre.any');
@@ -35,8 +32,8 @@ export default function EditMetadata() {
     ...(bpmLte && { 'bpm.lte': bpmLte }),
     ...(favorite && { 'favorite': favorite }),
     ...(search && { 'search': search }),
-    sort: sortField ?? 'artist',
-    sortDirection: sortDirection ?? 'asc',
+    sort: sortField,
+    sortDirection,
     limit: 500,
     page: 1,
   };
