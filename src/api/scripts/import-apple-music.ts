@@ -129,7 +129,8 @@ const importSongs = async (xmlPath: string) => {
       const comment = trackData['Comments'] || '';
       const genres = splitTagsField(trackData['Genre']);
       const grouping = splitTagsField(groupingRawString);
-      const bpm = trackData['BPM'] ? parseInt(String(trackData['BPM']), 10) || undefined : undefined;
+      const bpmRaw = trackData['BPM'] ? parseInt(String(trackData['BPM']), 10) : undefined;
+      const bpm = bpmRaw !== undefined && !isNaN(bpmRaw) ? bpmRaw : undefined;
       const totalTime = trackData['Total Time'] ? parseInt(String(trackData['Total Time']), 10) || undefined : undefined;
       const year = trackData['Year'] ? parseInt(String(trackData['Year']), 10) || undefined : undefined;
       const rating = convertRating(trackData['Rating']);
