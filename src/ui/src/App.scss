@@ -104,6 +104,10 @@ thead .col-heart {
   width: 16px;
   text-align: center;
   color: #b3b3b3;
+
+  svg {
+    fill: currentColor;
+  }
 }
 
 thead .col-sources {
