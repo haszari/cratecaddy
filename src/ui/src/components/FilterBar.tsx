@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useDebouncedValue } from '@mantine/hooks';
+import { TextInput } from '@mantine/core';
 import './FilterBar.scss';
-import { X, House, Pencil, ArrowLeft } from 'lucide-react';
+import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
+import TempoRangeControl from './TempoRangeControl';
+import { useFilters } from '../hooks/useFilters';
 
 interface FilterBarProps {
   genreNot: string[];
@@ -16,7 +20,9 @@ interface FilterBarProps {
   editHref?: string;
   doneHref?: string;
   readOnly?: boolean;
-  className?: string;
+  favouriteMode?: 'filter' | 'nav' | 'indicator';
+  search?: string;
+  onSearchChange?: (val: string) => void;
 }
 
 export default function FilterBar({
@@ -24,42 +30,62 @@ export default function FilterBar({
   onRemoveExclude, onBpmChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
+  favouriteMode = 'filter',
+  search, onSearchChange,
 }: FilterBarProps) {
-  const [bpmMinStr, setBpmMinStr] = useState(bpmGte !== undefined ? String(bpmGte) : '');
-  const [bpmMaxStr, setBpmMaxStr] = useState(bpmLte !== undefined ? String(bpmLte) : '');
+  const { filters, toggleFavorite } = useFilters();
+  const [searchInput, setSearchInput] = useState(search ?? '');
+  const [debouncedSearch] = useDebouncedValue(searchInput, 300);
 
-  const applyBpm = () => {
-    if (!onBpmChange) return;
-    const gte = bpmMinStr ? parseFloat(bpmMinStr) : undefined;
-    const lte = bpmMaxStr ? parseFloat(bpmMaxStr) : undefined;
-    onBpmChange(
-      gte !== undefined && !isNaN(gte) ? gte : undefined,
-      lte !== undefined && !isNaN(lte) ? lte : undefined,
+  useEffect(() => {
+    if (onSearchChange) onSearchChange(debouncedSearch);
+  }, [debouncedSearch, onSearchChange]);
+
+  const hasBpm = bpmGte !== undefined || bpmLte !== undefined;
+  const showSearch = search !== undefined || onSearchChange;
+  const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
+
+  const renderHeart = () => {
+    if (favouriteMode === 'nav') {
+      return (
+        <Link to="/favourited" className="iconButton" title="View favourited songs">
+          <Heart size={20} fill="none" />
+        </Link>
+      );
+    }
+    if (favouriteMode === 'indicator') {
+      return (
+        <span className="iconButton iconButton--favourite" title="Showing favourited songs">
+          <Heart size={20} fill="currentColor" />
+        </span>
+      );
+    }
+    const active = filters.favoriteActive;
+    return (
+      <button
+        className={`iconButton ${active ? 'iconButton--favourite' : ''}`}
+        onClick={readOnly ? undefined : toggleFavorite}
+        title={active ? 'Show all songs' : 'Show favourites only'}
+      >
+        <Heart size={20} fill={active ? 'currentColor' : 'none'} />
+      </button>
     );
   };
 
-  const clearBpm = () => {
-    setBpmMinStr('');
-    setBpmMaxStr('');
-    if (onBpmChange) onBpmChange(undefined, undefined);
-  };
-
-  const hasBpm = bpmGte !== undefined || bpmLte !== undefined;
-
   return (
     <div className="FilterBar">
-      <div className="FilterBar-section FilterBar-section-left">
-        <Link to="/" className="FilterBar-home iconButton" title="Home">
-          <House size={16} />
+      <div className="FilterBar-navGroup">
+        <Link to="/" className="iconButton" title="Home">
+          <House size={20} />
         </Link>
         {editHref && (
-          <Link to={editHref} className="FilterBar-edit iconButton" title="Edit metadata">
-            <Pencil size={16} />
+          <Link to={editHref} className="iconButton" title="Edit metadata">
+            <Pencil size={20} />
           </Link>
         )}
         {doneHref && (
-          <Link to={doneHref} className="FilterBar-done iconButton" title="Done editing">
-            <ArrowLeft size={16} />
+          <Link to={doneHref} className="iconButton" title="Done editing">
+            <ArrowLeft size={20} />
           </Link>
         )}
         {!readOnly && onShuffleToggle && (
@@ -71,49 +97,7 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="FilterBar-section FilterBar-section-center">
-        {(onBpmChange || (readOnly && hasBpm)) && (
-          <span className="FilterBar-bpm">
-            {readOnly ? (
-              <span className="FilterBar-bpm-display">
-                {bpmGte ?? '?'}–{bpmLte ?? '?'} bpm
-              </span>
-            ) : (
-              <>
-                <input
-                  type="number"
-                  placeholder="min"
-                  value={bpmMinStr}
-                  onChange={(e) => setBpmMinStr(e.target.value)}
-                  onBlur={applyBpm}
-                  onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
-                  min={0} max={999}
-                  className="FilterBar-bpm-input"
-                />
-                <span className="FilterBar-bpm-sep">–</span>
-                <input
-                  type="number"
-                  placeholder="max"
-                  value={bpmMaxStr}
-                  onChange={(e) => setBpmMaxStr(e.target.value)}
-                  onBlur={applyBpm}
-                  onKeyDown={(e) => e.key === 'Enter' && applyBpm()}
-                  min={0} max={999}
-                  className="FilterBar-bpm-input"
-                />
-                <span className="FilterBar-bpm-label">bpm</span>
-                {hasBpm && (
-                  <button className="FilterBar-bpm-clear" onClick={clearBpm} title="Clear BPM">
-                    <X size={12} />
-                  </button>
-                )}
-              </>
-            )}
-          </span>
-        )}
-      </div>
-
-      <div className="FilterBar-section FilterBar-section-right">
+      <div className="FilterBar-excludeGroup">
         {genreNot.map((genre) => (
           <span
             key={`ex:${genre}`}
@@ -124,11 +108,42 @@ export default function FilterBar({
             {genre}
             {!readOnly && (
               <span className="FilterBar-chip-x">
-                <X size={12} />
+                <X size={14} />
               </span>
             )}
           </span>
         ))}
+      </div>
+
+      <div className="FilterBar-filterGroup">
+        {(!readOnly || favouriteMode === 'indicator') && renderHeart()}
+
+        {showTempo && (
+          <TempoRangeControl
+            key={`bpm-${bpmGte ?? ''}-${bpmLte ?? ''}`}
+            bpmGte={bpmGte}
+            bpmLte={bpmLte}
+            onChange={readOnly ? undefined : onBpmChange}
+            readOnly={readOnly}
+          />
+        )}
+
+        {showSearch && (
+          readOnly ? (
+            search ? (
+              <span className="FilterBar-search-static">{search}</span>
+            ) : null
+          ) : (
+            <TextInput
+              className="FilterBar-search"
+              placeholder=""
+              rightSection={searchInput === '' ? <Search size={18} /> : undefined}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.currentTarget.value)}
+              size="sm"
+            />
+          )
+        )}
       </div>
     </div>
   );

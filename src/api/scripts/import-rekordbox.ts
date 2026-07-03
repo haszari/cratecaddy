@@ -131,7 +131,8 @@ const importSongs = async (xmlPath: string) => {
       const totalTimeSec = parseInt(track.TotalTime || '0', 10) || undefined;
       const duration = totalTimeSec ? totalTimeSec * 1000 : undefined;
       const year = track.Year ? parseInt(track.Year, 10) || undefined : undefined;
-      const bpm = track.AverageBpm ? parseFloat(track.AverageBpm) || undefined : undefined;
+      const bpmRaw = track.AverageBpm ? parseFloat(track.AverageBpm) : undefined;
+      const bpm = bpmRaw !== undefined && !isNaN(bpmRaw) ? bpmRaw : undefined;
       const rating = rekordboxRatingToScore(track.Rating);
       const location = track.Location || '';
 

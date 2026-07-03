@@ -3,6 +3,18 @@
  * dJay Pro CSV Importer
  * 
  * Imports songs from dJay Pro CSV export into CrateCaddy database.
+ * Songs are matched by Apple Music persistent ID (extracted from URL) when available,
+ * falling back to normalized artist+title+duration (see findMatchingSong).
+ * BPM, key and album fill nulls only (passive merge — never overwrites existing values).
+ * 
+ * Imports:
+ *   - Title, Artist → song identity (matching + create)
+ *   - Album, BPM, Key → song metadata (mergeField, fills nulls)
+ *   - Time → duration (matching only, not re-written)
+ *   - URL → source.filePath
+ * 
+ * Does NOT import: genres, grouping, rating, year, favourite
+ *   (not available in the djaypro CSV export format)
  * 
  * Environment Variables:
  *   MONGODB_URI - MongoDB connection string (default: mongodb://localhost:27017/cratecaddy)
@@ -35,11 +47,19 @@ const connectDB = async () => {
 const parseTimeToMs = (timeStr?: string): number | undefined => {
   if (!timeStr || timeStr.trim() === '') return undefined;
   const parts = timeStr.trim().split(':');
-  if (parts.length !== 2) return undefined;
-  const minutes = parseInt(parts[0], 10);
-  const seconds = parseInt(parts[1], 10);
-  if (isNaN(minutes) || isNaN(seconds)) return undefined;
-  return (minutes * 60 + seconds) * 1000;
+  let hours = 0, minutes = 0, seconds = 0;
+  if (parts.length === 3) {
+    hours = parseInt(parts[0], 10);
+    minutes = parseInt(parts[1], 10);
+    seconds = parseInt(parts[2], 10);
+  } else if (parts.length === 2) {
+    minutes = parseInt(parts[0], 10);
+    seconds = parseInt(parts[1], 10);
+  } else {
+    return undefined;
+  }
+  if ([hours, minutes, seconds].some(isNaN)) return undefined;
+  return ((hours * 60 + minutes) * 60 + seconds) * 1000;
 };
 
 const parseCSVLine = (line: string): string[] => {
@@ -49,7 +69,12 @@ const parseCSVLine = (line: string): string[] => {
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') {
-      inQuotes = !inQuotes;
+      if (i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
     } else if (char === ',' && !inQuotes) {
       result.push(current.trim());
       current = '';
@@ -59,6 +84,30 @@ const parseCSVLine = (line: string): string[] => {
   }
   result.push(current.trim());
   return result;
+};
+
+// Camelot wheel → standard musical key
+const camelotToKey: Record<string, string> = {
+  '1A': 'Gm', '2A': 'Dm', '3A': 'Am', '4A': 'Em', '5A': 'Bm', '6A': 'F#m',
+  '7A': 'C#m', '8A': 'G#m', '9A': 'D#m', '10A': 'A#m', '11A': 'Fm', '12A': 'Cm',
+  '1B': 'C', '2B': 'G', '3B': 'D', '4B': 'A', '5B': 'E', '6B': 'B',
+  '7B': 'F#', '8B': 'C#', '9B': 'G#', '10B': 'D#', '11B': 'A#', '12B': 'F',
+};
+
+const standardKeyPattern = /^[A-G][b#]?(?:m|dim|aug|sus)?$/;
+
+const extractAppleMusicId = (url: string): string | undefined => {
+  const match = url.match(/^apple-music:library:track:i\.([a-zA-Z0-9]+)$/);
+  return match ? match[1] : undefined;
+};
+
+const convertKey = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (standardKeyPattern.test(trimmed)) return trimmed;
+  if (camelotToKey[trimmed]) return camelotToKey[trimmed];
+  console.warn(`  Unrecognised key format: "${value}" — discarding`);
+  return undefined;
 };
 
 const importSongs = async (csvPath: string) => {
@@ -78,6 +127,7 @@ const importSongs = async (csvPath: string) => {
     let imported = 0;
     let updated = 0;
     let skipped = 0;
+    let errors = 0;
 
     for (const line of dataLines) {
       const fields = parseCSVLine(line);
@@ -86,13 +136,13 @@ const importSongs = async (csvPath: string) => {
         continue;
       }
 
-      const title = fields[0]?.replace(/^"|"$/g, '') || '';
-      const artist = fields[1]?.replace(/^"|"$/g, '') || '';
-      const album = fields[2]?.replace(/^"|"$/g, '') || '';
-      const timeStr = fields[3]?.replace(/^"|"$/g, '') || '';
-      const bpmStr = fields[4]?.replace(/^"|"$/g, '') || '';
-      const key = fields[5]?.replace(/^"|"$/g, '') || '';
-      const url = fields[6]?.replace(/^"|"$/g, '') || '';
+      const title = fields[0] || '';
+      const artist = fields[1] || '';
+      const album = fields[2] || '';
+      const timeStr = fields[3] || '';
+      const bpmStr = fields[4] || '';
+      const keyRaw = fields[5] || '';
+      const url = fields[6] || '';
 
       if (!title || !artist) {
         skipped++;
@@ -100,41 +150,49 @@ const importSongs = async (csvPath: string) => {
       }
 
       const duration = parseTimeToMs(timeStr);
-      const bpm = bpmStr ? parseFloat(bpmStr) || undefined : undefined;
+      const bpmRaw = bpmStr ? parseFloat(bpmStr) : undefined;
+      const bpm = bpmRaw !== undefined && !isNaN(bpmRaw) ? bpmRaw : undefined;
+      const appleMusicId = url ? extractAppleMusicId(url) : undefined;
 
-      const existing = await songService.findMatchingSong(artist, title, duration);
-      const isNew = !existing;
+      try {
+        const existing = await songService.findMatchingSong(artist, title, duration, appleMusicId);
+        const isNew = !existing;
 
-      await songService.updateWithHistory(
-        artist,
-        title,
-        duration,
-        {
-          bpm,
-          key: key || undefined,
-          album,
-          genres: [],
-          grouping: [],
-        },
-        {
-          sourceType: 'djaypro',
-          filePath: url || undefined,
-          importMeta: { url },
+        await songService.updateWithHistory(
+          artist,
+          title,
+          duration,
+          {
+            bpm,
+            key: convertKey(keyRaw),
+            album,
+            appleMusicId,
+          },
+          {
+            sourceType: 'djaypro',
+            filePath: url || undefined,
+            appleMusicId,
+            importMeta: { url },
+          }
+        );
+
+        if (isNew) {
+          imported++;
+        } else {
+          updated++;
         }
-      );
-
-      if (isNew) {
-        imported++;
-      } else {
-        updated++;
+      } catch (err) {
+        console.error(`  Error importing "${artist} – ${title}":`, (err as Error).message);
+        errors++;
       }
     }
 
     console.log(`\nImport complete!`);
     console.log(`  Imported: ${imported}`);
     console.log(`  Updated: ${updated}`);
+    console.log(`  Errors: ${errors}`);
     console.log(`  Skipped: ${skipped}`);
-    console.log(`  Total: ${imported + updated + skipped}`);
+    console.log(`  Total: ${imported + updated + errors + skipped}`);
 
     await mongoose.disconnect();
   } catch (error) {

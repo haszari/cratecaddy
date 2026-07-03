@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from '../hooks/useSongs';
 import { fetchGenreStats } from '../api/client';
@@ -7,12 +7,13 @@ import { useFilters } from '../hooks/useFilters';
 import { useSortShuffle } from '../hooks/useSortShuffle';
 import { buildEditUrl } from '../utils/urlBuilder';
 import FilterBar from '../components/FilterBar';
-import { GenreTagCloud } from '../components/GenreTagCloud';
 import BasePageCriteria from '../components/BasePageCriteria';
+import { GenreTagCloud } from '../components/GenreTagCloud';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
 import type { SortField, SortDirection } from '../components/SongTable';
+import { Heart } from 'lucide-react';
 
 function splitCSV(val: string | null): string[] {
   if (!val) return [];
@@ -33,11 +34,9 @@ function setParam(
   return next;
 }
 
-export default function Artist() {
-  const { artistName } = useParams<{ artistName: string }>();
-  const decodedArtist = artistName ? decodeURIComponent(artistName) : '';
-  const [searchParams, setSearchParams] = useSearchParams();
+export default function Favourited() {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
 
   const {
@@ -66,16 +65,14 @@ export default function Artist() {
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const favoriteParam = filters.favoriteActive ? 'true' : undefined;
   const searchParam = filters.search || undefined;
 
   const extraParams = {
-    'artist.any': decodedArtist || undefined,
+    'favorite': 'starred',
     ...(requiredGenresParam && { 'genre.all': requiredGenresParam }),
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(favoriteParam && { 'favorite': favoriteParam }),
     ...(searchParam && { 'search': searchParam }),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
@@ -88,16 +85,15 @@ export default function Artist() {
     limit: 50,
   });
 
-  const { data: relateStats } = useQuery({
-    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
+  const { data: relatedStats } = useQuery({
+    queryKey: ['genreStats', 'favourite', requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
-    enabled: !!decodedArtist,
   });
 
   const relatedTags: Record<string, TagInfo> = {};
-  if (relateStats) {
+  if (relatedStats) {
     const lowerRequired = new Set(requiredGenres.map((g) => g.toLowerCase()));
-    for (const { genre, count } of relateStats) {
+    for (const { genre, count } of relatedStats) {
       if (!lowerRequired.has(genre.toLowerCase())) {
         relatedTags[genre] = { count };
       }
@@ -126,21 +122,28 @@ export default function Artist() {
   );
 
   const songs = paginated?.data ?? [];
-  const hasTag = (genre: string) => filters.genreNot.includes(genre);
+  const hasTag = (genre: string) =>
+    filters.genreNot.includes(genre) || requiredGenres.includes(genre);
 
-  const editHref = buildEditUrl(
-    location.search,
-    'artist',
-    { artistAny: decodedArtist },
-  );
+  const editHref = buildEditUrl(location.search, 'favourited') + '&favorite=starred';
 
   return (
     <div className="GenreDetail">
-      <BasePageCriteria
-        artists={[decodedArtist]}
-        genres={requiredGenres.map((g) => ({ name: g, mode: 'and' }))}
-        onRemoveGenre={handleRemoveRequired}
-      />
+      <div className="PageCriteria">
+        <span className="GenreTag GenreTag-heading PageCriteria-artist">
+          <Heart size={28} fill="#e03131" color="#e03131" style={{ verticalAlign: -6 }} />
+        </span>
+        {requiredGenres.map((g) => (
+          <span
+            key={g}
+            className="genre-pill genre-pill--and"
+            onClick={() => handleRemoveRequired(g)}
+            title={`Remove ${g}`}
+          >
+            {g}
+          </span>
+        ))}
+      </div>
 
       <FilterBar
         genreNot={filters.genreNot}
@@ -152,6 +155,7 @@ export default function Artist() {
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}
         editHref={editHref}
+        favouriteMode="indicator"
         search={filters.search}
         onSearchChange={setSearch}
       />

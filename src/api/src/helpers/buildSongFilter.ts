@@ -120,6 +120,15 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
+  const favorite = params.favorite;
+  if (favorite) {
+    if (favorite === 'true' || favorite === '1' || favorite === 'starred') {
+      conditions.push({ favorite: 'starred' });
+    } else if (favorite === 'disliked') {
+      conditions.push({ favorite: 'disliked' });
+    }
+  }
+
   const searchTerm = params.search;
   if (searchTerm && searchTerm.trim()) {
     conditions.push(buildSearchCondition(searchTerm));

@@ -5,6 +5,8 @@ export interface FilterState {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  favoriteActive: boolean;
+  search: string;
 }
 
 function splitCSV(val: string | null): string[] {
@@ -39,6 +41,8 @@ export function useFilters() {
       const v = searchParams.get('bpm.lte');
       return v ? parseFloat(v) : undefined;
     })(),
+    favoriteActive: searchParams.get('favorite') === 'true',
+    search: searchParams.get('search') ?? '',
   };
 
   const addExclude = useCallback(
@@ -47,7 +51,7 @@ export function useFilters() {
         const current = splitCSV(prev.get('genre.not'));
         if (current.includes(genre)) return prev;
         return setParam(prev, 'genre.not', [...current, genre].join(','));
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
@@ -57,7 +61,7 @@ export function useFilters() {
       setSearchParams((prev) => {
         const current = splitCSV(prev.get('genre.not')).filter((g) => g !== genre);
         return setParam(prev, 'genre.not', current.length > 0 ? current.join(',') : null);
-      }, { replace: true });
+      });
     },
     [setSearchParams],
   );
@@ -68,7 +72,30 @@ export function useFilters() {
         let next = setParam(prev, 'bpm.gte', gte !== undefined ? String(gte) : null);
         next = setParam(next, 'bpm.lte', lte !== undefined ? String(lte) : null);
         return next;
-      }, { replace: true });
+      });
+    },
+    [setSearchParams],
+  );
+
+  const toggleFavorite = useCallback(() => {
+    setSearchParams((prev) => {
+      const current = prev.get('favorite');
+      const next = new URLSearchParams(prev);
+      if (current === 'true') {
+        next.delete('favorite');
+      } else {
+        next.set('favorite', 'true');
+      }
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const setSearch = useCallback(
+    (value: string) => {
+      setSearchParams((prev) =>
+        setParam(prev, 'search', value || null),
+
+      );
     },
     [setSearchParams],
   );
@@ -78,20 +105,26 @@ export function useFilters() {
       let next = setParam(prev, 'genre.not', null);
       next = setParam(next, 'bpm.gte', null);
       next = setParam(next, 'bpm.lte', null);
+      next = setParam(next, 'favorite', null);
+      next = setParam(next, 'search', null);
       return next;
-    }, { replace: true });
+    });
   }, [setSearchParams]);
 
   const hasActiveFilters =
     filters.genreNot.length > 0 ||
     filters.bpmGte !== undefined ||
-    filters.bpmLte !== undefined;
+    filters.bpmLte !== undefined ||
+    filters.favoriteActive ||
+    filters.search !== '';
 
   return {
     filters,
     addExclude,
     removeExclude,
     setBpmRange,
+    toggleFavorite,
+    setSearch,
     clearFilters,
     hasActiveFilters,
   };

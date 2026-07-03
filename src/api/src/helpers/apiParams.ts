@@ -7,6 +7,7 @@ export interface ApiFilterParams {
   'artist.not'?: string;
   'bpm.gte'?: string;
   'bpm.lte'?: string;
+  'favorite'?: string;
   search?: string;
 }
 
@@ -24,7 +25,7 @@ export type ApiGenreStatsParams = ApiFilterParams;
 export const FILTER_PARAM_KEYS: (keyof ApiFilterParams)[] = [
   'genre.any', 'genre.all', 'genre.not',
   'artist.any', 'artist.all', 'artist.not',
-  'bpm.gte', 'bpm.lte', 'search',
+  'bpm.gte', 'bpm.lte', 'favorite', 'search',
 ];
 
 export const PAGINATION_PARAM_KEYS: (keyof ApiPaginationParams)[] = [

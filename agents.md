@@ -9,6 +9,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - `src/tools/` — seed scripts (`seed-db.sh` + `sample-songs.json`)
 - `src/data/` — gitignored user data (import files, CSVs)
 - `plans/` — design documents and refactor plans (review before executing)
+  - Naming: `YYYYMMDD[a/b/c...]-descriptive-name.md`. Multiple plans on the same day get suffixed `a`, `b`, `c` in chronological order. Current/active plan is always the highest letter.
 - No root `package.json` — each sub-package is independent
 
 ## Commands (run from `src/api/` or `src/ui/`)
@@ -75,3 +76,4 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - Sentence case for all headings, labels, copy
 - File references as markdown links with workspace-relative paths
 - TypeScript ES modules, `tsx` runner for scripts
+- NZ/GB English spelling throughout (favourite, colour, centre, etc.)

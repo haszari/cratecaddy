@@ -14,12 +14,13 @@ function buildQueryString(params: ApiSongParams): string {
     ['artist.not', params['artist.not']],
     ['bpm.gte', params['bpm.gte']],
     ['bpm.lte', params['bpm.lte']],
+    ['favorite', params['favorite']],
     ['search', params.search],
     ['shuffle', params.shuffle],
-    ['page', params.page],
-    ['limit', params.limit],
     ['sort', params.sort],
     ['sortDirection', params.sortDirection],
+    ['page', params.page],
+    ['limit', params.limit],
   ];
   for (const [key, val] of entries) {
     if (val !== undefined && val !== null && val !== '') {

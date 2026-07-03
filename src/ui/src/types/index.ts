@@ -25,7 +25,7 @@ export interface Song {
   key?: string;
   year?: number;
   grouping?: string[];
-  appleMusicId?: string;
+  canonicalAppleMusicId?: string;
   favorite?: 'starred' | 'normal' | 'disliked';
   sources: ISource[];
 }

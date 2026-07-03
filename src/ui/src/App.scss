@@ -1,6 +1,6 @@
 .App {
   text-align: center;
-  padding: 3em 1em 1em;
+  padding: 4.5em 1em 1em;
 }
 
 .page-footer {
@@ -93,6 +93,21 @@
 
 table thead th {
   opacity: 0.5;
+}
+
+thead .col-heart {
+  opacity: 0;
+  font-size: 0;
+}
+
+.col-heart {
+  width: 16px;
+  text-align: center;
+  color: #b3b3b3;
+
+  svg {
+    fill: currentColor;
+  }
 }
 
 thead .col-sources {
@@ -272,6 +287,18 @@ thead th:last-child {
     svg {
       stroke: orange;
     }
+  }
+}
+
+.iconButton--favourite {
+  svg {
+    stroke: #e03131;
+    fill: #e03131;
+  }
+
+  &:hover svg {
+    stroke: #e03131;
+    fill: #e03131;
   }
 }
 
