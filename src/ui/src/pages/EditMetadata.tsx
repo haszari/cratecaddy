@@ -20,6 +20,8 @@ export default function EditMetadata() {
   const genreNot = searchParams.get('genre.not');
   const bpmGte = searchParams.get('bpm.gte');
   const bpmLte = searchParams.get('bpm.lte');
+  const ratingGte = searchParams.get('rating.gte');
+  const ratingLte = searchParams.get('rating.lte');
   const favorite = searchParams.get('favorite');
   const search = searchParams.get('search');
 
@@ -30,6 +32,8 @@ export default function EditMetadata() {
     ...(genreNot && { 'genre.not': genreNot }),
     ...(bpmGte && { 'bpm.gte': bpmGte }),
     ...(bpmLte && { 'bpm.lte': bpmLte }),
+    ...(ratingGte && { 'rating.gte': ratingGte }),
+    ...(ratingLte && { 'rating.lte': ratingLte }),
     ...(favorite && { 'favorite': favorite }),
     ...(search && { 'search': search }),
     sort: sortField,
@@ -88,6 +92,10 @@ export default function EditMetadata() {
   const bpmLteNum = bpmLte ? Number(bpmLte) : undefined;
   const sanitisedBpmGte = bpmGteNum !== undefined && !isNaN(bpmGteNum) ? bpmGteNum : undefined;
   const sanitisedBpmLte = bpmLteNum !== undefined && !isNaN(bpmLteNum) ? bpmLteNum : undefined;
+  const ratingGteNum = ratingGte ? Number(ratingGte) : undefined;
+  const ratingLteNum = ratingLte ? Number(ratingLte) : undefined;
+  const sanitisedRatingGte = ratingGteNum !== undefined && !isNaN(ratingGteNum) ? ratingGteNum : undefined;
+  const sanitisedRatingLte = ratingLteNum !== undefined && !isNaN(ratingLteNum) ? ratingLteNum : undefined;
   const genreNotList = genreNot?.split(',').filter(Boolean) ?? [];
 
   const doneHref = buildViewUrl(location.search);
@@ -104,6 +112,8 @@ export default function EditMetadata() {
         genreNot={genreNotList}
         bpmGte={sanitisedBpmGte}
         bpmLte={sanitisedBpmLte}
+        ratingGte={sanitisedRatingGte}
+        ratingLte={sanitisedRatingLte}
         readOnly
         doneHref={doneHref}
         search={search ?? ''}

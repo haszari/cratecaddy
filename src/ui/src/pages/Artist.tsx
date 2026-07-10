@@ -59,13 +59,15 @@ export default function Artist() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, setSearch,
+    removeExclude, setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
   const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
+  const ratingGteParam = filters.ratingGte !== undefined ? String(filters.ratingGte) : undefined;
+  const ratingLteParam = filters.ratingLte !== undefined ? String(filters.ratingLte) : undefined;
   const favoriteParam = filters.favoriteActive ? 'true' : undefined;
   const searchParam = filters.search || undefined;
 
@@ -75,6 +77,8 @@ export default function Artist() {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(ratingGteParam && { 'rating.gte': ratingGteParam }),
+    ...(ratingLteParam && { 'rating.lte': ratingLteParam }),
     ...(favoriteParam && { 'favorite': favoriteParam }),
     ...(searchParam && { 'search': searchParam }),
     ...(sortField && { sort: sortField }),
@@ -89,7 +93,7 @@ export default function Artist() {
   });
 
   const { data: relateStats } = useQuery({
-    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
+    queryKey: ['genreStats', decodedArtist, requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, ratingGteParam, ratingLteParam, favoriteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
     enabled: !!decodedArtist,
   });
@@ -146,8 +150,11 @@ export default function Artist() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        ratingGte={filters.ratingGte}
+        ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        onRatingChange={setRatingRange}
         shuffleActive={shuffleMode}
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}

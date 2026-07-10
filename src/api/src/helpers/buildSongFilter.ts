@@ -120,6 +120,23 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
+  const ratingGte = params['rating.gte'];
+  const ratingLte = params['rating.lte'];
+  if (ratingGte || ratingLte) {
+    const ratingRange: Record<string, number> = {};
+    if (ratingGte) {
+      const val = parseFloat(ratingGte);
+      if (!isNaN(val)) ratingRange.$gte = val;
+    }
+    if (ratingLte) {
+      const val = parseFloat(ratingLte);
+      if (!isNaN(val)) ratingRange.$lte = val;
+    }
+    if (Object.keys(ratingRange).length > 0) {
+      conditions.push({ rating: ratingRange });
+    }
+  }
+
   const favorite = params.favorite;
   if (favorite) {
     if (favorite === 'true' || favorite === '1' || favorite === 'starred') {

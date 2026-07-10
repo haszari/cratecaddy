@@ -6,14 +6,18 @@ import './FilterBar.scss';
 import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 import TempoRangeControl from './TempoRangeControl';
+import StarRatingFilter from './StarRatingFilter';
 import { useFilters } from '../hooks/useFilters';
 
 interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  ratingGte?: number;
+  ratingLte?: number;
   onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
+  onRatingChange?: (gte?: number, lte?: number) => void;
   shuffleActive?: boolean;
   onShuffleToggle?: (active: boolean) => void;
   onShuffleReseed?: () => void;
@@ -26,8 +30,8 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({
-  genreNot, bpmGte, bpmLte,
-  onRemoveExclude, onBpmChange,
+  genreNot, bpmGte, bpmLte, ratingGte, ratingLte,
+  onRemoveExclude, onBpmChange, onRatingChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
   favouriteMode = 'filter',
@@ -42,8 +46,10 @@ export default function FilterBar({
   }, [debouncedSearch, onSearchChange]);
 
   const hasBpm = bpmGte !== undefined || bpmLte !== undefined;
+  const hasRating = ratingGte !== undefined || ratingLte !== undefined;
   const showSearch = search !== undefined || onSearchChange;
   const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
+  const showRating = onRatingChange !== undefined || (readOnly && hasRating);
 
   const renderHeart = () => {
     if (favouriteMode === 'nav') {
@@ -117,6 +123,16 @@ export default function FilterBar({
 
       <div className="FilterBar-filterGroup">
         {(!readOnly || favouriteMode === 'indicator') && renderHeart()}
+
+        {showRating && (
+          <StarRatingFilter
+            key={`rating-${ratingGte ?? ''}-${ratingLte ?? ''}`}
+            ratingGte={ratingGte}
+            ratingLte={ratingLte}
+            onChange={readOnly ? undefined : onRatingChange}
+            readOnly={readOnly}
+          />
+        )}
 
         {showTempo && (
           <TempoRangeControl

@@ -58,13 +58,15 @@ export default function Favourited() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, setSearch,
+    removeExclude, setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
   const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
+  const ratingGteParam = filters.ratingGte !== undefined ? String(filters.ratingGte) : undefined;
+  const ratingLteParam = filters.ratingLte !== undefined ? String(filters.ratingLte) : undefined;
   const searchParam = filters.search || undefined;
 
   const extraParams = {
@@ -73,6 +75,8 @@ export default function Favourited() {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(ratingGteParam && { 'rating.gte': ratingGteParam }),
+    ...(ratingLteParam && { 'rating.lte': ratingLteParam }),
     ...(searchParam && { 'search': searchParam }),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
@@ -86,7 +90,7 @@ export default function Favourited() {
   });
 
   const { data: relatedStats } = useQuery({
-    queryKey: ['genreStats', 'favourite', requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, searchParam],
+    queryKey: ['genreStats', 'favourite', requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, ratingGteParam, ratingLteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
@@ -149,8 +153,11 @@ export default function Favourited() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        ratingGte={filters.ratingGte}
+        ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        onRatingChange={setRatingRange}
         shuffleActive={shuffleMode}
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}

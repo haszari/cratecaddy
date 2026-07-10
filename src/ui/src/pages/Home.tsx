@@ -16,23 +16,27 @@ export default function Home() {
     filters,
     addExclude,
     removeExclude,
-    setBpmRange, setSearch,
+    setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
   const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
   const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
   const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
+  const ratingGteParam = filters.ratingGte !== undefined ? String(filters.ratingGte) : undefined;
+  const ratingLteParam = filters.ratingLte !== undefined ? String(filters.ratingLte) : undefined;
   const searchParam = filters.search || undefined;
 
   const extraParams = {
     ...(genreNotParam && { 'genre.not': genreNotParam }),
     ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
     ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
+    ...(ratingGteParam && { 'rating.gte': ratingGteParam }),
+    ...(ratingLteParam && { 'rating.lte': ratingLteParam }),
     ...(searchParam && { 'search': searchParam }),
   };
 
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, searchParam],
+    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, ratingGteParam, ratingLteParam, searchParam],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
@@ -67,8 +71,11 @@ export default function Home() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        ratingGte={filters.ratingGte}
+        ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        onRatingChange={setRatingRange}
         shuffleActive={shuffleMode}
         onShuffleToggle={toggleShuffle}
         onShuffleReseed={reshuffle}

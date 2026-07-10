@@ -14,6 +14,8 @@ function buildQueryString(params: ApiSongParams): string {
     ['artist.not', params['artist.not']],
     ['bpm.gte', params['bpm.gte']],
     ['bpm.lte', params['bpm.lte']],
+    ['rating.gte', params['rating.gte']],
+    ['rating.lte', params['rating.lte']],
     ['favorite', params['favorite']],
     ['search', params.search],
     ['shuffle', params.shuffle],

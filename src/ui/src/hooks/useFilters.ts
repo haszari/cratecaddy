@@ -5,6 +5,8 @@ export interface FilterState {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  ratingGte?: number;
+  ratingLte?: number;
   favoriteActive: boolean;
   search: string;
 }
@@ -39,6 +41,14 @@ export function useFilters() {
     })(),
     bpmLte: (() => {
       const v = searchParams.get('bpm.lte');
+      return v ? parseFloat(v) : undefined;
+    })(),
+    ratingGte: (() => {
+      const v = searchParams.get('rating.gte');
+      return v ? parseFloat(v) : undefined;
+    })(),
+    ratingLte: (() => {
+      const v = searchParams.get('rating.lte');
       return v ? parseFloat(v) : undefined;
     })(),
     favoriteActive: searchParams.get('favorite') === 'true',
@@ -77,6 +87,17 @@ export function useFilters() {
     [setSearchParams],
   );
 
+  const setRatingRange = useCallback(
+    (gte?: number, lte?: number) => {
+      setSearchParams((prev) => {
+        let next = setParam(prev, 'rating.gte', gte !== undefined ? String(gte) : null);
+        next = setParam(next, 'rating.lte', lte !== undefined ? String(lte) : null);
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
+
   const toggleFavorite = useCallback(() => {
     setSearchParams((prev) => {
       const current = prev.get('favorite');
@@ -105,6 +126,8 @@ export function useFilters() {
       let next = setParam(prev, 'genre.not', null);
       next = setParam(next, 'bpm.gte', null);
       next = setParam(next, 'bpm.lte', null);
+      next = setParam(next, 'rating.gte', null);
+      next = setParam(next, 'rating.lte', null);
       next = setParam(next, 'favorite', null);
       next = setParam(next, 'search', null);
       return next;
@@ -115,6 +138,8 @@ export function useFilters() {
     filters.genreNot.length > 0 ||
     filters.bpmGte !== undefined ||
     filters.bpmLte !== undefined ||
+    filters.ratingGte !== undefined ||
+    filters.ratingLte !== undefined ||
     filters.favoriteActive ||
     filters.search !== '';
 
@@ -123,6 +148,7 @@ export function useFilters() {
     addExclude,
     removeExclude,
     setBpmRange,
+    setRatingRange,
     toggleFavorite,
     setSearch,
     clearFilters,
