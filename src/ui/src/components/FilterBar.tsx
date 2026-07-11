@@ -126,7 +126,6 @@ export default function FilterBar({
 
         {showRating && (
           <StarRatingFilter
-            key={`rating-${ratingGte ?? ''}-${ratingLte ?? ''}`}
             ratingGte={ratingGte}
             ratingLte={ratingLte}
             onChange={readOnly ? undefined : onRatingChange}
@@ -136,7 +135,6 @@ export default function FilterBar({
 
         {showTempo && (
           <TempoRangeControl
-            key={`bpm-${bpmGte ?? ''}-${bpmLte ?? ''}`}
             bpmGte={bpmGte}
             bpmLte={bpmLte}
             onChange={readOnly ? undefined : onBpmChange}

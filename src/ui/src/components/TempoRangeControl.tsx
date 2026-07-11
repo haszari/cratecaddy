@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { ChevronUp, ChevronDown, Plus, Minus, X } from 'lucide-react';
 import './TempoRangeControl.scss';
@@ -33,6 +33,29 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
   );
   const [range, setRange] = useState(computeRange());
   const [debouncedCentre] = useDebouncedValue(inputBuf, 300);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [prevBpmGte, setPrevBpmGte] = useState(bpmGte);
+  const [prevBpmLte, setPrevBpmLte] = useState(bpmLte);
+
+  if (prevBpmGte !== bpmGte || prevBpmLte !== bpmLte) {
+    setPrevBpmGte(bpmGte);
+    setPrevBpmLte(bpmLte);
+    if (!hasFilter) {
+      setInputBuf('');
+      setRange(0);
+      setActive(false);
+    } else {
+      const centre = computeCentre();
+      setInputBuf(centre !== undefined ? String(centre) : '');
+      setRange(computeRange());
+    }
+  }
+
+  useEffect(() => {
+    if (active && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [active]);
 
   const commit = useCallback(
     (centre: number, newRange: number) => {
@@ -169,6 +192,7 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
       </span>
 
       <input
+        ref={inputRef}
         type="number"
         className="TempoRangeControl-input"
         value={inputBuf}
