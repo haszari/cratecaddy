@@ -42,6 +42,10 @@ export default function FilterBar({
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
 
   useEffect(() => {
+    setSearchInput(search ?? '');
+  }, [search]);
+
+  useEffect(() => {
     if (onSearchChange) onSearchChange(debouncedSearch);
   }, [debouncedSearch, onSearchChange]);
 
