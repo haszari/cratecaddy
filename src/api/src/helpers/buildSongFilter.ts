@@ -1,6 +1,6 @@
 import { FilterQuery } from 'mongoose';
 import { ISong } from '../models/Song.js';
-import { ApiFilterParams } from './apiParams.js';
+import { KEY, ApiFilterParams } from './apiParams.js';
 
 export type { ApiFilterParams as SongFilterParams };
 
@@ -58,23 +58,23 @@ function buildSearchCondition(term: string): FilterQuery<ISong> {
 export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
   const conditions: FilterQuery<ISong>[] = [];
 
-  const anyGenre = params['genre.any'];
+  const anyGenre = params[KEY.genreAny];
   if (anyGenre) {
     const vals = splitValues(anyGenre);
     if (vals.length > 0) conditions.push(buildAnyCondition('genres', vals));
   }
-  const allGenre = params['genre.all'];
+  const allGenre = params[KEY.genreAll];
   if (allGenre) {
     const vals = splitValues(allGenre);
     if (vals.length > 0) conditions.push(buildAllCondition('genres', vals));
   }
-  const notGenre = params['genre.not'];
+  const notGenre = params[KEY.genreNot];
   if (notGenre) {
     const vals = splitValues(notGenre);
     if (vals.length > 0) conditions.push(buildNotCondition('genres', vals));
   }
 
-  const anyArtist = params['artist.any'];
+  const anyArtist = params[KEY.artistAny];
   if (anyArtist) {
     const vals = splitValues(anyArtist);
     if (vals.length > 0) {
@@ -86,19 +86,19 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
       conditions.push({ $or: regexes });
     }
   }
-  const allArtist = params['artist.all'];
+  const allArtist = params[KEY.artistAll];
   if (allArtist) {
     const vals = splitValues(allArtist);
     if (vals.length > 0) conditions.push(buildAllCondition('artist', vals));
   }
-  const notArtist = params['artist.not'];
+  const notArtist = params[KEY.artistNot];
   if (notArtist) {
     const vals = splitValues(notArtist);
     if (vals.length > 0) conditions.push(buildNotCondition('artist', vals));
   }
 
-  const bpmGte = params['bpm.gte'];
-  const bpmLte = params['bpm.lte'];
+  const bpmGte = params[KEY.bpmGte];
+  const bpmLte = params[KEY.bpmLte];
   if (bpmGte || bpmLte) {
     const bpmRange: Record<string, number> = {};
     if (bpmGte) {
@@ -120,8 +120,8 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
-  const ratingGte = params['rating.gte'];
-  const ratingLte = params['rating.lte'];
+  const ratingGte = params[KEY.ratingGte];
+  const ratingLte = params[KEY.ratingLte];
   if (ratingGte || ratingLte) {
     const ratingRange: Record<string, number> = {};
     if (ratingGte) {
@@ -137,7 +137,7 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
-  const favorite = params.favorite;
+  const favorite = params[KEY.favorite];
   if (favorite) {
     if (favorite === 'true' || favorite === '1' || favorite === 'starred') {
       conditions.push({ favorite: 'starred' });
@@ -146,7 +146,7 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
-  const searchTerm = params.search;
+  const searchTerm = params[KEY.search];
   if (searchTerm && searchTerm.trim()) {
     conditions.push(buildSearchCondition(searchTerm));
   }

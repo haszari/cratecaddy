@@ -8,6 +8,7 @@ import { useSortShuffle } from '../hooks/useSortShuffle';
 import FilterBar from '../components/FilterBar';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
+import { buildApiParams } from '@cratecaddy-api/apiParams';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,24 +20,10 @@ export default function Home() {
     setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
-  const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
-  const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
-  const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const ratingGteParam = filters.ratingGte !== undefined ? String(filters.ratingGte) : undefined;
-  const ratingLteParam = filters.ratingLte !== undefined ? String(filters.ratingLte) : undefined;
-  const searchParam = filters.search || undefined;
-
-  const extraParams = {
-    ...(genreNotParam && { 'genre.not': genreNotParam }),
-    ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
-    ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(ratingGteParam && { 'rating.gte': ratingGteParam }),
-    ...(ratingLteParam && { 'rating.lte': ratingLteParam }),
-    ...(searchParam && { 'search': searchParam }),
-  };
+  const extraParams = buildApiParams(filters);
 
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, ratingGteParam, ratingLteParam, searchParam],
+    queryKey: ['genreStats', filters],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
