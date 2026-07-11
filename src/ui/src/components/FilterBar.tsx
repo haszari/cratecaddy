@@ -9,7 +9,7 @@ import TempoRangeControl from './TempoRangeControl';
 import StarRatingFilter from './StarRatingFilter';
 import { useFilters } from '../hooks/useFilters';
 
-interface FilterBarProps {
+export interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
@@ -40,6 +40,12 @@ export default function FilterBar({
   const { filters, toggleFavorite } = useFilters();
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
+  const [prevSearch, setPrevSearch] = useState(search);
+
+  if (prevSearch !== search) {
+    setPrevSearch(search);
+    setSearchInput(search ?? '');
+  }
 
   useEffect(() => {
     if (onSearchChange) onSearchChange(debouncedSearch);

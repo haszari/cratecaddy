@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { KEY } from '@cratecaddy-api/apiParams';
+import { splitCSV, setParam } from '../utils/urlParams';
 
 export interface FilterState {
   genreNot: string[];
@@ -10,25 +11,6 @@ export interface FilterState {
   ratingLte?: number;
   favoriteActive: boolean;
   search: string;
-}
-
-function splitCSV(val: string | null): string[] {
-  if (!val) return [];
-  return val.split(',').map((s) => s.trim()).filter(Boolean);
-}
-
-function setParam(
-  params: URLSearchParams,
-  key: string,
-  value: string | null,
-): URLSearchParams {
-  const next = new URLSearchParams(params);
-  if (value === null || value === '') {
-    next.delete(key);
-  } else {
-    next.set(key, value);
-  }
-  return next;
 }
 
 export function useFilters() {

@@ -99,15 +99,20 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
 
   const bpmGte = params[KEY.bpmGte];
   const bpmLte = params[KEY.bpmLte];
-  if (bpmGte || bpmLte) {
+  if (bpmGte != null || bpmLte != null) {
     const bpmRange: Record<string, number> = {};
-    if (bpmGte) {
+    if (bpmGte != null) {
       const val = parseFloat(bpmGte);
       if (!isNaN(val)) bpmRange.$gte = val;
     }
-    if (bpmLte) {
+    if (bpmLte != null) {
       const val = parseFloat(bpmLte);
       if (!isNaN(val)) bpmRange.$lte = val;
+    }
+    if (bpmRange.$gte !== undefined && bpmRange.$lte !== undefined && bpmRange.$gte > bpmRange.$lte) {
+      const tmp = bpmRange.$gte;
+      bpmRange.$gte = bpmRange.$lte;
+      bpmRange.$lte = tmp;
     }
     if (Object.keys(bpmRange).length > 0) {
       conditions.push({
@@ -122,15 +127,20 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
 
   const ratingGte = params[KEY.ratingGte];
   const ratingLte = params[KEY.ratingLte];
-  if (ratingGte || ratingLte) {
+  if (ratingGte != null || ratingLte != null) {
     const ratingRange: Record<string, number> = {};
-    if (ratingGte) {
+    if (ratingGte != null) {
       const val = parseFloat(ratingGte);
       if (!isNaN(val)) ratingRange.$gte = val;
     }
-    if (ratingLte) {
+    if (ratingLte != null) {
       const val = parseFloat(ratingLte);
       if (!isNaN(val)) ratingRange.$lte = val;
+    }
+    if (ratingRange.$gte !== undefined && ratingRange.$lte !== undefined && ratingRange.$gte > ratingRange.$lte) {
+      const tmp = ratingRange.$gte;
+      ratingRange.$gte = ratingRange.$lte;
+      ratingRange.$lte = tmp;
     }
     if (Object.keys(ratingRange).length > 0) {
       conditions.push({ rating: ratingRange });

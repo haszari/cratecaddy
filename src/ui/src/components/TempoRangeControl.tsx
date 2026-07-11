@@ -10,28 +10,28 @@ interface TempoRangeControlProps {
   readOnly?: boolean;
 }
 
+function computeCentre(bpmGte?: number, bpmLte?: number): number | undefined {
+  if (bpmGte !== undefined && bpmLte !== undefined) {
+    return Math.round((bpmGte + bpmLte) / 2);
+  }
+  return bpmGte ?? bpmLte;
+}
+
+function computeRange(bpmGte?: number, bpmLte?: number): number {
+  if (bpmGte !== undefined && bpmLte !== undefined) {
+    return Math.floor((bpmLte - bpmGte) / 2);
+  }
+  return 0;
+}
+
 export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }: TempoRangeControlProps) {
   const hasFilter = bpmGte !== undefined || bpmLte !== undefined;
 
-  const computeCentre = (): number | undefined => {
-    if (bpmGte !== undefined && bpmLte !== undefined) {
-      return Math.round((bpmGte + bpmLte) / 2);
-    }
-    return bpmGte ?? bpmLte;
-  };
-
-  const computeRange = (): number => {
-    if (bpmGte !== undefined && bpmLte !== undefined) {
-      return Math.floor((bpmLte - bpmGte) / 2);
-    }
-    return 0;
-  };
-
   const [active, setActive] = useState(hasFilter);
   const [inputBuf, setInputBuf] = useState(
-    hasFilter ? String(computeCentre() ?? '') : '',
+    hasFilter ? String(computeCentre(bpmGte, bpmLte) ?? '') : '',
   );
-  const [range, setRange] = useState(computeRange());
+  const [range, setRange] = useState(computeRange(bpmGte, bpmLte));
   const [debouncedCentre] = useDebouncedValue(inputBuf, 300);
   const inputRef = useRef<HTMLInputElement>(null);
   const [prevBpmGte, setPrevBpmGte] = useState(bpmGte);
@@ -45,9 +45,9 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
       setRange(0);
       setActive(false);
     } else {
-      const centre = computeCentre();
+      const centre = computeCentre(bpmGte, bpmLte);
       setInputBuf(centre !== undefined ? String(centre) : '');
-      setRange(computeRange());
+      setRange(computeRange(bpmGte, bpmLte));
     }
   }
 
@@ -135,7 +135,7 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
     return (
       <span className="TempoRangeControl TempoRangeControl-readOnly">
         <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{bpmGte ?? '?'}</span>
-        <span className="TempoRangeControl-centre">{computeCentre() ?? '?'}</span>
+        <span className="TempoRangeControl-centre">{computeCentre(bpmGte, bpmLte) ?? '?'}</span>
         <span className="TempoRangeControl-stepper">
           <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
           <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
@@ -152,7 +152,13 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
         onClick={() => { setActive(true); setRange(5); }}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && setActive(true)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setActive(true);
+            setRange(5);
+          }
+        }}
       >
         <span className="TempoRangeControl-placeholder">tempo</span>
       </span>

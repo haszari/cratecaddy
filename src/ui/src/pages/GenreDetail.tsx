@@ -1,20 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useSongs } from '../hooks/useSongs';
-import { fetchGenreStats } from '../api/client';
-import { useFilters } from '../hooks/useFilters';
-import { useSortShuffle } from '../hooks/useSortShuffle';
-import { buildEditUrl } from '../utils/urlBuilder';
+import { useSongPage } from '../hooks/useSongPage';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
-import type { TagInfo } from '../types';
-import type { SortField, SortDirection } from '../components/SongTable';
-import { withSearch } from '../utils/url';
-import { KEY, buildApiParams } from '@cratecaddy-api/apiParams';
+import { buildEditUrl } from '../utils/urlBuilder';
 
 export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
@@ -24,96 +16,41 @@ export default function GenreDetail() {
   const separator = genrePath && genrePath.includes(',') ? ',' : '+';
   const isOrMode = separator === ',';
 
-  const decodedGenres = genrePath
-    ? genrePath.split(separator).map(decodeURIComponent).filter(Boolean)
-    : [];
-
-  const [page, setPage] = useState(1);
-
-  const {
-    sortField, sortDirection, shuffleSeed, shuffleMode,
-    setSort, toggleShuffle, reshuffle,
-  } = useSortShuffle();
-
-  const handleSort = useCallback((field: SortField, direction: SortDirection) => {
-    setSort(field, direction);
-    setPage(1);
-  }, [setSort, setPage]);
-
-  const handleShuffleToggle = useCallback((on: boolean) => {
-    toggleShuffle(on);
-    setPage(1);
-  }, [toggleShuffle, setPage]);
-
-  const {
-    filters, addExclude,
-    removeExclude, setBpmRange, setRatingRange, setSearch,
-  } = useFilters();
-
-  const genreParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
-
-  const extraParams = {
-    ...(genreParam && (isOrMode ? { [KEY.genreAny]: genreParam } : { [KEY.genreAll]: genreParam })),
-    ...buildApiParams(filters),
-    ...(sortField && { sort: sortField }),
-    ...(sortDirection && { sortDirection }),
-  };
-
-  const { data: paginated, isLoading, error } = useSongs({
-    ...extraParams,
-    shuffle: shuffleSeed,
-    page,
-    limit: 50,
-  });
-
-  const { data: relatedStats } = useQuery({
-    queryKey: ['genreStats', genreParam, isOrMode ? 'any' : 'all', filters],
-    queryFn: () => fetchGenreStats(extraParams),
-    enabled: decodedGenres.length > 0,
-  });
-
-  const relatedTags: Record<string, TagInfo> = {};
-  if (relatedStats) {
-    const lowerAndGenres = new Set(decodedGenres.map((g) => g.toLowerCase()));
-    for (const { genre, count } of relatedStats) {
-      if (!lowerAndGenres.has(genre.toLowerCase())) {
-        relatedTags[genre] = { count };
-      }
-    }
-  }
-
-  const handleAddInclude = useCallback(
-    (genre: string) => {
-      const lower = decodedGenres.map((g) => g.toLowerCase());
-      if (lower.includes(genre.toLowerCase())) return;
-      const sep = isOrMode ? ',' : '+';
-      const newPath = `/genre/${decodedGenres.map((g) => encodeURIComponent(g)).join(sep)}${sep}${encodeURIComponent(genre)}`;
-      navigate(withSearch(newPath), { replace: false });
-    },
-    [decodedGenres, isOrMode, navigate],
+  const decodedGenres = useMemo(
+    () => genrePath
+      ? genrePath.split(separator).map(decodeURIComponent).filter(Boolean)
+      : [],
+    [genrePath, separator],
   );
 
-  const handleRemoveInclude = useCallback(
-    (genre: string) => {
-      const remaining = decodedGenres.filter((g) => g.toLowerCase() !== genre.toLowerCase());
-      if (remaining.length === 0) {
-        navigate(withSearch('/'), { replace: false });
-      } else {
-        const sep = isOrMode ? ',' : '+';
-        const newPath = `/genre/${remaining.map((g) => encodeURIComponent(g)).join(sep)}`;
-        navigate(withSearch(newPath), { replace: false });
-      }
-    },
-    [decodedGenres, isOrMode, navigate],
+  const genreParam = useMemo(
+    () => decodedGenres.length > 0 ? decodedGenres.join(',') : undefined,
+    [decodedGenres],
   );
-
-  const songs = paginated?.data ?? [];
 
   const editHref = buildEditUrl(
     location.search,
     'genre',
     isOrMode ? { genreAny: decodedGenres.join(',') } : { genreAll: decodedGenres.join(',') },
   );
+
+  const {
+    setPage, addExclude,
+    sortField, sortDirection,
+    handleSort,
+    songs, paginated, isLoading, error,
+    relatedTags, filterBarProps,
+    handleAddInclude, handleRemoveInclude,
+  } = useSongPage({
+    genreMode: 'url-path',
+    decodedGenres,
+    isOrMode,
+    navigate,
+    genreStatsKey: ['genreStats', genreParam, isOrMode ? 'any' : 'all'],
+    genreStatsEnabled: decodedGenres.length > 0,
+    excludedGenres: decodedGenres,
+    editHref,
+  });
 
   return (
     <div className="GenreDetail">
@@ -122,25 +59,10 @@ export default function GenreDetail() {
         onRemoveGenre={handleRemoveInclude}
       />
 
-      <FilterBar
-        genreNot={filters.genreNot}
-        bpmGte={filters.bpmGte}
-        bpmLte={filters.bpmLte}
-        ratingGte={filters.ratingGte}
-        ratingLte={filters.ratingLte}
-        onRemoveExclude={removeExclude}
-        onBpmChange={setBpmRange}
-        onRatingChange={setRatingRange}
-        shuffleActive={shuffleMode}
-        onShuffleToggle={handleShuffleToggle}
-        onShuffleReseed={reshuffle}
-        editHref={editHref}
-        search={filters.search}
-        onSearchChange={setSearch}
-      />
+      <FilterBar {...filterBarProps} />
 
       {isLoading && <p>Loading songs...</p>}
-      {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
+      {error && <p className="error-message">Failed to load songs</p>}
       {!isLoading && !error && paginated && (
         <>
           {songs.length > 0 && (

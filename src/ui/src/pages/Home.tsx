@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { fetchGenreStats } from '../api/client';
@@ -34,23 +34,28 @@ export default function Home() {
     [navigate],
   );
 
-  const tags: Record<string, TagInfo> = {};
-  const main: Record<string, TagInfo> = {};
-  const fringe: Record<string, TagInfo> = {};
-  if (stats) {
-    for (const { genre, count } of stats) {
-      tags[genre] = { count };
-      if (count > 1) {
-        main[genre] = { count };
-      } else {
-        fringe[genre] = { count };
+  const { tags, main, fringe, totalSongs } = useMemo(() => {
+    const tags: Record<string, TagInfo> = {};
+    const main: Record<string, TagInfo> = {};
+    const fringe: Record<string, TagInfo> = {};
+    if (stats) {
+      for (const { genre, count } of stats) {
+        tags[genre] = { count };
+        if (count > 1) {
+          main[genre] = { count };
+        } else {
+          fringe[genre] = { count };
+        }
       }
     }
-  }
+    const totalSongs = stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0;
+    return { tags, main, fringe, totalSongs };
+  }, [stats]);
 
-  const totalSongs = stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0;
-  const hasTag = (genre: string) =>
-    filters.genreNot.includes(genre);
+  const hasTag = useCallback(
+    (genre: string) => filters.genreNot.includes(genre),
+    [filters.genreNot],
+  );
 
   return (
     <div className="HomePage">
@@ -78,7 +83,7 @@ export default function Home() {
         <p className="song-count">{totalSongs} song{totalSongs !== 1 ? 's' : ''} across {Object.keys(tags).length} style{Object.keys(tags).length !== 1 ? 's' : ''}</p>
       )}
       {isLoading && <p>Loading genres...</p>}
-      {error && <p style={{ color: 'red' }}>Failed to load genres</p>}
+      {error && <p className="error-message">Failed to load genres</p>}
       {!isLoading && stats && (
         <>
           <GenreTagCloud

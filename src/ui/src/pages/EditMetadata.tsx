@@ -112,7 +112,7 @@ export default function EditMetadata() {
         artists={artists}
         genres={genres.length > 0 ? genres : undefined}
       />
-      {isError && <p style={{ color: 'red' }}>Failed to load songs</p>}
+      {isError && <p className="error-message">Failed to load songs</p>}
       {isLoading && <p>Loading songs...</p>}
       {!isLoading && !isError && (
         <EditLayout
