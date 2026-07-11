@@ -9,7 +9,7 @@ import TempoRangeControl from './TempoRangeControl';
 import StarRatingFilter from './StarRatingFilter';
 import { useFilters } from '../hooks/useFilters';
 
-interface FilterBarProps {
+export interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
