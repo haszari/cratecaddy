@@ -134,13 +134,13 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
     if (!hasFilter) return null;
     return (
       <span className="TempoRangeControl TempoRangeControl-readOnly">
-        <span className="TempoRangeControl-hint">{bpmGte ?? '?'}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{bpmGte ?? '?'}</span>
         <span className="TempoRangeControl-centre">{computeCentre() ?? '?'}</span>
         <span className="TempoRangeControl-stepper">
           <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
           <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
         </span>
-        <span className="TempoRangeControl-hint">{bpmLte ?? '?'}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-max">{bpmLte ?? '?'}</span>
       </span>
     );
   }
@@ -171,8 +171,29 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
       </button>
 
       {minHint !== undefined && !isNaN(minHint) && (
-        <span className="TempoRangeControl-hint">{minHint}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{minHint}</span>
       )}
+
+      <button
+        className="TempoRangeControl-btn TempoRangeControl-btn--clear"
+        onClick={clear}
+        title="Clear BPM filter"
+      >
+        <X size={14} />
+      </button>
+
+      <input
+        ref={inputRef}
+        type="number"
+        className="TempoRangeControl-input"
+        value={inputBuf}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        min={0}
+        max={999}
+        step={1}
+        placeholder="bpm"
+      />
 
       <span className="TempoRangeControl-stepper">
         <button
@@ -191,29 +212,8 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
         </button>
       </span>
 
-      <input
-        ref={inputRef}
-        type="number"
-        className="TempoRangeControl-input"
-        value={inputBuf}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        min={0}
-        max={999}
-        step={1}
-        placeholder="bpm"
-      />
-
-      <button
-        className="TempoRangeControl-btn TempoRangeControl-btn--clear"
-        onClick={clear}
-        title="Clear BPM filter"
-      >
-        <X size={14} />
-      </button>
-
       {maxHint !== undefined && !isNaN(maxHint) && (
-        <span className="TempoRangeControl-hint">{maxHint}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-max">{maxHint}</span>
       )}
 
       <button
