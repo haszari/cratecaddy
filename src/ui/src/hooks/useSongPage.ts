@@ -146,6 +146,14 @@ export function useSongPage({
     ...(sortDirection && { sortDirection }),
   }), [extraFilterParams, genreMode, genreParam, genreParamKey, filters, sortField, sortDirection]);
 
+  const statsParams = useMemo(() => ({
+    ...extraFilterParams,
+    ...(genreMode === 'search-param' && genreParam && genreParamKey
+      ? { [genreParamKey]: genreParam }
+      : {}),
+    ...buildApiParams(filters),
+  }), [extraFilterParams, genreMode, genreParam, genreParamKey, filters]);
+
   // Songs query
   const { data: paginated, isLoading, error } = useSongs({
     ...extraParams,
@@ -157,7 +165,7 @@ export function useSongPage({
   // Genre stats query
   const { data: relatedStats } = useQuery({
     queryKey: genreStatsKey,
-    queryFn: () => fetchGenreStats(extraParams),
+    queryFn: () => fetchGenreStats(statsParams),
     enabled: genreStatsEnabled,
   });
 
