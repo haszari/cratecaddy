@@ -17,7 +17,7 @@ export default function Favourited() {
   const requiredGenres = splitCSV(searchParams.get(KEY.genreAll));
   const { filters } = useFilters();
 
-  const editHref = buildEditUrl(location.search, 'favourited') + '&favorite=starred';
+  const editHref = buildEditUrl(location.search, 'favourited', { favorite: 'starred' });
 
   const {
     setPage, addExclude,

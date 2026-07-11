@@ -7,6 +7,7 @@ export function buildEditUrl(
     genreAll?: string;
     genreAny?: string;
     artistAny?: string;
+    favorite?: string;
   } = {},
 ): string {
   const params = new URLSearchParams(currentSearch);
@@ -23,6 +24,9 @@ export function buildEditUrl(
   }
   if (pathParams.genreAny && !params.has('genre.any')) {
     params.set('genre.any', pathParams.genreAny);
+  }
+  if (pathParams.favorite && !params.has('favorite')) {
+    params.set('favorite', pathParams.favorite);
   }
   return `/edit-metadata?${params.toString()}`;
 }
