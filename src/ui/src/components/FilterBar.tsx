@@ -40,10 +40,12 @@ export default function FilterBar({
   const { filters, toggleFavorite } = useFilters();
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
+  const [prevSearch, setPrevSearch] = useState(search);
 
-  useEffect(() => {
+  if (prevSearch !== search) {
+    setPrevSearch(search);
     setSearchInput(search ?? '');
-  }, [search]);
+  }
 
   useEffect(() => {
     if (onSearchChange) onSearchChange(debouncedSearch);
