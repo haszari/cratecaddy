@@ -53,7 +53,7 @@ export default function Artist() {
       <FilterBar {...filterBarProps} />
 
       {isLoading && <p>Loading songs...</p>}
-      {error && <p style={{ color: 'red' }}>Failed to load songs</p>}
+      {error && <p className="error-message">Failed to load songs</p>}
       {!isLoading && !error && paginated && (
         <>
           {songs.length > 0 && (

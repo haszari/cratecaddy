@@ -78,7 +78,7 @@ export default function Home() {
         <p className="song-count">{totalSongs} song{totalSongs !== 1 ? 's' : ''} across {Object.keys(tags).length} style{Object.keys(tags).length !== 1 ? 's' : ''}</p>
       )}
       {isLoading && <p>Loading genres...</p>}
-      {error && <p style={{ color: 'red' }}>Failed to load genres</p>}
+      {error && <p className="error-message">Failed to load genres</p>}
       {!isLoading && stats && (
         <>
           <GenreTagCloud
