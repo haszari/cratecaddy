@@ -152,7 +152,13 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
         onClick={() => { setActive(true); setRange(5); }}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && setActive(true)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setActive(true);
+            setRange(5);
+          }
+        }}
       >
         <span className="TempoRangeControl-placeholder">tempo</span>
       </span>
