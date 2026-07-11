@@ -6,6 +6,7 @@ import { buildViewUrl } from '../utils/urlBuilder';
 import FilterBar from '../components/FilterBar';
 import BasePageCriteria from '../components/BasePageCriteria';
 import EditLayout from '../components/EditLayout';
+import { KEY, readApiParams } from '@cratecaddy-api/apiParams';
 
 export default function EditMetadata() {
   const [searchParams] = useSearchParams();
@@ -14,24 +15,10 @@ export default function EditMetadata() {
 
   const { sortField, sortDirection } = useSortShuffle();
 
-  const genreAll = searchParams.get('genre.all');
-  const genreAny = searchParams.get('genre.any');
-  const artistAny = searchParams.get('artist.any');
-  const genreNot = searchParams.get('genre.not');
-  const bpmGte = searchParams.get('bpm.gte');
-  const bpmLte = searchParams.get('bpm.lte');
-  const favorite = searchParams.get('favorite');
-  const search = searchParams.get('search');
+  const filterParams = readApiParams(searchParams);
 
   const params = {
-    ...(genreAll && { 'genre.all': genreAll }),
-    ...(genreAny && { 'genre.any': genreAny }),
-    ...(artistAny && { 'artist.any': artistAny }),
-    ...(genreNot && { 'genre.not': genreNot }),
-    ...(bpmGte && { 'bpm.gte': bpmGte }),
-    ...(bpmLte && { 'bpm.lte': bpmLte }),
-    ...(favorite && { 'favorite': favorite }),
-    ...(search && { 'search': search }),
+    ...filterParams,
     sort: sortField,
     sortDirection,
     limit: 500,
@@ -84,19 +71,30 @@ export default function EditMetadata() {
     });
   }, [songs]);
 
+  const bpmGte = filterParams[KEY.bpmGte];
+  const bpmLte = filterParams[KEY.bpmLte];
+  const ratingGte = filterParams[KEY.ratingGte];
+  const ratingLte = filterParams[KEY.ratingLte];
+  const genreNot = filterParams[KEY.genreNot];
+  const search = filterParams[KEY.search];
+
   const bpmGteNum = bpmGte ? Number(bpmGte) : undefined;
   const bpmLteNum = bpmLte ? Number(bpmLte) : undefined;
   const sanitisedBpmGte = bpmGteNum !== undefined && !isNaN(bpmGteNum) ? bpmGteNum : undefined;
   const sanitisedBpmLte = bpmLteNum !== undefined && !isNaN(bpmLteNum) ? bpmLteNum : undefined;
+  const ratingGteNum = ratingGte ? Number(ratingGte) : undefined;
+  const ratingLteNum = ratingLte ? Number(ratingLte) : undefined;
+  const sanitisedRatingGte = ratingGteNum !== undefined && !isNaN(ratingGteNum) ? ratingGteNum : undefined;
+  const sanitisedRatingLte = ratingLteNum !== undefined && !isNaN(ratingLteNum) ? ratingLteNum : undefined;
   const genreNotList = genreNot?.split(',').filter(Boolean) ?? [];
 
   const doneHref = buildViewUrl(location.search);
 
   const genres = [
-    ...(genreAll ? genreAll.split(',').map((g) => ({ name: g, mode: 'and' as const })) : []),
-    ...(genreAny ? genreAny.split(',').map((g) => ({ name: g, mode: 'or' as const })) : []),
+    ...(filterParams[KEY.genreAll] ? filterParams[KEY.genreAll]!.split(',').map((g) => ({ name: g, mode: 'and' as const })) : []),
+    ...(filterParams[KEY.genreAny] ? filterParams[KEY.genreAny]!.split(',').map((g) => ({ name: g, mode: 'or' as const })) : []),
   ];
-  const artists = artistAny ? [artistAny] : undefined;
+  const artists = filterParams[KEY.artistAny] ? [filterParams[KEY.artistAny]!] : undefined;
 
   return (
     <div className="EditMetadata">
@@ -104,6 +102,8 @@ export default function EditMetadata() {
         genreNot={genreNotList}
         bpmGte={sanitisedBpmGte}
         bpmLte={sanitisedBpmLte}
+        ratingGte={sanitisedRatingGte}
+        ratingLte={sanitisedRatingLte}
         readOnly
         doneHref={doneHref}
         search={search ?? ''}

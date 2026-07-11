@@ -14,6 +14,7 @@ import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
 import type { SortField, SortDirection } from '../components/SongTable';
 import { Heart } from 'lucide-react';
+import { KEY, buildApiParams } from '@cratecaddy-api/apiParams';
 
 function splitCSV(val: string | null): string[] {
   if (!val) return [];
@@ -54,26 +55,19 @@ export default function Favourited() {
     setPage(1);
   }, [toggleShuffle, setPage]);
 
-  const requiredGenres = splitCSV(searchParams.get('genre.all'));
+  const requiredGenres = splitCSV(searchParams.get(KEY.genreAll));
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, setSearch,
+    removeExclude, setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
   const requiredGenresParam = requiredGenres.length > 0 ? requiredGenres.join(',') : undefined;
-  const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
-  const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
-  const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const searchParam = filters.search || undefined;
 
   const extraParams = {
-    'favorite': 'starred',
-    ...(requiredGenresParam && { 'genre.all': requiredGenresParam }),
-    ...(genreNotParam && { 'genre.not': genreNotParam }),
-    ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
-    ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(searchParam && { 'search': searchParam }),
+    [KEY.favorite]: 'starred',
+    ...(requiredGenresParam && { [KEY.genreAll]: requiredGenresParam }),
+    ...buildApiParams(filters),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
   };
@@ -86,7 +80,7 @@ export default function Favourited() {
   });
 
   const { data: relatedStats } = useQuery({
-    queryKey: ['genreStats', 'favourite', requiredGenresParam, genreNotParam, bpmGteParam, bpmLteParam, searchParam],
+    queryKey: ['genreStats', 'favourite', requiredGenresParam, filters],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
@@ -103,9 +97,9 @@ export default function Favourited() {
   const handleAddRequired = useCallback(
     (genre: string) => {
       setSearchParams((prev) => {
-        const current = splitCSV(prev.get('genre.all'));
+        const current = splitCSV(prev.get(KEY.genreAll));
         if (current.includes(genre)) return prev;
-        return setParam(prev, 'genre.all', [...current, genre].join(','));
+        return setParam(prev, KEY.genreAll, [...current, genre].join(','));
       });
     },
     [setSearchParams],
@@ -114,8 +108,8 @@ export default function Favourited() {
   const handleRemoveRequired = useCallback(
     (genre: string) => {
       setSearchParams((prev) => {
-        const current = splitCSV(prev.get('genre.all')).filter((g) => g !== genre);
-        return setParam(prev, 'genre.all', current.length > 0 ? current.join(',') : null);
+        const current = splitCSV(prev.get(KEY.genreAll)).filter((g) => g !== genre);
+        return setParam(prev, KEY.genreAll, current.length > 0 ? current.join(',') : null);
       });
     },
     [setSearchParams],
@@ -149,8 +143,11 @@ export default function Favourited() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        ratingGte={filters.ratingGte}
+        ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        onRatingChange={setRatingRange}
         shuffleActive={shuffleMode}
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}

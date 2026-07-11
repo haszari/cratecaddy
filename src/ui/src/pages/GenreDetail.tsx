@@ -14,6 +14,7 @@ import SongTable from '../components/SongTable';
 import type { TagInfo } from '../types';
 import type { SortField, SortDirection } from '../components/SongTable';
 import { withSearch } from '../utils/url';
+import { KEY, buildApiParams } from '@cratecaddy-api/apiParams';
 
 export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
@@ -46,23 +47,14 @@ export default function GenreDetail() {
 
   const {
     filters, addExclude,
-    removeExclude, setBpmRange, setSearch,
+    removeExclude, setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
   const genreParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
-  const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
-  const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
-  const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const favoriteParam = filters.favoriteActive ? 'true' : undefined;
-  const searchParam = filters.search || undefined;
 
   const extraParams = {
-    ...(genreParam && (isOrMode ? { 'genre.any': genreParam } : { 'genre.all': genreParam })),
-    ...(genreNotParam && { 'genre.not': genreNotParam }),
-    ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
-    ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(favoriteParam && { 'favorite': favoriteParam }),
-    ...(searchParam && { 'search': searchParam }),
+    ...(genreParam && (isOrMode ? { [KEY.genreAny]: genreParam } : { [KEY.genreAll]: genreParam })),
+    ...buildApiParams(filters),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
   };
@@ -75,7 +67,7 @@ export default function GenreDetail() {
   });
 
   const { data: relatedStats } = useQuery({
-    queryKey: ['genreStats', genreParam, isOrMode ? 'any' : 'all', genreNotParam, bpmGteParam, bpmLteParam, favoriteParam, searchParam],
+    queryKey: ['genreStats', genreParam, isOrMode ? 'any' : 'all', filters],
     queryFn: () => fetchGenreStats(extraParams),
     enabled: decodedGenres.length > 0,
   });
@@ -134,8 +126,11 @@ export default function GenreDetail() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        ratingGte={filters.ratingGte}
+        ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        onRatingChange={setRatingRange}
         shuffleActive={shuffleMode}
         onShuffleToggle={handleShuffleToggle}
         onShuffleReseed={reshuffle}

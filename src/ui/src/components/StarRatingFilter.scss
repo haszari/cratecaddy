@@ -1,0 +1,35 @@
+.StarRatingFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.05em;
+  user-select: none;
+
+  &.StarRatingFilter-inactive {
+    opacity: 0.55;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  .StarRatingFilter-star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    transition: color 0.1s ease;
+
+    &.StarRatingFilter-star--on {
+      color: #f5a623;
+    }
+
+    &.StarRatingFilter-star--off {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+}

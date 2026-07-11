@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { ChevronUp, ChevronDown, Plus, Minus, X } from 'lucide-react';
 import './TempoRangeControl.scss';
@@ -33,6 +33,29 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
   );
   const [range, setRange] = useState(computeRange());
   const [debouncedCentre] = useDebouncedValue(inputBuf, 300);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [prevBpmGte, setPrevBpmGte] = useState(bpmGte);
+  const [prevBpmLte, setPrevBpmLte] = useState(bpmLte);
+
+  if (prevBpmGte !== bpmGte || prevBpmLte !== bpmLte) {
+    setPrevBpmGte(bpmGte);
+    setPrevBpmLte(bpmLte);
+    if (!hasFilter) {
+      setInputBuf('');
+      setRange(0);
+      setActive(false);
+    } else {
+      const centre = computeCentre();
+      setInputBuf(centre !== undefined ? String(centre) : '');
+      setRange(computeRange());
+    }
+  }
+
+  useEffect(() => {
+    if (active && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [active]);
 
   const commit = useCallback(
     (centre: number, newRange: number) => {
@@ -111,13 +134,13 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
     if (!hasFilter) return null;
     return (
       <span className="TempoRangeControl TempoRangeControl-readOnly">
-        <span className="TempoRangeControl-hint">{bpmGte ?? '?'}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{bpmGte ?? '?'}</span>
         <span className="TempoRangeControl-centre">{computeCentre() ?? '?'}</span>
         <span className="TempoRangeControl-stepper">
           <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
           <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
         </span>
-        <span className="TempoRangeControl-hint">{bpmLte ?? '?'}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-max">{bpmLte ?? '?'}</span>
       </span>
     );
   }
@@ -148,8 +171,29 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
       </button>
 
       {minHint !== undefined && !isNaN(minHint) && (
-        <span className="TempoRangeControl-hint">{minHint}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{minHint}</span>
       )}
+
+      <button
+        className="TempoRangeControl-btn TempoRangeControl-btn--clear"
+        onClick={clear}
+        title="Clear BPM filter"
+      >
+        <X size={14} />
+      </button>
+
+      <input
+        ref={inputRef}
+        type="number"
+        className="TempoRangeControl-input"
+        value={inputBuf}
+        onChange={handleInputChange}
+        onFocus={handleFocus}
+        min={0}
+        max={999}
+        step={1}
+        placeholder="bpm"
+      />
 
       <span className="TempoRangeControl-stepper">
         <button
@@ -168,28 +212,8 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
         </button>
       </span>
 
-      <input
-        type="number"
-        className="TempoRangeControl-input"
-        value={inputBuf}
-        onChange={handleInputChange}
-        onFocus={handleFocus}
-        min={0}
-        max={999}
-        step={1}
-        placeholder="bpm"
-      />
-
-      <button
-        className="TempoRangeControl-btn TempoRangeControl-btn--clear"
-        onClick={clear}
-        title="Clear BPM filter"
-      >
-        <X size={14} />
-      </button>
-
       {maxHint !== undefined && !isNaN(maxHint) && (
-        <span className="TempoRangeControl-hint">{maxHint}</span>
+        <span className="TempoRangeControl-hint TempoRangeControl-hint-max">{maxHint}</span>
       )}
 
       <button

@@ -1,4 +1,5 @@
 import type { Song, PaginatedResponse } from '../types';
+import { KEY } from '@cratecaddy-api/apiParams';
 import type { ApiSongParams, ApiGenreStatsParams } from '@cratecaddy-api/apiParams';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -6,16 +7,18 @@ const API_URL = import.meta.env.VITE_API_URL;
 function buildQueryString(params: ApiSongParams): string {
   const parts: string[] = [];
   const entries: [string, string | number | undefined][] = [
-    ['genre.any', params['genre.any']],
-    ['genre.all', params['genre.all']],
-    ['genre.not', params['genre.not']],
-    ['artist.any', params['artist.any']],
-    ['artist.all', params['artist.all']],
-    ['artist.not', params['artist.not']],
-    ['bpm.gte', params['bpm.gte']],
-    ['bpm.lte', params['bpm.lte']],
-    ['favorite', params['favorite']],
-    ['search', params.search],
+    [KEY.genreAny, params[KEY.genreAny]],
+    [KEY.genreAll, params[KEY.genreAll]],
+    [KEY.genreNot, params[KEY.genreNot]],
+    [KEY.artistAny, params[KEY.artistAny]],
+    [KEY.artistAll, params[KEY.artistAll]],
+    [KEY.artistNot, params[KEY.artistNot]],
+    [KEY.bpmGte, params[KEY.bpmGte]],
+    [KEY.bpmLte, params[KEY.bpmLte]],
+    [KEY.ratingGte, params[KEY.ratingGte]],
+    [KEY.ratingLte, params[KEY.ratingLte]],
+    [KEY.favorite, params[KEY.favorite]],
+    [KEY.search, params[KEY.search]],
     ['shuffle', params.shuffle],
     ['sort', params.sort],
     ['sortDirection', params.sortDirection],

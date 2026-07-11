@@ -8,6 +8,7 @@ import { useSortShuffle } from '../hooks/useSortShuffle';
 import FilterBar from '../components/FilterBar';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
+import { buildApiParams } from '@cratecaddy-api/apiParams';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -16,23 +17,13 @@ export default function Home() {
     filters,
     addExclude,
     removeExclude,
-    setBpmRange, setSearch,
+    setBpmRange, setRatingRange, setSearch,
   } = useFilters();
 
-  const genreNotParam = filters.genreNot.length > 0 ? filters.genreNot.join(',') : undefined;
-  const bpmGteParam = filters.bpmGte !== undefined ? String(filters.bpmGte) : undefined;
-  const bpmLteParam = filters.bpmLte !== undefined ? String(filters.bpmLte) : undefined;
-  const searchParam = filters.search || undefined;
-
-  const extraParams = {
-    ...(genreNotParam && { 'genre.not': genreNotParam }),
-    ...(bpmGteParam && { 'bpm.gte': bpmGteParam }),
-    ...(bpmLteParam && { 'bpm.lte': bpmLteParam }),
-    ...(searchParam && { 'search': searchParam }),
-  };
+  const extraParams = buildApiParams(filters);
 
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['genreStats', genreNotParam, bpmGteParam, bpmLteParam, searchParam],
+    queryKey: ['genreStats', filters],
     queryFn: () => fetchGenreStats(extraParams),
   });
 
@@ -67,8 +58,11 @@ export default function Home() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        ratingGte={filters.ratingGte}
+        ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
+        onRatingChange={setRatingRange}
         shuffleActive={shuffleMode}
         onShuffleToggle={toggleShuffle}
         onShuffleReseed={reshuffle}
