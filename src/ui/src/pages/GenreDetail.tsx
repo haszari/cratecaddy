@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSongPage } from '../hooks/useSongPage';
 import FilterBar from '../components/FilterBar';
@@ -15,11 +16,17 @@ export default function GenreDetail() {
   const separator = genrePath && genrePath.includes(',') ? ',' : '+';
   const isOrMode = separator === ',';
 
-  const decodedGenres = genrePath
-    ? genrePath.split(separator).map(decodeURIComponent).filter(Boolean)
-    : [];
+  const decodedGenres = useMemo(
+    () => genrePath
+      ? genrePath.split(separator).map(decodeURIComponent).filter(Boolean)
+      : [],
+    [genrePath, separator],
+  );
 
-  const genreParam = decodedGenres.length > 0 ? decodedGenres.join(',') : undefined;
+  const genreParam = useMemo(
+    () => decodedGenres.length > 0 ? decodedGenres.join(',') : undefined,
+    [decodedGenres],
+  );
 
   const editHref = buildEditUrl(
     location.search,
