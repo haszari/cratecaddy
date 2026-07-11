@@ -109,6 +109,11 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
       const val = parseFloat(bpmLte);
       if (!isNaN(val)) bpmRange.$lte = val;
     }
+    if (bpmRange.$gte !== undefined && bpmRange.$lte !== undefined && bpmRange.$gte > bpmRange.$lte) {
+      const tmp = bpmRange.$gte;
+      bpmRange.$gte = bpmRange.$lte;
+      bpmRange.$lte = tmp;
+    }
     if (Object.keys(bpmRange).length > 0) {
       conditions.push({
         $or: [
@@ -131,6 +136,11 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     if (ratingLte != null) {
       const val = parseFloat(ratingLte);
       if (!isNaN(val)) ratingRange.$lte = val;
+    }
+    if (ratingRange.$gte !== undefined && ratingRange.$lte !== undefined && ratingRange.$gte > ratingRange.$lte) {
+      const tmp = ratingRange.$gte;
+      ratingRange.$gte = ratingRange.$lte;
+      ratingRange.$lte = tmp;
     }
     if (Object.keys(ratingRange).length > 0) {
       conditions.push({ rating: ratingRange });
