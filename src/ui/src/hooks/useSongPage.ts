@@ -170,9 +170,9 @@ export function useSongPage({
     limit: 50,
   });
 
-  // Genre stats query
+  // Genre stats query — append filters so stale-cache refetches when they change
   const { data: relatedStats } = useQuery({
-    queryKey: genreStatsKey,
+    queryKey: [...genreStatsKey, filters],
     queryFn: () => fetchGenreStats(statsParams),
     enabled: genreStatsEnabled,
   });
