@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSongById, fetchGenreStats } from '../api/client';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Song() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,8 @@ export default function Song() {
     queryFn: () => fetchGenreStats(),
     enabled: !!song,
   });
+
+  useDocumentTitle(song ? `${song.artist} — ${song.title}` : undefined);
 
   const tags = song && genreStats
     ? Object.fromEntries(
