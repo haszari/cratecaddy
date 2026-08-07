@@ -2,7 +2,9 @@
 
 **Parent:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md)
 
-Production appliance. No terminals. Starts on OS boot. Open browser to `http://localhost:$CRATECADDY_PORT`.
+**Decisions:** [ADR-0007](../docs/adr/0007-api-serves-static-ui-same-origin.md), [ADR-0008](../docs/adr/0008-daemon-mode-launchd-auto-start.md), [ADR-0009](../docs/adr/0009-env-file-config-cratecaddy-env.md), [ADR-0010](../docs/adr/0010-dev-prod-isolation-opaque-volumes.md), [ADR-0011](../docs/adr/0011-mongo-published-loopback-only.md)
+
+Production appliance. No terminals. Starts on OS boot. Open browser to `http://localhost:$API_PORT`.
 
 **Depends on:** Nothing — this is the first step.
 
@@ -13,19 +15,19 @@ Production appliance. No terminals. Starts on OS boot. Open browser to `http://l
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                     macOS host                        │
-│                                                       │
-│  launchd (com.cratecaddy.startup)                     │
-│    └── cratecaddy start                               │
-│          ├── docker run ... (MongoDB container)       │
-│          │     └── port $MONGO_PORT                   │
-│          └── node api/dist/server.js (API + static UI)│
-│                ├── Express API, port $CRATECADDY_PORT │
-│                ├── Serves built static UI at /        │
-│                └── osascript (Apple Music write)      │
-│                                                       │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│                  macOS host                   │
+│                                               │
+│  launchd (com.cratecaddy.startup)             │
+│    └── cratecaddy start                       │
+│          ├── docker compose up -d (MongoDB)   │
+│          │     └── port 127.0.0.1:$MONGO_PORT │
+│          └── node dist/server.js (API+static) │
+│                ├── Express API, port $API_PORT│
+│                ├── Serves built static UI at /│
+│                └── osascript (Apple Music)    │
+│                                               │
+└──────────────────────────────────────────────┘
 ```
 
 Docker runs MongoDB. API runs on the macOS host and serves the built static UI through Express. The `osascript` call for Apple Music integration executes on the host where it has access to macOS scripting.
@@ -34,9 +36,11 @@ Docker runs MongoDB. API runs on the macOS host and serves the built static UI t
 
 ## Configuration
 
-All values configurable: API port, MongoDB port, data directory, log file. Defaults apply when unset.
+All values configurable: environment target, API port, MongoDB port, log file. Defaults apply when unset. Database data is deliberately not user-configurable — it lives in Docker named volumes (see Decisions 11).
 
-Dev uses Docker Compose's automatic `.env` loading from the project root. Prod uses a separate env file (`~/.cratecaddy/config.env`) passed by the CLI via `--env-file`.
+- `CRATECADDY_ENV` — `prod` (default) or `dev`; drives the default target for `cratecaddy import` and any command that needs to know which environment it belongs to. Prod sets it in `~/.cratecaddy/config.env`, dev sets it in the root `.env`.
+
+Dev uses Docker Compose's automatic `.env` loading from the project root. Prod values come from `~/.cratecaddy/config.env`, which the CLI sources at startup — the resulting env vars flow into the compose command and the API process.
 
 ---
 
@@ -51,6 +55,12 @@ Add static file serving after API routes, before the 404 handler. When the `stat
 ```typescript
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// The API package is ESM ("type": "module"), so `__dirname` is not defined at
+// runtime. Derive it from import.meta.url (same pattern as
+// src/api/scripts/import-apple-music.ts).
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // After API routes:
 const staticPath = path.join(__dirname, 'static');
@@ -64,6 +74,8 @@ if (fs.existsSync(staticPath)) {
 ```
 
 Vite's default `base: '/'` produces asset paths relative to root. Express static serves from root. The two match — the built UI works without Vite config changes.
+
+The `fs.existsSync` guard also keeps dev safe: under `tsx watch`, `__dirname` is `src/` and no `src/static` directory exists, so static serving is skipped in dev automatically.
 
 ### 2. Prod build script
 
@@ -88,6 +100,26 @@ cp -r ../ui/dist/* dist/static/
 echo "Prod build complete: src/api/dist/"
 ```
 
+### 2a. UI API base URL (port-agnostic)
+
+**Files:** `src/ui/src/api/client.ts` (edit), `src/ui/.env.production` (create)
+
+`client.ts` reads `import.meta.env.VITE_API_URL`, baked at build time. In dev that's `http://localhost:7625` from `src/ui/.env` — correct, because the Vite dev server (7626) and the API (7625) are different origins. But in prod the built UI is served by Express from the **same origin** as the API, so an absolute URL is wrong: a custom `API_PORT` would silently break every API call.
+
+Fix: default to relative URLs, and force `VITE_API_URL` empty for production builds.
+
+```typescript
+// src/ui/src/api/client.ts
+const API_URL = import.meta.env.VITE_API_URL || '';
+```
+
+```bash
+# src/ui/.env.production  — used only by `vite build` (mode=production)
+VITE_API_URL=
+```
+
+Vite loads env files per mode in precedence order `.env` < `.env.local` < `.env.production` < `.env.production.local`, with `process.env` winning over all (verified against Vite's `loadEnv`). An empty `VITE_API_URL` in `.env.production` therefore overrides the dev value from `.env`, so prod builds emit relative `/api/...` requests that resolve on whatever port Express listens on.
+
 ### 3. CLI wrapper
 
 **File:** `bin/cratecaddy`
@@ -96,29 +128,56 @@ echo "Prod build complete: src/api/dist/"
 #!/bin/bash
 set -e
 
-# Config
+# Config — source ~/.cratecaddy/config.env if it exists (dotenv-style KEY=VALUE
+# lines, valid shell). Sourcing makes every value visible to this script and to
+# the env vars we export into child processes below.
 CONFIG="$HOME/.cratecaddy/config.env"
-PORT="${CRATECADDY_PORT:-7625}"
+[ -f "$CONFIG" ] && . "$CONFIG"
+
+API_PORT="${API_PORT:-7625}"
 MONGO_PORT="${MONGO_PORT:-27017}"
-DATA_DIR="${CRATECADDY_DATA:-$HOME/.cratecaddy/data}"
+MONGO_CONTAINER="cratecaddy-mongodb-prod"
 LOG_FILE="${CRATECADDY_LOG:-$HOME/.cratecaddy/cratecaddy.log}"
 PID_FILE="$HOME/.cratecaddy/api.pid"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# The CLI is installed as a symlink (/usr/local/bin/cratecaddy →
+# ~/cratecaddy/bin/cratecaddy), so $0 alone would resolve to the shortcut's
+# directory, not the real script. Follow the symlink chain to the real file
+# (BSD readlink has no -f, hence the loop) before computing SCRIPT_DIR.
+resolve_script() {
+  local source="$1"
+  while [ -L "$source" ]; do
+    local dir target
+    dir="$(cd -P "$(dirname "$source")" && pwd)"
+    target="$(readlink "$source")"
+    case "$target" in
+      /*) source="$target" ;;
+      *)  source="$dir/$target" ;;
+    esac
+  done
+  echo "$source"
+}
+
+REAL_SCRIPT="$(resolve_script "$0")"
+SCRIPT_DIR="$(cd -P "$(dirname "$REAL_SCRIPT")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Docker Compose with prod env file (if it exists)
-COMPOSE_CMD=(docker compose -f "$PROJECT_DIR/docker-compose.yml" -f "$PROJECT_DIR/docker-compose.prod.yml")
-[ -f "$CONFIG" ] && COMPOSE_CMD+=(--env-file "$CONFIG")
-
 start_mongodb() {
-  # Check if already running on this port
-  if docker ps --format '{{.Ports}}' | grep -q ":${MONGO_PORT}->"; then
-    echo "MongoDB already running on port $MONGO_PORT."
-    return
-  fi
+  # `docker compose up -d` is idempotent: if the container is already up it
+  # prints "running" and exits 0, so no separate already-running guard is needed.
   docker compose -f "$PROJECT_DIR/docker-compose.yml" -f "$PROJECT_DIR/docker-compose.prod.yml" up -d
   echo "Waiting for MongoDB..."
-  until mongosh --quiet --port "$MONGO_PORT" --eval 'db.runCommand("ping").ok' > /dev/null 2>&1; do
+  # mongosh runs inside the container (it ships with mongo:7.0), so no host
+  # mongosh prerequisite. Port inside the container is always 27017 — the host
+  # mapping is external. Give up after 60s so a dead Docker daemon fails the
+  # command instead of hanging forever.
+  local tries=0
+  until docker exec "$MONGO_CONTAINER" mongosh --quiet --port 27017 --eval 'db.runCommand("ping").ok' > /dev/null 2>&1; do
+    tries=$((tries + 1))
+    if [ "$tries" -ge 60 ]; then
+      echo "ERROR: MongoDB did not become ready within 60s. Is Docker running?" >&2
+      exit 1
+    fi
     sleep 1
   done
   echo "MongoDB ready on port $MONGO_PORT."
@@ -126,9 +185,14 @@ start_mongodb() {
 
 start_api() {
   cd "$PROJECT_DIR/src/api"
+  # Export the resolved prod config into the Node process. server.ts also calls
+  # dotenv.config() on the repo .env, but dotenv never overrides vars already in
+  # the environment — so these exports always win and custom ports take effect.
+  export API_PORT="${API_PORT:-7625}"
+  export MONGODB_URI="${MONGODB_URI:-mongodb://127.0.0.1:${MONGO_PORT:-27017}/cratecaddy}"
   nohup node dist/server.js > "$LOG_FILE" 2>&1 &
   echo $! > "$PID_FILE"
-  echo "API started on port $PORT (PID: $(cat $PID_FILE))"
+  echo "API started on port $API_PORT (PID: $(cat $PID_FILE))"
 }
 
 stop_api() {
@@ -141,14 +205,14 @@ stop_api() {
 case "${1:-}" in
   start)
     if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
-      echo "CrateCaddy is already running on port $PORT."
+      echo "CrateCaddy is already running on port $API_PORT."
       exit 0
     fi
-    mkdir -p "$DATA_DIR" "$(dirname "$LOG_FILE")"
+    mkdir -p "$(dirname "$LOG_FILE")"
     start_mongodb
     start_api
     echo ""
-    echo "CrateCaddy is running: http://localhost:$PORT"
+    echo "CrateCaddy is running: http://localhost:$API_PORT"
     ;;
   stop)
     stop_api
@@ -159,15 +223,15 @@ case "${1:-}" in
     stop_api
     docker compose -f "$PROJECT_DIR/docker-compose.yml" -f "$PROJECT_DIR/docker-compose.prod.yml" down 2>/dev/null || true
     sleep 1
-    mkdir -p "$DATA_DIR" "$(dirname "$LOG_FILE")"
+    mkdir -p "$(dirname "$LOG_FILE")"
     start_mongodb
     start_api
     echo ""
-    echo "CrateCaddy restarted: http://localhost:$PORT"
+    echo "CrateCaddy restarted: http://localhost:$API_PORT"
     ;;
   status)
     if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
-      echo "CrateCaddy is running on port $PORT (PID: $(cat $PID_FILE))"
+      echo "CrateCaddy is running on port $API_PORT (PID: $(cat $PID_FILE))"
     else
       echo "CrateCaddy is not running."
       rm -f "$PID_FILE" 2>/dev/null
@@ -177,17 +241,39 @@ case "${1:-}" in
     tail -f "$LOG_FILE"
     ;;
   import)
-    shift
+    # Target environment. Explicit positional arg wins; otherwise the
+    # CRATECADDY_ENV prop from config (prod for the installed daemon).
+    ENV_TARGET="${1:-${CRATECADDY_ENV:-prod}}"
+    case "$ENV_TARGET" in
+      prod|dev) shift ;;
+      *) echo "Usage: cratecaddy import [prod|dev] <file>" >&2; exit 1 ;;
+    esac
+    # Load the target env's config, then export MONGODB_URI so the host-side
+    # import script (which reads process.env.MONGODB_URI, default localhost:27017)
+    # connects to the right database on the right port.
+    if [ "$ENV_TARGET" = "dev" ]; then
+      [ -f "$PROJECT_DIR/.env" ] && . "$PROJECT_DIR/.env"
+    fi
+    export MONGODB_URI="${MONGODB_URI:-mongodb://127.0.0.1:${MONGO_PORT:-27017}/cratecaddy}"
+    # Debug line: shows the target so a wrong-environment whoops can be Ctrl-C'd.
+    echo "Importing to $ENV_TARGET ($MONGODB_URI)..."
     cd "$PROJECT_DIR/src/api"
     npm run import:applemusic "$@"
     ;;
   install)
-    CLI_PATH="$(which cratecaddy)"
-    sed "s|__CRATECADDY_CLI_PATH__|$CLI_PATH|" \
+    # Resolve the real script path so the plist references the actual file,
+    # not the /usr/local/bin symlink. Auto-start then survives the shortcut
+    # being removed.
+    CLI_PATH="$(resolve_script "$(which cratecaddy)")"
+    # Bake the resolved CLI path and log file path into the plist. The installed
+    # copy is frozen config — changing config.env afterwards does not rewrite it;
+    # re-run `install` to regenerate.
+    sed -e "s|__CRATECADDY_CLI_PATH__|$CLI_PATH|" \
+        -e "s|__CRATECADDY_LOG_FILE__|$LOG_FILE|" \
       "$PROJECT_DIR/macos/com.cratecaddy.startup.plist" \
       > ~/Library/LaunchAgents/com.cratecaddy.startup.plist
     launchctl load ~/Library/LaunchAgents/com.cratecaddy.startup.plist
-    echo "Auto-start enabled. CrateCaddy will start on login."
+    echo "Auto-start enabled. CrateCaddy will start on boot."
     ;;
   uninstall)
     launchctl unload ~/Library/LaunchAgents/com.cratecaddy.startup.plist 2>/dev/null || true
@@ -208,17 +294,17 @@ case "${1:-}" in
     echo "  status            Check if CrateCaddy is running"
     echo "  logs              Tail API log file"
     echo "  import <path>     Import from Apple Music XML"
-    echo "  install           Enable auto-start on login"
+    echo "  install           Enable auto-start on boot"
     echo "  uninstall         Remove auto-start and stop services"
     ;;
 esac
 ```
 
-### 4. macOS launchd plist template — auto-start on login
+### 4. macOS launchd plist template — auto-start on boot
 
 **File:** `macos/com.cratecaddy.startup.plist` (template)
 
-This is a **template file** — it contains a substitution placeholder (`__CRATECADDY_CLI_PATH__`) that gets resolved at install time. The `install` CLI command runs `sed` to replace the placeholder with the actual CLI path and writes the result to `~/Library/LaunchAgents/`.
+This is a **template file** — it contains substitution placeholders (`__CRATECADDY_CLI_PATH__`, `__CRATECADDY_LOG_FILE__`) that get resolved at install time. The `install` CLI command runs `sed` to replace them with the actual CLI path and the resolved log file path, writing the result to `~/Library/LaunchAgents/`. The installed plist is then **frozen config**: changing `config.env` afterwards does not retroactively rewrite it, and we don't support editing the installed copy — re-run `install` if you need to regenerate it.
 
 launchd inherits `/usr/bin:/bin:/usr/sbin:/sbin`. The plist uses an absolute path to the CLI to avoid PATH resolution issues.
 
@@ -239,9 +325,9 @@ launchd inherits `/usr/bin:/bin:/usr/sbin:/sbin`. The plist uses an absolute pat
     <key>KeepAlive</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>/tmp/cratecaddy-startup.log</string>
+    <string>__CRATECADDY_LOG_FILE__</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/cratecaddy-startup.log</string>
+    <string>__CRATECADDY_LOG_FILE__</string>
 </dict>
 </plist>
 ```
@@ -268,33 +354,34 @@ ln -s ~/cratecaddy/bin/cratecaddy /usr/local/bin/cratecaddy
 # 5. Start
 cratecaddy start
 
-# 6. Open http://localhost:$CRATECADDY_PORT
+# 6. Open http://localhost:$API_PORT
 ```
 
 **Customisation:** Create `~/.cratecaddy/config.env` and edit. All values have defaults (see Configuration section above).
 
-**Auto-start on login:**
+**Auto-start on boot:**
 
 ```bash
 cratecaddy install    # installs launchd plist
 cratecaddy uninstall  # removes it
 ```
 
-After OS boot, CrateCaddy starts automatically. Open browser to `http://localhost:$CRATECADDY_PORT`.
+After OS boot, CrateCaddy starts automatically. Open browser to `http://localhost:$API_PORT`.
 
 ### 6. Dev workflow — isolated from prod
 
-Prod and dev use separate MongoDB instances, separate ports, separate data directories. Dev gets its values from `.env` in the project root (Docker Compose auto-loads it). Prod gets its values from `~/.cratecaddy/config.env` (CLI passes via `--env-file`).
+Prod and dev use separate MongoDB instances, separate ports, separate data volumes. Dev gets its values from `.env` in the project root (Docker Compose auto-loads it). Prod gets its values from `~/.cratecaddy/config.env`, sourced by the CLI at startup.
 
 | | Prod | Dev |
 |---|---|---|
-| MongoDB port | `MONGO_PORT` from prod env file | `MONGO_PORT` from `.env` |
-| API port | `CRATECADDY_PORT` from prod env file | Same — Vite proxy handles it |
-| Data dir | `CRATECADDY_DATA` from prod env file | Docker volume (default) |
-| MongoDB container | `cratecaddy-mongodb` | `cratecaddy-mongodb-dev` |
+| Environment | `CRATECADDY_ENV=prod` (config.env) | `CRATECADDY_ENV=dev` (root `.env`) |
+| MongoDB port | `MONGO_PORT` from config.env | `MONGO_PORT` from `.env` |
+| API port | `API_PORT` from config.env | `API_PORT` from `.env` |
+| Data volume | `cratecaddy-mongo-data-prod` | `cratecaddy-mongo-data-dev` |
+| MongoDB container | `cratecaddy-mongodb-prod` | `cratecaddy-mongodb-dev` |
 | Compose | `docker-compose.yml` + `docker-compose.prod.yml` | `docker-compose.yml` only |
 
-Dev uses the base `docker-compose.yml` directly — no override file. Set different `MONGO_PORT` in `.env` so dev and prod MongoDB don't compete for the same port.
+Dev uses the base `docker-compose.yml` directly — no override file. The base file interpolates `${MONGO_PORT:-27017}`, so if prod uses the default port, set a different `MONGO_PORT` (e.g. `27018`) in the root `.env` for dev — and keep `MONGODB_URI` in the same file in sync (`mongodb://localhost:27018/cratecaddy`). Dev and prod then coexist on separate ports and separate containers.
 
 ```bash
 docker compose up -d
@@ -311,19 +398,47 @@ This runs the full prod stack locally on the prod-configured ports.
 
 ### 7. Import flow
 
-Import scripts run on the macOS host. They connect to the prod MongoDB container on `localhost:$MONGO_PORT` (from the prod env file).
+Import scripts run on the macOS host. The `import` command targets an environment explicitly — the target defaults to the `CRATECADDY_ENV` prop from config (`prod` for the installed daemon), and can be overridden per-invocation:
 
 ```bash
-cratecaddy import /path/to/library.xml
+cratecaddy import /path/to/library.xml     # default target = CRATECADDY_ENV from config.env (prod)
+cratecaddy import prod /path/to/library.xml  # explicit prod
+cratecaddy import dev /path/to/library.xml   # explicit dev (uses root .env config)
 ```
 
-This calls `npm run import:applemusic` in `src/api/`, which connects to `mongodb://localhost:${MONGO_PORT}/cratecaddy`.
+Each target loads its own config — `~/.cratecaddy/config.env` for prod, root `.env` for dev — and the CLI exports `MONGODB_URI` (`mongodb://127.0.0.1:${MONGO_PORT}/cratecaddy`) into `npm run import:applemusic` so the import lands in the right database on the right port.
 
-### Optional: Clean up docker-compose.yml
+The command prints the resolved target and URI first — `Importing to prod (mongodb://127.0.0.1:27017/cratecaddy)...` — so a wrong-environment import can be stopped with Ctrl-C before the script runs.
 
-The existing `docker-compose.yml` defines three services: `mongodb`, `api`, `ui`. The `api` and `ui` services are defined but never used. They can be removed to reduce confusion. This is not required for the plan to work — Docker Compose ignores services that aren't explicitly started.
+**Accepted risk:** the prod-installed CLI can target dev (and vice-versa). This is useful for debugging, and manageable with care — the debug line is the safety net.
 
-### Add docker-compose.prod.yml
+### 8. Update docker-compose.yml (dev)
+
+The base file is shared by both envs; the prod override renames what it needs. Dev container/volume get the `-dev` suffix so dev and prod never collide.
+
+```yaml
+# docker-compose.yml
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: cratecaddy-mongodb-dev
+    ports:
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: cratecaddy
+    volumes:
+      - cratecaddy-mongo-data-dev:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  cratecaddy-mongo-data-dev:
+```
+
+### 9. Add docker-compose.prod.yml
 
 Production override file. Docker's recommended pattern: base `docker-compose.yml` for shared config, `docker-compose.prod.yml` for production-specific settings.
 
@@ -331,18 +446,20 @@ Production override file. Docker's recommended pattern: base `docker-compose.yml
 # docker-compose.prod.yml
 services:
   mongodb:
-    container_name: cratecaddy-mongodb
+    container_name: cratecaddy-mongodb-prod
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
     volumes:
-      - cratecaddy_mongo_data:/data/db
+      - cratecaddy-mongo-data-prod:/data/db
     restart: unless-stopped
 
 volumes:
-  cratecaddy_mongo_data:
+  cratecaddy-mongo-data-prod:
 ```
 
 The prod CLI uses `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`. Dev uses the base `docker-compose.yml` directly — no override file.
+
+**Loopback-only publishing (both envs).** Both compose files bind the published port to `127.0.0.1` (`127.0.0.1:${MONGO_PORT}:27017`). The API and import scripts connect via `127.0.0.1`, so this changes nothing for local use — it only prevents LAN devices from reaching the unauthenticated MongoDB. If remote access is ever needed, this is the deliberate line to change.
 
 To test the prod build locally: run `./scripts/build-prod.sh`, then `MONGO_PORT=27018 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`. The prod MongoDB runs on a different port, the API serves the built static UI. This lets a developer verify the prod build without installing on another machine.
 
@@ -353,13 +470,15 @@ To test the prod build locally: run `./scripts/build-prod.sh`, then `MONGO_PORT=
 | File | Action | Purpose |
 |------|--------|---------|
 | `src/api/src/server.ts` | Edit | Add static file serving + SPA fallback |
+| `src/ui/src/api/client.ts` | Edit | Relative API base URL (`|| ''`) |
+| `src/ui/.env.production` | Create | Empty `VITE_API_URL` for port-agnostic prod builds |
 | `src/api/Dockerfile` | Delete | Defined but never referenced by compose or scripts |
 | `bin/cratecaddy` | Create | CLI wrapper |
 | `scripts/build-prod.sh` | Create | Build UI + API + bundle static files |
-| `macos/com.cratecaddy.startup.plist` | Create | launchd template (contains `__CRATECADDY_CLI_PATH__` placeholder) |
-| `~/.cratecaddy/config.env` | Create (user) | Ports, data dir, log file |
+| `macos/com.cratecaddy.startup.plist` | Create | launchd template (contains `__CRATECADDY_CLI_PATH__` and `__CRATECADDY_LOG_FILE__` placeholders) |
+| `~/.cratecaddy/config.env` | Create (user) | Environment (`CRATECADDY_ENV`), ports, log file |
 | `docker-compose.prod.yml` | Create | Production override: container name, ports, volumes, restart |
-| `docker-compose.yml` | Edit (optional) | Remove unused `api` and `ui` services |
+| `docker-compose.yml` | Edit | `-dev` container/volume suffix, loopback-only port binding, `MONGO_PORT` interpolation |
 
 ---
 
@@ -373,17 +492,19 @@ To test the prod build locally: run `./scripts/build-prod.sh`, then `MONGO_PORT=
 
 4. **PID file for process management.** Written by `start`, read by `stop`/`status`, cleaned up on stop.
 
-5. **launchd template with absolute path.** The plist is a template file with a `__CRATECADDY_CLI_PATH__` placeholder. The `install` command resolves it via `sed` (replacing with the output of `which cratecaddy`) and writes the result to `~/Library/LaunchAgents/`.
+5. **launchd template with absolute path.** The plist is a template file with a `__CRATECADDY_CLI_PATH__` placeholder. The `install` command resolves it via `sed` with the script's **real path** (symlinks followed via `resolve_script`) and writes the result to `~/Library/LaunchAgents/`. The CLI itself also resolves its own symlink before deriving `PROJECT_DIR`, so it works whether invoked as `cratecaddy` (symlink) or directly.
 
-6. **POSIX dot-directory.** `~/.cratecaddy/` stores config, data, logs, and the PID file.
+6. **POSIX dot-directory.** `~/.cratecaddy/` stores config, logs, and the PID file.
 
-7. **All ports configurable.** `CRATECADDY_PORT` and `MONGO_PORT` in `~/.cratecaddy/config.env`.
+7. **All ports configurable.** `API_PORT` and `MONGO_PORT` in `~/.cratecaddy/config.env`.
 
 8. **Clone, build, link.** Installation is a git clone, npm install, build, and symlink. Prerequisites: Docker, Node.js, macOS.
 
-9. **Auto-start on login.** `cratecaddy install` sets up the launchd plist. CrateCaddy starts on OS boot.
+9. **Auto-start on boot.** `cratecaddy install` sets up the launchd plist. CrateCaddy starts on OS boot.
 
-10. **Dev and prod are isolated.** Separate MongoDB containers, separate ports, separate data directories. Dev uses `.env` auto-loaded by Docker Compose. Prod uses a separate env file passed by the CLI. Both can run simultaneously.
+10. **Dev and prod are isolated.** Separate MongoDB containers, separate ports, separate data volumes. Dev uses `.env` auto-loaded by Docker Compose. Prod uses a separate env file passed by the CLI. Both can run simultaneously.
+
+11. **MongoDB data is opaque Docker state.** Both envs use named volumes (`cratecaddy-mongo-data-dev` / `cratecaddy-mongo-data-prod`); there is no host-visible data folder and no `CRATECADDY_DATA` config. Data is managed with `docker volume` operations, and the documented restore path is `cratecaddy import`.
 
 ---
 
@@ -391,4 +512,4 @@ To test the prod build locally: run `./scripts/build-prod.sh`, then `MONGO_PORT=
 
 1. **launchd does not restart a process that exits when `KeepAlive` is false.** With `RunAtLoad: true` and `KeepAlive: false` (both defaults in our plist), launchd runs the command once at load time. If the command exits, launchd does not restart it — it considers the job done. The `cratecaddy start` command spawns the background API via `nohup`, then exits cleanly. launchd sees the exit and moves on. No crash interpretation, no restart loop.
 
-2. **Docker Compose expands `~` on the host side.** Volume source paths with `~` are expanded to the user's home directory by the Docker Compose client on the host. However, this has edge cases with remote daemons and older Compose versions. The compose file will use `${HOME}` instead of `~` for reliability: `${CRATECADDY_DATA:-${HOME}/.cratecaddy/data}`.
+2. **MongoDB data lives in Docker named volumes, not a host folder.** An earlier draft exposed the data at a host path (`~/.cratecaddy/data`) via a bind mount and a `CRATECADDY_DATA` config knob. For an appliance this is a mis-feature: the data is opaque Mongo state (WiredTiger files) that a human can't read, so surfacing it only invites confusion and a dead config option. Both envs use suffixed named volumes instead; the container owns the state and restore goes through `cratecaddy import` or `docker volume` operations.

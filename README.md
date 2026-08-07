@@ -11,6 +11,8 @@ Music metadata exploration tool: React SPA frontend, Express API, and MongoDB da
   - **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
 - **Docker** - Only MongoDB runs in Docker; the API runs on the host (macOS) so it can call `osascript` for write round-trips to Apple Music
 
+Architecture decisions are recorded in [docs/adr/](./docs/adr/).
+
 ## Development
 
 ### First time setup

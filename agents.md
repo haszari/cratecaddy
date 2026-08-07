@@ -10,6 +10,8 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - `src/data/` — gitignored user data (import files, CSVs)
 - `plans/` — design documents and refactor plans (review before executing)
   - Naming: `YYYYMMDD[a/b/c...]-descriptive-name.md`. Multiple plans on the same day get suffixed `a`, `b`, `c` in chronological order. Current/active plan is always the highest letter.
+- `docs/adr/` — architecture decision records. Create/link one when a plan's decision lands (see existing `0001`–`0006`).
+- `CONTEXT.md` — domain language glossary (ubiquitous language)
 - No root `package.json` — each sub-package is independent
 
 ## Commands (run from `src/api/` or `src/ui/`)
