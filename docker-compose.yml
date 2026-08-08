@@ -1,13 +1,28 @@
+# WHY THIS IS A SEPARATE FILE (and not one parameterised file):
+# A single compose file with `${CRATECADDY_ENV}`-style keys was considered and
+# rejected: compose does NOT interpolate top-level `volumes:` keys, and the
+# volume name is precisely what must differ between envs (it is the data
+# isolation boundary). So the two environments cannot share one file. Instead
+# this base file holds the shared/dev shape and docker-compose.prod.yml
+# overrides what prod needs — Docker's recommended base+override pattern.
+#
+# This file is the DEV environment. Prod is `docker-compose.yml` +
+# `docker-compose.prod.yml` (compose merges them; the override's `name:` and
+# `container_name` win). Each env has its own compose project (cratecaddy-dev /
+# cratecaddy-prod), container, and volume, so Docker Compose never reconciles
+# the two environments as one stack.
+name: cratecaddy-dev
+
 services:
   mongodb:
     image: mongo:7.0
-    container_name: cratecaddy-mongodb
+    container_name: cratecaddy-mongodb-dev
     ports:
-      - "27017:27017"
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
     environment:
       MONGO_INITDB_DATABASE: cratecaddy
     volumes:
-      - mongodb_data:/data/db
+      - cratecaddy-mongo-data-dev:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 5s
@@ -15,4 +30,4 @@ services:
       retries: 5
 
 volumes:
-  mongodb_data:
+  cratecaddy-mongo-data-dev:
