@@ -6,10 +6,10 @@
 
 This is deliberately simple. The user's key requirement is: reliably launch on boot, and easy manual (re)start. `KeepAlive: false` means a crashed API stays down until manually restarted — no crash auto-restart, by choice (the user may add it later, but it is not part of this step).
 
-The plist is a **template** with `__CRATECADDY_CLI_PATH__` and `__CRATECADDY_LOG_FILE__` placeholders. `cratecaddy install` substitutes them with `sed` using the symlink-resolved real CLI path and the resolved log path, writing to `~/Library/LaunchAgents/`. The installed plist is **frozen config**: re-run `install` to regenerate; we do not support editing the installed copy.
+The plist is a **template** with `__CRATECADDY_CLI_PATH__` and `__CRATECADDY_LOG_FILE__` placeholders. `cratecaddy install` substitutes them with `sed`, writing to `~/Library/LaunchAgents/`. The CLI path is always the **installed copy** at `~/.cratecaddy/bin/cratecaddy` (see [0012-per-user-install-directory](./0012-per-user-install-directory.md)) — never the checkout, so auto-start survives the checkout being moved or deleted. The installed plist is **frozen config**: re-run `install` to regenerate; we do not support editing the installed copy.
 
 Rejected alternatives:
 
 1. **launchd owns the API process via `KeepAlive: true` and a foreground `run` command.** Gives crash auto-restart but forces launchd-aware start/stop/restart branches in the CLI, complicates the process model, and adds machinery the user explicitly does not want yet. Deferred.
 
-2. **Store the CLI path directly in the template, no `sed` substitution.** The CLI is installed as a symlink (`/usr/local/bin/cratecaddy`), so the plist must reference the real file or auto-start breaks if the shortcut is removed. Substitution at install time keeps the plist correct and the template portable.
+2. **Store the CLI path directly in the template, no `sed` substitution.** The CLI is copied to a fixed per-user install directory (`~/.cratecaddy/bin/cratecaddy`), and the log path defaults to `~/.cratecaddy/cratecaddy.log` but can be overridden in `config.env`. Substitution at install time keeps the template portable and the resolved paths correct even when config is customised.

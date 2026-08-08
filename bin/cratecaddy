@@ -22,8 +22,9 @@ set -e
 #   cratecaddy logs         Tail the API log file
 #   cratecaddy import [prod|dev] <xml-file>   Import an Apple Music XML library
 #                           (default target = $CRATECADDY_ENV from config.env)
-#   cratecaddy install      Enable auto-start on boot (launchd plist)
-#   cratecaddy uninstall    Remove auto-start and stop all services
+#   cratecaddy install      Install the runtime to ~/.cratecaddy, add the CLI
+#                           to PATH, and enable auto-start on boot (launchd)
+#   cratecaddy uninstall    Remove auto-start + PATH line, stop all services
 #
 # CONFIG (all optional, sourced from ~/.cratecaddy/config.env if it exists)
 #   CRATECADDY_ENV  prod|dev   default target for `import` (default: prod)
@@ -32,15 +33,25 @@ set -e
 #   CRATECADDY_LOG  API log file (default: ~/.cratecaddy/cratecaddy.log)
 #
 # LAYOUT
-#   ~/.cratecaddy/           runtime dir (config.env, logs, api.pid)
-#   docker-compose.yml       base compose (dev: name cratecaddy-dev)
-#   docker-compose.prod.yml  prod override (name cratecaddy-prod)
+#   ~/.cratecaddy/           the appliance — installed runtime + runtime state
+#     bin/cratecaddy         this CLI
+#     docker-compose.yml     base compose (dev: name cratecaddy-dev)
+#     docker-compose.prod.yml  prod override (name cratecaddy-prod)
+#     macos/                 launchd plist template
+#     src/api/               built API (dist/ + node_modules/ + scripts)
+#     config.env             optional config
+#     cratecaddy.log         API log
+#     api.pid                API PID file
+#
+#   The CLI resolves everything from its own location ($PROJECT_DIR, two levels
+#   up from bin/), so after `install` the copied script runs against the copy in
+#   ~/.cratecaddy — the checkout is no longer needed.
 #
 # INSTALLATION
 #   Clone the repo, npm install in src/ui and src/api, run `./scripts/build-prod.sh`,
-#   then symlink this script onto PATH with sudo (e.g.
-#   sudo ln -s <repo>/bin/cratecaddy /usr/local/bin/cratecaddy) and run
-#   `cratecaddy install` for boot auto-start. Docker must be running.
+#   then run this script's `install` command from the checkout. It copies the
+#   built runtime into ~/.cratecaddy, adds the CLI to PATH via ~/.zshrc, and
+#   installs the launchd plist for boot auto-start. Docker must be running.
 # ---------------------------------------------------------------------------
 
 # Config — source ~/.cratecaddy/config.env if it exists (dotenv-style KEY=VALUE
@@ -55,13 +66,14 @@ CONFIG="$HOME/.cratecaddy/config.env"
 API_PORT="${API_PORT:-5225}"
 MONGO_PORT="${MONGO_PORT:-5227}"
 MONGO_CONTAINER="cratecaddy-mongodb-prod"
-LOG_FILE="${CRATECADDY_LOG:-$HOME/.cratecaddy/cratecaddy.log}"
-PID_FILE="$HOME/.cratecaddy/api.pid"
+INSTALL_ROOT="$HOME/.cratecaddy"
+LOG_FILE="${CRATECADDY_LOG:-$INSTALL_ROOT/cratecaddy.log}"
+PID_FILE="$INSTALL_ROOT/api.pid"
 
-# The CLI is installed as a symlink (/usr/local/bin/cratecaddy →
-# ~/cratecaddy/bin/cratecaddy), so $0 alone would resolve to the shortcut's
-# directory, not the real script. Follow the symlink chain to the real file
-# (BSD readlink has no -f, hence the loop) before computing SCRIPT_DIR.
+# Follow any symlink chain to the real file before computing SCRIPT_DIR, so
+# PROJECT_DIR is derived from the actual script location (the installed copy at
+# ~/.cratecaddy/bin) even if the user creates a shortcut to it. BSD readlink has
+# no -f, hence the loop.
 resolve_script() {
   local source="$1"
   while [ -L "$source" ]; do
@@ -211,16 +223,46 @@ case "${1:-}" in
     npm run import:applemusic "$@"
     ;;
   install)
-    # REAL_SCRIPT is the symlink-resolved path computed at startup, so the plist
-    # references the actual file, not the /usr/local/bin symlink. Auto-start then
-    # survives the shortcut being removed.
-    CLI_PATH="$REAL_SCRIPT"
-    # Bake the resolved CLI path and log file path into the plist. The installed
-    # copy is frozen config — changing config.env afterwards does not rewrite it;
-    # re-run `install` to regenerate.
-    sed -e "s|__CRATECADDY_CLI_PATH__|$CLI_PATH|" \
+    # Install the built runtime into ~/.cratecaddy so the appliance no longer
+    # depends on the checkout. Everything the CLI needs at runtime — the compose
+    # files, the launchd template, and the built API (dist/ + node_modules/ +
+    # scripts) — is copied. The copied CLI resolves $PROJECT_DIR from its own
+    # location, so start/stop/import then run against the copy.
+    if [ "$PROJECT_DIR" != "$INSTALL_ROOT" ]; then
+      if [ ! -f "$PROJECT_DIR/src/api/dist/server.js" ]; then
+        echo "ERROR: no production build found (src/api/dist/server.js missing)." >&2
+        echo "Run ./scripts/build-prod.sh first, then re-run install." >&2
+        exit 1
+      fi
+      echo "Copying the CrateCaddy runtime to $INSTALL_ROOT ..."
+      mkdir -p "$INSTALL_ROOT/bin" "$INSTALL_ROOT/macos"
+      cp "$PROJECT_DIR/bin/cratecaddy" "$INSTALL_ROOT/bin/cratecaddy"
+      chmod +x "$INSTALL_ROOT/bin/cratecaddy"
+      cp "$PROJECT_DIR/docker-compose.yml" "$PROJECT_DIR/docker-compose.prod.yml" "$INSTALL_ROOT/"
+      cp "$PROJECT_DIR/macos/com.cratecaddy.startup.plist" "$INSTALL_ROOT/macos/"
+      rm -rf "$INSTALL_ROOT/src/api"
+      cp -R "$PROJECT_DIR/src/api" "$INSTALL_ROOT/src/api"
+      # One PATH line in ~/.zshrc so `cratecaddy` resolves anywhere. Idempotent:
+      # a full-line grep guard means re-running install never duplicates it.
+      if [ -f "$HOME/.zshrc" ]; then
+        if ! grep -qF 'export PATH="$HOME/.cratecaddy/bin:$PATH"' "$HOME/.zshrc"; then
+          {
+            echo ""
+            echo "# cratecaddy CLI"
+            echo 'export PATH="$HOME/.cratecaddy/bin:$PATH"'
+          } >> "$HOME/.zshrc"
+        fi
+      fi
+      echo "Runtime installed. Open a new terminal (or run 'source ~/.zshrc') to use 'cratecaddy'."
+    fi
+    # Bake the installed CLI path and log file path into the plist. The plist
+    # always references the installed copy ($INSTALL_ROOT/bin/cratecaddy), never
+    # the checkout, so auto-start survives the checkout being moved or removed.
+    # The installed copy is frozen config — changing config.env afterwards does
+    # not rewrite it; re-run `install` to regenerate.
+    sed -e "s|__CRATECADDY_CLI_PATH__|$INSTALL_ROOT/bin/cratecaddy|" \
         -e "s|__CRATECADDY_LOG_FILE__|$LOG_FILE|" \
-      "$PROJECT_DIR/macos/com.cratecaddy.startup.plist" \
+      "$INSTALL_ROOT/macos/com.cratecaddy.startup.plist" \
       > ~/Library/LaunchAgents/com.cratecaddy.startup.plist
     launchctl load ~/Library/LaunchAgents/com.cratecaddy.startup.plist
     echo "Auto-start enabled. CrateCaddy will start on boot."
@@ -230,7 +272,12 @@ case "${1:-}" in
     rm -f ~/Library/LaunchAgents/com.cratecaddy.startup.plist
     stop_api
     docker compose -f "$PROJECT_DIR/docker-compose.yml" -f "$PROJECT_DIR/docker-compose.prod.yml" down 2>/dev/null || true
-    echo "CrateCaddy uninstalled."
+    # Remove the PATH line added by install (leave the rest of ~/.zshrc alone).
+    if [ -f "$HOME/.zshrc" ]; then
+      sed -i '' -e '/^# cratecaddy CLI$/d' -e '/^export PATH="\$HOME\/\.cratecaddy\/bin:\$PATH"$/d' "$HOME/.zshrc"
+    fi
+    echo "CrateCaddy uninstalled. The runtime in ~/.cratecaddy and the prod data volume are kept."
+    echo "To remove them too: rm -rf ~/.cratecaddy && docker volume rm cratecaddy-mongo-data-prod"
     ;;
   *)
     echo "CrateCaddy — music metadata explorer"
@@ -244,7 +291,7 @@ case "${1:-}" in
     echo "  status            Check if CrateCaddy is running"
     echo "  logs              Tail API log file"
     echo "  import <path>     Import from Apple Music XML"
-    echo "  install           Enable auto-start on boot"
-    echo "  uninstall         Remove auto-start and stop services"
+    echo "  install           Install runtime to ~/.cratecaddy + enable auto-start"
+    echo "  uninstall         Remove auto-start + PATH line, stop services"
     ;;
 esac

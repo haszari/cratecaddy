@@ -8,15 +8,15 @@ This is the **production** setup. It uses its own ports and data, so it runs alo
 
 Installing the appliance creates these things on your machine:
 
-- `~/.cratecaddy/` — runtime directory: config (`config.env`), API log, API PID file
+- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file
+- a PATH line in `~/.zshrc` pointing at `~/.cratecaddy/bin`, so the `cratecaddy` command works from any terminal
 - `cratecaddy-mongodb-prod` — a Docker container running MongoDB 7.0
 - `cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
 - `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
-- `/usr/local/bin/cratecaddy` — a symlink to the CLI script (from the install step below)
 
 None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
 
-Uninstall: `cratecaddy uninstall` removes the launchd agent and stops everything. Remove the CLI symlink yourself with `sudo rm /usr/local/bin/cratecaddy`. Data in the prod volume is kept — remove it yourself with `docker volume rm cratecaddy-mongo-data-prod` if you want it gone.
+Uninstall: `cratecaddy uninstall` removes the launchd agent, the PATH line, and stops everything. The runtime in `~/.cratecaddy` and the prod data volume are kept — remove them yourself with `rm -rf ~/.cratecaddy` and `docker volume rm cratecaddy-mongo-data-prod` if you want them gone.
 
 ## Prerequisites
 
@@ -38,20 +38,24 @@ npm install --prefix src/ui
 # 3. Build for production (bundles the UI into the API server)
 ./scripts/build-prod.sh
 
-# 4. Link the CLI onto your PATH (needs sudo)
-sudo ln -s ~/cratecaddy/bin/cratecaddy /usr/local/bin/cratecaddy
+# 4. Install the appliance — copies the built runtime to ~/.cratecaddy and
+#    adds ~/.cratecaddy/bin to your PATH (in ~/.zshrc)
+./bin/cratecaddy install
 
-# 5. Start
+# 5. Start (open a new terminal first, or run: source ~/.zshrc)
 cratecaddy start
 ```
 
 Open <http://localhost:5225>.
 
+The appliance is a **copy** — after install you can move or delete the checkout and CrateCaddy keeps working.
+
 ## Auto-start on boot
 
+`cratecaddy install` also enables start-on-login. To undo:
+
 ```bash
-cratecaddy install      # start on login
-cratecaddy uninstall    # remove auto-start + stop services
+cratecaddy uninstall    # remove auto-start + PATH line, stop services
 ```
 
 ## Day-to-day

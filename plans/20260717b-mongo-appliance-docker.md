@@ -12,6 +12,14 @@ Production appliance. No terminals. Starts on OS boot. Open browser to `http://l
 
 ---
 
+## Addendum (2026-08-08): the installation steps below are superseded — use with care
+
+This plan's installation section is **superseded**. It installs the CLI as a `/usr/local/bin` symlink to the checkout, which turned out to be fragile: the appliance resolves everything from `PROJECT_DIR`, so moving or deleting the checkout breaks `start`/`stop`/`import` and leaves a dangling symlink (this actually happened on the author's machine).
+
+**Correct approach (per [ADR-0012](../docs/adr/0012-per-user-install-directory.md)):** per-user install to `~/.cratecaddy/`. `cratecaddy install` copies the built runtime (CLI, compose files, launchd template, built API) into `~/.cratecaddy/`, appends one PATH line to `~/.zshrc` (`export PATH="$HOME/.cratecaddy/bin:$PATH"`), and writes the launchd plist against the installed copy — no sudo, and the checkout is disposable after install. See [PRODUCTION.md](../PRODUCTION.md) for current install/uninstall steps. This follows the "own hidden folder + own PATH line" convention used by mainstream user-installed CLI tools on macOS — rustup/cargo (`~/.cargo/bin`), [deno](https://docs.deno.com/runtime/getting_started/installation) (`~/.deno/bin`), [pyenv](https://github.com/pyenv/pyenv) (`~/.pyenv/bin`), [asdf](https://asdf-vm.com/guide/getting-started.html) (`~/.asdf`). The XDG `~/.local/bin` alternative ([spec](https://specifications.freedesktop.org/basedir-spec/latest/)) was rejected: macOS does not put it on PATH by default, and its adopters (pipx, uv, mise) are a niche.
+
+---
+
 ## Architecture
 
 ```
