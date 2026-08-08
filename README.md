@@ -83,7 +83,10 @@ Import music library metadata from Apple Music.
 
 This will import all song metadata with grouping containing `DJing` or `Listening`. 
 
-See [import-apple-music.ts](./src/api/scripts/import-apple-music.ts) for details.
+Import scripts are the same in dev and prod — one source of truth ([import-apple-music.ts](./src/api/scripts/import-apple-music.ts)). The two entry points only differ in which database they target:
+
+- `npm run import:applemusic` (dev) — targets the dev database from the root `.env` config
+- `cratecaddy import` (prod, see [PRODUCTION.md](./PRODUCTION.md)) — targets the prod database, controlled by `cratecaddy import dev|prod <file>`
 
 Song data is merged based on artist + title + duration, and import process updates database (can re-import multiple times safely - idempotent).
 
@@ -103,11 +106,8 @@ Not recommended or supported at present, cumbersome flow.
 - Genre statistics: `http://localhost:7625/api/songs/stats/genres`
 - Frontend: `http://localhost:7626`
 
-## Production build / run - tbc, work in progress
+## Production build / run
 
-Currently UI and API are built separately:
+Run Crate Caddy as a self-contained service on this Mac — MongoDB in Docker plus the built API serving the UI, managed by the `cratecaddy` command and optionally auto-started on boot.
 
-1. Build UI: `cd src/ui && npm run build` → outputs to `dist/`
-2. Build API: `cd src/api && npm run build` → outputs to `dist/`
-3. Serve UI from a static host (Vercel, Netlify, S3, etc.)
-4. Run API server on a Node.js host with MongoDB connection
+See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and what it does to your system.

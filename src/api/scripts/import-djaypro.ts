@@ -36,7 +36,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { songService } from '../src/services/songService.js';
 
-dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..', '.env') });
 
 const connectDB = async () => {
   const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy';

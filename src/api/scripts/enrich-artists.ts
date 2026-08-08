@@ -17,7 +17,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..', '.env') });
 
 const MB_API = 'https://musicbrainz.org/ws/2/artist';
 const WIKI_API = 'https://en.wikipedia.org/w/api.php';
