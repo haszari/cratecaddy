@@ -4,7 +4,7 @@
 
 The Express API serves the built static UI from its own `dist/static/` directory at the root URL, so the browser and the API share one origin. The UI's API client defaults to **relative** URLs (`import.meta.env.VITE_API_URL || ''`), and production builds force `VITE_API_URL=` empty via `src/ui/.env.production`. Requests resolve against whatever host and port Express actually listens on.
 
-This keeps the appliance to a single Node process on the macOS host (alongside MongoDB in Docker). A custom `API_PORT` in config still works because no absolute URL is baked into the production bundle. In dev the absolute `http://localhost:7625` from `src/ui/.env` remains correct — the Vite dev server (7626) and the API (7625) are different origins.
+This keeps the appliance to a single Node process on the macOS host (alongside MongoDB in Docker). A custom `API_PORT` in config still works because no absolute URL is baked into the production bundle. In dev the absolute `http://localhost:5326` from `src/ui/.env` remains correct — the Vite dev server (5325) and the API (5326) are different origins.
 
 The `fs.existsSync` guard in `server.ts` skips static serving entirely when no `dist/static/` exists, so dev mode is unaffected.
 

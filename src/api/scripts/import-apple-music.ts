@@ -5,7 +5,7 @@
  * Imports songs from Apple Music Library.xml export into CrateCaddy database.
  * 
  * Environment Variables:
- *   MONGODB_URI - MongoDB connection string (default: mongodb://localhost:27017/cratecaddy)
+ *   MONGODB_URI - MongoDB connection string (default: mongodb://localhost:5327/cratecaddy)
  * 
  * Parameters:
  *   xmlPath - Path to Library.xml file (optional, defaults to ../../data/Library.xml)

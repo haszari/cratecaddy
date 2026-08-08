@@ -4,8 +4,8 @@
 
 All values are configurable through env files with defaults when unset. Prod values live in `~/.cratecaddy/config.env`; dev values live in the repo-root `.env` (auto-loaded by Docker Compose). The CLI **sources** config.env at startup, so the resulting env vars flow into the compose command, the API process, and the import script. No `--env-file` pass-through is used — sourcing is the mechanism.
 
-- `API_PORT` — API listen port (dev default 7625, prod default 7640)
-- `MONGO_PORT` — host-side MongoDB port (dev default 27017, prod default 27018)
+- `API_PORT` — API listen port (defaults defined in the CLI and repo `.env`, not fixed here)
+- `MONGO_PORT` — host-side MongoDB port (same)
 - `CRATECADDY_LOG` — log file path (default `~/.cratecaddy/cratecaddy.log`)
 - `CRATECADDY_ENV` — `prod` (default) or `dev`
 

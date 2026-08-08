@@ -17,7 +17,7 @@
  *   (not available in the djaypro CSV export format)
  * 
  * Environment Variables:
- *   MONGODB_URI - MongoDB connection string (default: mongodb://localhost:27017/cratecaddy)
+ *   MONGODB_URI - MongoDB connection string (default: mongodb://localhost:5327/cratecaddy)
  * 
  * Parameters:
  *   csvPath - Path to CSV file (optional, defaults to ../../data/dJayPro.csv)

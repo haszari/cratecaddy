@@ -13,7 +13,7 @@ Connect directly to the MongoDB container:
 docker exec -it cratecaddy-mongodb mongosh cratecaddy
 
 # Or connect from host (if mongosh is installed locally)
-mongosh mongodb://localhost:27017/cratecaddy
+mongosh mongodb://localhost:5327/cratecaddy
 ```
 
 Once connected, you can run queries:
@@ -92,7 +92,7 @@ docker exec cratecaddy-mongodb mongosh cratecaddy --quiet --eval "JSON.stringify
 ## Option 4: MongoDB Compass (GUI)
 
 1. Download [MongoDB Compass](https://www.mongodb.com/products/compass)
-2. Connect to: `mongodb://localhost:27017`
+2. Connect to: `mongodb://localhost:5327`
 3. Select database: `cratecaddy`
 4. Browse collections visually
 

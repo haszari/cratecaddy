@@ -5,14 +5,14 @@
 # Compose merges this with the base file: the base `name:`/`container_name`/
 # ports/volumes are REPLACED by the values here. `ports: !override` is required
 # because compose merges port lists by APPENDING — without it prod would publish
-# both the dev (27017) and prod (27018) mappings and collide with dev Mongo.
+# both the dev (5327) and prod (5227) mappings and collide with dev Mongo.
 name: cratecaddy-prod
 
 services:
   mongodb:
     container_name: cratecaddy-mongodb-prod
     ports: !override
-      - "127.0.0.1:${MONGO_PORT:-27018}:27017"
+      - "127.0.0.1:${MONGO_PORT:-5227}:27017"
     volumes:
       - cratecaddy-mongo-data-prod:/data/db
     restart: unless-stopped

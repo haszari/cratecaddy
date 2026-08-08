@@ -45,8 +45,8 @@ cd src/api && npm run dev
 cd src/ui && npm run dev
 ```
 
-- Frontend: http://localhost:7626
-- API: http://localhost:7625/health
+- Frontend: http://localhost:5325
+- API: http://localhost:5326/health
 
 #### Hot reload
 

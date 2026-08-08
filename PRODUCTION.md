@@ -14,7 +14,7 @@ Installing the appliance creates these things on your machine:
 - `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
 - `/usr/local/bin/cratecaddy` — a symlink to the CLI script (from the install step below)
 
-None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 7640, `MONGO_PORT` 27018), a separate container, and a separate data volume.
+None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
 
 Uninstall: `cratecaddy uninstall` removes the launchd agent and stops everything. Data in the prod volume is kept — remove it yourself with `docker volume rm cratecaddy-mongo-data-prod` if you want it gone.
 
@@ -45,7 +45,7 @@ ln -s ~/cratecaddy/bin/cratecaddy /usr/local/bin/cratecaddy
 cratecaddy start
 ```
 
-Open <http://localhost:7640>.
+Open <http://localhost:5225>.
 
 ## Auto-start on boot
 
@@ -75,8 +75,8 @@ See [Import data from Apple Music](./README.md#import-data-from-apple-music) for
 All values are optional — defaults work as-is. Override by creating `~/.cratecaddy/config.env`:
 
 ```bash
-API_PORT=7640
-MONGO_PORT=27018
+API_PORT=5225
+MONGO_PORT=5227
 CRATECADDY_LOG=/path/to/cratecaddy.log
 ```
 

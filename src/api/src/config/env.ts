@@ -17,6 +17,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 export const config = {
   repoRoot,
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy',
-  apiPort: Number(process.env.API_PORT) || 7625,
+  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:5327/cratecaddy',
+  apiPort: Number(process.env.API_PORT) || 5326,
 };

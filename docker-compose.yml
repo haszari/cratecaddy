@@ -18,7 +18,7 @@ services:
     image: mongo:7.0
     container_name: cratecaddy-mongodb-dev
     ports:
-      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
+      - "127.0.0.1:${MONGO_PORT:-5327}:27017"
     environment:
       MONGO_INITDB_DATABASE: cratecaddy
     volumes:
