@@ -96,8 +96,6 @@ Song data is merged based on artist + title + duration, and import process updat
 
 Experimental import from other sources that include musical key data. As above, can be rerun, data is merged based on key song metadata. Source-specific metadata is stored separately in the mongodb record. 
 
-Not recommended or supported at present, cumbersome flow. 
-
 ## Architecture
 
 - **src/ui/** - Vite + React SPA displaying genre tag clouds from the API
