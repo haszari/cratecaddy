@@ -13,11 +13,7 @@
  */
 
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..', '.env') });
+import { config } from '../src/config/env.js';
 
 const MB_API = 'https://musicbrainz.org/ws/2/artist';
 const WIKI_API = 'https://en.wikipedia.org/w/api.php';
@@ -32,8 +28,7 @@ interface ArtistRow {
 }
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy';
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(config.mongoUri);
 };
 
 const quoteCsv = (val: string): string => {

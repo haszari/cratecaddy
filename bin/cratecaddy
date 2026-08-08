@@ -94,6 +94,11 @@ start_mongodb() {
   done
   # `docker compose up -d` is idempotent: if the container is already up it
   # prints "running" and exits 0, so no separate already-running guard is needed.
+  # Export MONGO_PORT so compose interpolates a custom value from config.env:
+  # `docker compose` only reads the process environment, and sourcing config.env
+  # sets shell vars that are NOT exported — without this, the container would
+  # publish the default port while start_api connects to the custom one.
+  export MONGO_PORT
   docker compose -f "$PROJECT_DIR/docker-compose.yml" -f "$PROJECT_DIR/docker-compose.prod.yml" up -d
   echo "Waiting for MongoDB..."
   # mongosh runs inside the container (it ships with mongo:7.0), so no host
@@ -114,9 +119,10 @@ start_mongodb() {
 
 start_api() {
   cd "$PROJECT_DIR/src/api"
-  # Export the resolved prod config into the Node process. server.ts also calls
-  # dotenv.config() on the repo .env, but dotenv never overrides vars already in
-  # the environment — so these exports always win and custom ports take effect.
+  # Export the resolved prod config into the Node process. The API's shared
+  # config module (src/api/src/config/env.ts) reads MONGODB_URI and API_PORT
+  # from the environment and only falls back to the repo .env for dev, so these
+  # exports always win and custom ports take effect.
   export NODE_ENV=production
   export API_PORT
   export MONGODB_URI="mongodb://127.0.0.1:${MONGO_PORT}/cratecaddy"
@@ -186,10 +192,10 @@ case "${1:-}" in
         ;;
     esac
     # Load the target env's config, then export MONGODB_URI so the host-side
-    # import script (which reads process.env.MONGODB_URI, default localhost:27017)
-    # connects to the right database on the right port. The URI is always derived
-    # from the resolved MONGO_PORT — never trusted from the config file — so the
-    # port and the URI cannot drift apart.
+    # import script (whose shared config module reads process.env.MONGODB_URI,
+    # default localhost:27017) connects to the right database on the right port.
+    # The URI is always derived from the resolved MONGO_PORT — never trusted from
+    # the config file — so the port and the URI cannot drift apart.
     if [ "$ENV_TARGET" = "dev" ]; then
       # Dev defaults independently of prod config (which was sourced at the top):
       # .env may override these, but a missing value must NOT inherit prod's.

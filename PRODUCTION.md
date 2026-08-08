@@ -1,6 +1,6 @@
-# Crate Caddy appliance (prod build)
+# CrateCaddy appliance (prod build)
 
-Runs Crate Caddy as a self-contained service on your Mac: a MongoDB container (Docker) plus the built API server (Node, serving the UI). Managed by a single `cratecaddy` command, optionally auto-started on boot via launchd.
+Runs CrateCaddy as a self-contained service on macOS: a MongoDB container (Docker) plus the built API server (Node, serving the UI). Managed by a single `cratecaddy` command, optionally auto-started on boot via launchd.
 
 This is the **production** setup. It uses its own ports and data, so it runs alongside the dev workflow without touching it.
 
@@ -81,6 +81,10 @@ CRATECADDY_LOG=/path/to/cratecaddy.log
 ```
 
 After changing config, restart: `cratecaddy restart`.
+
+## Security notes
+
+The API binds all network interfaces, so it is reachable from other devices on your LAN at `http://<mac-ip>:<API_PORT>`. MongoDB binds loopback only (`127.0.0.1`), so the database is not exposed. Do not expose the API port to the internet — it has no authentication.
 
 ## How it fits with development
 

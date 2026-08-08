@@ -8,10 +8,10 @@ Dev and prod are fully isolated:
 |---|---|---|
 | MongoDB container | `cratecaddy-mongodb-prod` | `cratecaddy-mongodb-dev` |
 | Data volume | `cratecaddy-mongo-data-prod` | `cratecaddy-mongo-data-dev` |
-| Host port | `MONGO_PORT` from config.env (default 27017) | `MONGO_PORT` from root `.env` |
+| Host port | `MONGO_PORT` from config.env (default 27018) | `MONGO_PORT` from root `.env` (default 27017) |
 | Compose | base + `docker-compose.prod.yml` override | base `docker-compose.yml` only |
 
-Container names and volume names carry a `-prod`/`-dev` suffix so Docker never sees a name collision, and both can run simultaneously. Ports are configurable per environment (e.g. dev on 27018) so host port bindings never clash. The base compose file interpolates `${MONGO_PORT:-27017}` rather than hardcoding 27017.
+Container names and volume names carry a `-prod`/`-dev` suffix so Docker never sees a name collision, and both can run simultaneously. Ports are configurable per environment (e.g. prod on 27018) so host port bindings never clash. The base compose file interpolates `${MONGO_PORT:-27017}` rather than hardcoding 27017.
 
 MongoDB data lives in Docker **named volumes**, not a host folder. There is no `CRATECADDY_DATA` config knob and no bind mount: the data is opaque Mongo state (WiredTiger files) that a human can't read, so surfacing it invites confusion. Backups and restores go through `cratecaddy import` or `docker volume` operations.
 

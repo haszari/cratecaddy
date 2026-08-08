@@ -1,15 +1,10 @@
 #!/usr/bin/env ts-node
 
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..', '.env') });
+import { config } from '../src/config/env.js';
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy';
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(config.mongoUri);
 };
 
 const quoteCsv = (val: string): string => {

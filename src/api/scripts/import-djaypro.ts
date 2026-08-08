@@ -31,16 +31,13 @@
 
 import mongoose from 'mongoose';
 import { readFileSync } from 'fs';
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { config } from '../src/config/env.js';
 import { songService } from '../src/services/songService.js';
 
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..', '.env') });
-
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy';
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(config.mongoUri);
   console.log('Connected to MongoDB');
 };
 

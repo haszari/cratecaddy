@@ -1,17 +1,16 @@
-# Crate Caddy
+# CrateCaddy
 
 Music metadata exploration tool: React SPA frontend, Express API, and MongoDB database for indexing and discovering your music collection through genre tags.
 
 🤖 *Warning: LLM agents helped build this thing - do not use for club gigs, weddings probably ok* 🚨
 
-## Architecture
-
-- **src/ui/** - Vite + React SPA displaying genre tag clouds from the API
-- **src/api/** - Express TypeScript server with Mongoose models, CRUD endpoints at `/api/songs`
-  - **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
-- **Docker** - Only MongoDB runs in Docker; the API runs on the host (macOS) so it can call `osascript` for write round-trips to Apple Music
-
 Architecture decisions are recorded in [docs/adr/](./docs/adr/).
+
+## Production build / run
+
+CrateCaddy can run as a self-contained service on macOS. MongoDB in Docker, built API serving UI static webapp. Launch with `cratecaddy` command, optional auto-start on boot.
+
+See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and what it does to your system.
 
 ## Development
 
@@ -99,15 +98,10 @@ Experimental import from other sources that include musical key data. As above, 
 
 Not recommended or supported at present, cumbersome flow. 
 
-## Testing
+## Architecture
 
-- API health check: `http://localhost:7625/health`
-- All songs: `http://localhost:7625/api/songs`
-- Genre statistics: `http://localhost:7625/api/songs/stats/genres`
-- Frontend: `http://localhost:7626`
+- **src/ui/** - Vite + React SPA displaying genre tag clouds from the API
+- **src/api/** - Express TypeScript server with Mongoose models, CRUD endpoints at `/api/songs`
+  - **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
+- **Docker** - Only MongoDB runs in Docker; the API runs on the host (macOS) so it can call `osascript` for write round-trips to Apple Music
 
-## Production build / run
-
-Run Crate Caddy as a self-contained service on this Mac — MongoDB in Docker plus the built API serving the UI, managed by the `cratecaddy` command and optionally auto-started on boot.
-
-See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and what it does to your system.
