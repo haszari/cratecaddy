@@ -4,19 +4,6 @@ Runs CrateCaddy as a self-contained service on macOS: a MongoDB container (Docke
 
 This is the **production** setup. It uses its own ports and data, so it runs alongside the dev workflow without touching it.
 
-## What it does to your system
-
-Installing the appliance creates these things on your machine:
-
-- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file
-- a PATH line in `~/.zshrc` pointing at `~/.cratecaddy/bin`, so the `cratecaddy` command works from any terminal
-- `cratecaddy-mongodb-prod` — a Docker container running MongoDB 7.0
-- `cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
-- `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
-
-None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
-
-Uninstall: `cratecaddy uninstall` removes the launchd agent, the PATH line, and stops everything. The runtime in `~/.cratecaddy` and the prod data volume are kept — remove them yourself with `rm -rf ~/.cratecaddy` and `docker volume rm cratecaddy-mongo-data-prod` if you want them gone.
 
 ## Prerequisites
 
@@ -58,7 +45,7 @@ The appliance is a **copy** — after install you can move or delete the checkou
 cratecaddy uninstall    # remove auto-start + PATH line, stop services
 ```
 
-## Day-to-day
+## Usage - command reference
 
 | Command | What it does |
 |---|---|
@@ -93,3 +80,17 @@ The API binds all network interfaces, so it is reachable from other devices on y
 ## How it fits with development
 
 The dev workflow is unaffected — separate ports, container, volume, and compose project (`cratecaddy-dev`). Both can run at the same time. See [Development](./README.md#development) in the README.
+
+## What's installed, where? How to uninstall?
+
+Installing the appliance creates these things on your machine:
+
+- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file
+- a PATH line in `~/.zshrc` pointing at `~/.cratecaddy/bin`, so the `cratecaddy` command works from any terminal
+- `cratecaddy-mongodb-prod` — a Docker container running MongoDB 7.0
+- `cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
+- `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
+
+None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
+
+Uninstall: `cratecaddy uninstall` removes the launchd agent, the PATH line, and stops everything. The runtime in `~/.cratecaddy` and the prod data volume are kept — remove them yourself with `rm -rf ~/.cratecaddy` and `docker volume rm cratecaddy-mongo-data-prod` if you want them gone.
