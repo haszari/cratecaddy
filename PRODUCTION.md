@@ -16,7 +16,7 @@ Installing the appliance creates these things on your machine:
 
 None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
 
-Uninstall: `cratecaddy uninstall` removes the launchd agent and stops everything. Data in the prod volume is kept — remove it yourself with `docker volume rm cratecaddy-mongo-data-prod` if you want it gone.
+Uninstall: `cratecaddy uninstall` removes the launchd agent and stops everything. Remove the CLI symlink yourself with `sudo rm /usr/local/bin/cratecaddy`. Data in the prod volume is kept — remove it yourself with `docker volume rm cratecaddy-mongo-data-prod` if you want it gone.
 
 ## Prerequisites
 
@@ -38,8 +38,8 @@ npm install --prefix src/ui
 # 3. Build for production (bundles the UI into the API server)
 ./scripts/build-prod.sh
 
-# 4. Link the CLI onto your PATH
-ln -s ~/cratecaddy/bin/cratecaddy /usr/local/bin/cratecaddy
+# 4. Link the CLI onto your PATH (needs sudo)
+sudo ln -s ~/cratecaddy/bin/cratecaddy /usr/local/bin/cratecaddy
 
 # 5. Start
 cratecaddy start

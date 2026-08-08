@@ -38,7 +38,8 @@ set -e
 #
 # INSTALLATION
 #   Clone the repo, npm install in src/ui and src/api, run `./scripts/build-prod.sh`,
-#   then symlink this script onto PATH (e.g. /usr/local/bin/cratecaddy) and run
+#   then symlink this script onto PATH with sudo (e.g.
+#   sudo ln -s <repo>/bin/cratecaddy /usr/local/bin/cratecaddy) and run
 #   `cratecaddy install` for boot auto-start. Docker must be running.
 # ---------------------------------------------------------------------------
 
