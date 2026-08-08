@@ -241,17 +241,22 @@ case "${1:-}" in
       cp "$PROJECT_DIR/docker-compose.yml" "$PROJECT_DIR/docker-compose.prod.yml" "$INSTALL_ROOT/"
       cp "$PROJECT_DIR/macos/com.cratecaddy.startup.plist" "$INSTALL_ROOT/macos/"
       rm -rf "$INSTALL_ROOT/src/api"
-      cp -R "$PROJECT_DIR/src/api" "$INSTALL_ROOT/src/api"
+      # BSD cp -R fails if the destination's parent (…/src) does not exist, so
+      # pre-create it and copy the contents rather than the directory itself.
+      mkdir -p "$INSTALL_ROOT/src/api"
+      cp -R "$PROJECT_DIR/src/api/." "$INSTALL_ROOT/src/api/"
       # One PATH line in ~/.zshrc so `cratecaddy` resolves anywhere. Idempotent:
       # a full-line grep guard means re-running install never duplicates it.
-      if [ -f "$HOME/.zshrc" ]; then
-        if ! grep -qF 'export PATH="$HOME/.cratecaddy/bin:$PATH"' "$HOME/.zshrc"; then
-          {
-            echo ""
-            echo "# cratecaddy CLI"
-            echo 'export PATH="$HOME/.cratecaddy/bin:$PATH"'
-          } >> "$HOME/.zshrc"
-        fi
+      # Create ~/.zshrc if missing (fresh accounts may not have one).
+      if [ ! -f "$HOME/.zshrc" ]; then
+        touch "$HOME/.zshrc"
+      fi
+      if ! grep -qF 'export PATH="$HOME/.cratecaddy/bin:$PATH"' "$HOME/.zshrc"; then
+        {
+          echo ""
+          echo "# cratecaddy CLI"
+          echo 'export PATH="$HOME/.cratecaddy/bin:$PATH"'
+        } >> "$HOME/.zshrc"
       fi
       echo "Runtime installed. Open a new terminal (or run 'source ~/.zshrc') to use 'cratecaddy'."
     fi
@@ -260,6 +265,7 @@ case "${1:-}" in
     # the checkout, so auto-start survives the checkout being moved or removed.
     # The installed copy is frozen config — changing config.env afterwards does
     # not rewrite it; re-run `install` to regenerate.
+    mkdir -p ~/Library/LaunchAgents
     sed -e "s|__CRATECADDY_CLI_PATH__|$INSTALL_ROOT/bin/cratecaddy|" \
         -e "s|__CRATECADDY_LOG_FILE__|$LOG_FILE|" \
       "$INSTALL_ROOT/macos/com.cratecaddy.startup.plist" \
