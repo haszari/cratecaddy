@@ -1,5 +1,5 @@
 import { Song, ISong, ISource, SourceFormat } from '../models/Song.js';
-import { HistoryEntry, IHistoryEntry } from '../models/History.js';
+import { HistoryEntry, IHistoryEntry, IHistorySnapshot } from '../models/History.js';
 import { buildSongFilter } from '../helpers/buildSongFilter.js';
 import { ApiFilterParams, ApiPaginationParams } from '../helpers/apiParams.js';
 import { parsePagination, PaginationResult } from '../helpers/pagination.js';

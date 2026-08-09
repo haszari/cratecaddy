@@ -2,7 +2,7 @@ import type { Song, PaginatedResponse } from '../types';
 import { KEY } from '@cratecaddy-api/apiParams';
 import type { ApiSongParams, ApiGenreStatsParams } from '@cratecaddy-api/apiParams';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 function buildQueryString(params: ApiSongParams): string {
   const parts: string[] = [];

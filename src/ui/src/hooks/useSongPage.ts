@@ -11,7 +11,7 @@ import { splitCSV, setParam } from '../utils/urlParams';
 import type { TagInfo } from '../types';
 import type { SortField, SortDirection } from '../components/SongTable';
 import type { FilterBarProps } from '../components/FilterBar';
-import { buildApiParams } from '@cratecaddy-api/apiParams';
+import { buildApiParams, KEY } from '@cratecaddy-api/apiParams';
 
 interface UseSongPageOptions {
   /** Page-specific filter params (artistAny, favorite, genreAny/genreAll from URL path) */
@@ -135,24 +135,32 @@ export function useSongPage({
     [genreMode, decodedGenres, isOrMode, navigate],
   );
 
+  // Genre filter params for the API query
+  const genreApiParams = useMemo(() => {
+    if (genreMode === 'search-param' && genreParam && genreParamKey) {
+      return { [genreParamKey]: genreParam };
+    }
+    if (genreMode === 'url-path' && decodedGenres.length > 0) {
+      const key = isOrMode ? KEY.genreAny : KEY.genreAll;
+      return { [key]: decodedGenres.join(',') };
+    }
+    return {};
+  }, [genreMode, genreParam, genreParamKey, decodedGenres, isOrMode]);
+
   // Query params
   const extraParams = useMemo(() => ({
     ...extraFilterParams,
-    ...(genreMode === 'search-param' && genreParam && genreParamKey
-      ? { [genreParamKey]: genreParam }
-      : {}),
+    ...genreApiParams,
     ...buildApiParams(filters),
     ...(sortField && { sort: sortField }),
     ...(sortDirection && { sortDirection }),
-  }), [extraFilterParams, genreMode, genreParam, genreParamKey, filters, sortField, sortDirection]);
+  }), [extraFilterParams, genreApiParams, filters, sortField, sortDirection]);
 
   const statsParams = useMemo(() => ({
     ...extraFilterParams,
-    ...(genreMode === 'search-param' && genreParam && genreParamKey
-      ? { [genreParamKey]: genreParam }
-      : {}),
+    ...genreApiParams,
     ...buildApiParams(filters),
-  }), [extraFilterParams, genreMode, genreParam, genreParamKey, filters]);
+  }), [extraFilterParams, genreApiParams, filters]);
 
   // Songs query
   const { data: paginated, isLoading, error } = useSongs({
@@ -162,9 +170,9 @@ export function useSongPage({
     limit: 50,
   });
 
-  // Genre stats query
+  // Genre stats query — append filters so stale-cache refetches when they change
   const { data: relatedStats } = useQuery({
-    queryKey: genreStatsKey,
+    queryKey: [...genreStatsKey, filters],
     queryFn: () => fetchGenreStats(statsParams),
     enabled: genreStatsEnabled,
   });

@@ -7,6 +7,7 @@ import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import { buildEditUrl } from '../utils/urlBuilder';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function GenreDetail() {
   const { genrePath } = useParams<{ genrePath: string }>();
@@ -27,6 +28,8 @@ export default function GenreDetail() {
     () => decodedGenres.length > 0 ? decodedGenres.join(',') : undefined,
     [decodedGenres],
   );
+
+  useDocumentTitle(decodedGenres.length > 0 ? decodedGenres.join(separator) : undefined);
 
   const editHref = buildEditUrl(
     location.search,

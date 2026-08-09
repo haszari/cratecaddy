@@ -9,6 +9,7 @@ import { buildEditUrl } from '../utils/urlBuilder';
 import { splitCSV } from '../utils/urlParams';
 import { Heart } from 'lucide-react';
 import { KEY } from '@cratecaddy-api/apiParams';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Favourited() {
   const location = useLocation();
@@ -16,6 +17,8 @@ export default function Favourited() {
 
   const requiredGenres = splitCSV(searchParams.get(KEY.genreAll));
   const { filters } = useFilters();
+
+  useDocumentTitle('Favourited');
 
   const editHref = buildEditUrl(location.search, 'favourited', { favorite: 'starred' });
 

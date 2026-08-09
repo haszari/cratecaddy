@@ -1,0 +1,21 @@
+# Production override of docker-compose.yml. See the header comment there for
+# why this is a separate override file rather than one parameterised compose
+# file (compose does not interpolate top-level `volumes:` keys).
+#
+# Compose merges this with the base file: the base `name:`/`container_name`/
+# ports/volumes are REPLACED by the values here. `ports: !override` is required
+# because compose merges port lists by APPENDING — without it prod would publish
+# both the dev (5327) and prod (5227) mappings and collide with dev Mongo.
+name: cratecaddy-prod
+
+services:
+  mongodb:
+    container_name: cratecaddy-mongodb-prod
+    ports: !override
+      - "127.0.0.1:${MONGO_PORT:-5227}:27017"
+    volumes:
+      - cratecaddy-mongo-data-prod:/data/db
+    restart: unless-stopped
+
+volumes:
+  cratecaddy-mongo-data-prod:

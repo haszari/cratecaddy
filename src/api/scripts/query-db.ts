@@ -15,16 +15,11 @@
  */
 
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { config } from '../src/config/env.js';
 import { Song } from '../src/models/Song.js';
 
-dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
-
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cratecaddy';
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(config.mongoUri);
   console.log('Connected to MongoDB');
   return mongoose.connection.db;
 };

@@ -9,6 +9,7 @@ import SongTable from '../components/SongTable';
 import { buildEditUrl } from '../utils/urlBuilder';
 import { splitCSV } from '../utils/urlParams';
 import { KEY } from '@cratecaddy-api/apiParams';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Artist() {
   const { artistName } = useParams<{ artistName: string }>();
@@ -18,6 +19,8 @@ export default function Artist() {
 
   const requiredGenres = splitCSV(searchParams.get(KEY.genreAll));
   const { filters } = useFilters();
+
+  useDocumentTitle(decodedArtist || undefined);
 
   const editHref = buildEditUrl(
     location.search,

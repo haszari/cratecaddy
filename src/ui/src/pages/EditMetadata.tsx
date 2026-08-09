@@ -7,6 +7,7 @@ import FilterBar from '../components/FilterBar';
 import BasePageCriteria from '../components/BasePageCriteria';
 import EditLayout from '../components/EditLayout';
 import { KEY, readApiParams } from '@cratecaddy-api/apiParams';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function EditMetadata() {
   const [searchParams] = useSearchParams();
@@ -87,6 +88,8 @@ export default function EditMetadata() {
   const sanitisedRatingGte = ratingGteNum !== undefined && !isNaN(ratingGteNum) ? ratingGteNum : undefined;
   const sanitisedRatingLte = ratingLteNum !== undefined && !isNaN(ratingLteNum) ? ratingLteNum : undefined;
   const genreNotList = genreNot?.split(',').filter(Boolean) ?? [];
+
+  useDocumentTitle('Edit');
 
   const doneHref = buildViewUrl(location.search);
 

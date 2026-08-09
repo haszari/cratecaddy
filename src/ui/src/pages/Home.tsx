@@ -9,8 +9,10 @@ import FilterBar from '../components/FilterBar';
 import type { TagInfo } from '../types';
 import { withSearch } from '../utils/url';
 import { buildApiParams } from '@cratecaddy-api/apiParams';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Home() {
+  useDocumentTitle();
   const navigate = useNavigate();
   const { shuffleMode, toggleShuffle, reshuffle } = useSortShuffle();
   const {
