@@ -26,18 +26,11 @@ import { fileURLToPath } from 'url';
 import { config } from '../src/config/env.js';
 import { SourceFormat, Song } from '../src/models/Song.js';
 import { songService } from '../src/services/songService.js';
+import { splitTagsField } from '../src/helpers/tags.js';
 
 const connectDB = async () => {
   await mongoose.connect(config.mongoUri);
   console.log('Connected to MongoDB');
-};
-
-const splitTagsField = (fieldStr?: string): string[] => {
-  if (!fieldStr || fieldStr.trim() === '') return [];
-  return fieldStr
-    .split(',')
-    .map((tag) => tag.trim())
-    .filter((tag) => tag !== '');
 };
 
 const convertRating = (rating?: string | number): number | undefined => {

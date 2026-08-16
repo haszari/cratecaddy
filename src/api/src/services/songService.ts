@@ -4,6 +4,8 @@ import { buildSongFilter } from '../helpers/buildSongFilter.js';
 import { ApiFilterParams, ApiPaginationParams } from '../helpers/apiParams.js';
 import { parsePagination, PaginationResult } from '../helpers/pagination.js';
 import { buildShuffleHashFunction } from '../helpers/shuffleHash.js';
+import { splitTagsField } from '../helpers/tags.js';
+import type { AppleLovedTrack } from './appleMusicRead.js';
 
 /**
  * Normalize artist and title for database matching
@@ -74,6 +76,22 @@ function getMostRecentSourceDate(sources: ISource[]): Date | undefined {
     }
   }
   return mostRecent;
+}
+
+export interface SyncFavouritesResult {
+  lovedCount: number;
+  starred: number;
+  unstarred: number;
+  added: number;
+  skippedNoAppleId: number;
+  skippedEmpty: number;
+}
+
+function allAppleIds(song: ISong): string[] {
+  return [...new Set([
+    ...(song.appleMusicIds || []),
+    ...(song.sources || []).map((s) => s.appleMusicId).filter(Boolean),
+  ])];
 }
 
 export class SongService {
@@ -347,6 +365,101 @@ export class SongService {
       results.push({ id, ...result });
     }
     return { results };
+  }
+
+  /**
+   * Reconcile the starred (heart) state with Apple Music's Loved flag via AppleScript.
+   * One-way: Apple → DB. Star matched songs, un-star songs no longer Loved, and create
+   * DB songs for Loved tracks with no match.
+   */
+  async syncFavouritesFromAppleMusic(): Promise<SyncFavouritesResult> {
+    const { readLovedTracks } = await import('./appleMusicRead.js');
+    const loved = await readLovedTracks();
+
+    const lovedById = new Map<string, AppleLovedTrack>();
+    for (const track of loved) lovedById.set(track.persistentId, track);
+
+    const ids = [...lovedById.keys()];
+    const matchedSongs = ids.length > 0
+      ? await Song.find({
+          $or: [
+            { appleMusicIds: { $in: ids } },
+            { 'sources.appleMusicId': { $in: ids } },
+          ],
+        })
+      : [];
+
+    const songByAppleId = new Map<string, ISong>();
+    for (const song of matchedSongs) {
+      for (const id of allAppleIds(song)) {
+        if (!songByAppleId.has(id)) songByAppleId.set(id, song);
+      }
+    }
+
+    // 1. Star matched songs that are Loved in Apple but not currently starred
+    let starred = 0;
+    for (const id of ids) {
+      const song = songByAppleId.get(id);
+      if (!song) continue;
+      if (song.favorite !== 'starred') {
+        await this.updateSongMetadata(String(song._id), { favorite: 'starred' }, 'applemusic');
+        starred++;
+      }
+    }
+
+    // 2. Un-star songs that are starred but no longer Loved in Apple
+    let unstarred = 0;
+    let skippedNoAppleId = 0;
+    for (const song of await Song.find({ favorite: 'starred' })) {
+      const appleIds = allAppleIds(song);
+      if (appleIds.length === 0) {
+        skippedNoAppleId++;
+        continue;
+      }
+      if (appleIds.some((id) => lovedById.has(id))) continue;
+      await this.updateSongMetadata(String(song._id), { favorite: 'normal' }, 'applemusic');
+      unstarred++;
+    }
+
+    // 3. Create songs for Loved tracks with no DB match
+    let added = 0;
+    let skippedEmpty = 0;
+    for (const [id, track] of lovedById) {
+      if (songByAppleId.has(id)) continue;
+      if (!track.artist.trim() || !track.name.trim()) {
+        skippedEmpty++;
+        continue;
+      }
+      await this.updateWithHistory(
+        track.artist.trim(),
+        track.name.trim(),
+        track.duration,
+        {
+          genres: splitTagsField(track.genre),
+          grouping: splitTagsField(track.grouping),
+          bpm: track.bpm,
+          rating: track.rating !== undefined ? track.rating / 20 : undefined,
+          year: track.year,
+          album: track.album,
+          appleMusicId: id,
+          favorite: 'starred',
+        },
+        {
+          sourceType: 'applemusic',
+          appleMusicId: id,
+        },
+      );
+      added++;
+    }
+
+    return {
+      lovedCount: loved.length,
+      starred,
+      unstarred,
+      added,
+      skippedNoAppleId,
+      skippedEmpty,
+    };
   }
 
   async createSong(data: Partial<ISong>): Promise<ISong> {
