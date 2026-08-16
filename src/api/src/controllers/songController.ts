@@ -189,6 +189,15 @@ export class SongController {
     }
   }
 
+  async syncFavouritesFromAppleMusic(req: Request, res: Response) {
+    try {
+      const result = await songService.syncFavouritesFromAppleMusic();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to sync favourites from Apple Music' });
+    }
+  }
+
   async getHistory(req: Request, res: Response) {
     try {
       const history = await songService.getHistory(req.params.id);
