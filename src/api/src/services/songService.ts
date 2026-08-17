@@ -78,7 +78,7 @@ function getMostRecentSourceDate(sources: ISource[]): Date | undefined {
   return mostRecent;
 }
 
-export interface SyncFavouritesResult {
+export interface ReimportFavouritesResult {
   lovedCount: number;
   starred: number;
   unstarred: number;
@@ -368,11 +368,11 @@ export class SongService {
   }
 
   /**
-   * Reconcile the starred (heart) state with Apple Music's Loved flag via AppleScript.
+   * Reimport the starred (heart) state from Apple Music's Loved flag via AppleScript.
    * One-way: Apple → DB. Star matched songs, un-star songs no longer Loved, and create
    * DB songs for Loved tracks with no match.
    */
-  async syncFavouritesFromAppleMusic(): Promise<SyncFavouritesResult> {
+  async reimportFavouritesFromAppleMusic(): Promise<ReimportFavouritesResult> {
     const { readLovedTracks } = await import('./appleMusicRead.js');
     const loved = await readLovedTracks();
 

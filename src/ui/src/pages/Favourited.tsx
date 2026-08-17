@@ -12,14 +12,14 @@ import { splitCSV } from '../utils/urlParams';
 import { Heart, Loader2, RefreshCw } from 'lucide-react';
 import { KEY } from '@cratecaddy-api/apiParams';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import { syncFavouritesFromAppleMusic } from '../api/client';
+import { reimportFavouritesFromAppleMusic } from '../api/client';
 
 export default function Favourited() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const [syncMsg, setSyncMsg] = useState('');
-  const [syncIsError, setSyncIsError] = useState(false);
+  const [reimportMsg, setReimportMsg] = useState('');
+  const [reimportIsError, setReimportIsError] = useState(false);
 
   const requiredGenres = splitCSV(searchParams.get(KEY.genreAll));
   const { filters } = useFilters();
@@ -45,23 +45,23 @@ export default function Favourited() {
     editHref,
   });
 
-  const syncMutation = useMutation({
-    mutationFn: syncFavouritesFromAppleMusic,
+  const reimportMutation = useMutation({
+    mutationFn: reimportFavouritesFromAppleMusic,
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['songs'] });
       queryClient.invalidateQueries({ queryKey: ['genreStats'] });
-      setSyncIsError(false);
-      setSyncMsg(
-        `Synced with Apple Music: ${result.starred} starred, ${result.unstarred} un-starred, ${result.added} added`,
+      setReimportIsError(false);
+      setReimportMsg(
+        `Reimported favourites: ${result.starred} starred, ${result.unstarred} un-starred, ${result.added} added`,
       );
     },
     onError: (err) => {
-      setSyncIsError(true);
-      setSyncMsg(err instanceof Error ? err.message : 'Sync with Apple Music failed');
+      setReimportIsError(true);
+      setReimportMsg(err instanceof Error ? err.message : 'Reimport favourites from Apple Music failed');
     },
   });
 
-  const syncBusy = syncMutation.isPending;
+  const reimportBusy = reimportMutation.isPending;
 
   return (
     <div className="GenreDetail">
@@ -79,19 +79,6 @@ export default function Favourited() {
             {g}
           </span>
         ))}
-        <span
-          className={`FavouritedSync-pill${syncBusy ? ' FavouritedSync-pill--disabled' : ''}`}
-          onClick={syncBusy ? undefined : () => syncMutation.mutate()}
-          title="Pull loved tracks from Apple Music and reconcile favourites"
-        >
-          {syncBusy ? <Loader2 className="FavouritedSync-spinner" size={14} /> : <RefreshCw size={14} />}
-          {syncBusy ? 'Syncing…' : 'Sync with Apple Music'}
-        </span>
-        {syncMsg && (
-          <span className={`FavouritedSync-status${syncIsError ? ' FavouritedSync-status--error' : ''}`}>
-            {syncMsg}
-          </span>
-        )}
       </div>
 
       <FilterBar {...filterBarProps} />
@@ -124,6 +111,22 @@ export default function Favourited() {
           )}
         </>
       )}
+
+      <div className="FavouritedReimport">
+        <span
+          className={`FavouritedReimport-pill${reimportBusy ? ' FavouritedReimport-pill--disabled' : ''}`}
+          onClick={reimportBusy ? undefined : () => reimportMutation.mutate()}
+          title="Refresh starred songs by pulling Loved tracks from Apple Music"
+        >
+          {reimportBusy ? <Loader2 className="FavouritedReimport-spinner" size={14} /> : <RefreshCw size={14} />}
+          {reimportBusy ? 'Reimporting…' : 'Reimport favourites from Apple Music'}
+        </span>
+        {reimportMsg && (
+          <span className={`FavouritedReimport-status${reimportIsError ? ' FavouritedReimport-status--error' : ''}`}>
+            {reimportMsg}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

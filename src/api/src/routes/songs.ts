@@ -13,7 +13,7 @@ router.put('/metadata/batch', (req, res) => songController.updateMetadataBatch(r
 router.put('/:id/metadata', (req, res) => songController.updateMetadata(req, res));
 router.post('/write-to-apple-music', (req, res) => songController.writeToAppleMusicBatch(req, res));
 router.post('/write-to-apple-music/:id', (req, res) => songController.writeToAppleMusic(req, res));
-router.post('/sync-favourites-from-apple-music', (req, res) => songController.syncFavouritesFromAppleMusic(req, res));
+router.post('/reimport-favourites-from-apple-music', (req, res) => songController.reimportFavouritesFromAppleMusic(req, res));
 router.delete('/:id', (req, res) => songController.deleteSong(req, res));
 
 export default router;

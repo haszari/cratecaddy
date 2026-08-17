@@ -189,12 +189,12 @@ export class SongController {
     }
   }
 
-  async syncFavouritesFromAppleMusic(req: Request, res: Response) {
+  async reimportFavouritesFromAppleMusic(req: Request, res: Response) {
     try {
-      const result = await songService.syncFavouritesFromAppleMusic();
+      const result = await songService.reimportFavouritesFromAppleMusic();
       res.json(result);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to sync favourites from Apple Music' });
+      res.status(500).json({ error: 'Failed to reimport favourites from Apple Music' });
     }
   }
 

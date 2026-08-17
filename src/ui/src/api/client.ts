@@ -99,7 +99,7 @@ export async function writeToAppleMusicBatch(ids: string[]): Promise<{ results: 
   return response.json();
 }
 
-export interface SyncFavouritesResult {
+export interface ReimportFavouritesResult {
   lovedCount: number;
   starred: number;
   unstarred: number;
@@ -108,14 +108,14 @@ export interface SyncFavouritesResult {
   skippedEmpty: number;
 }
 
-export async function syncFavouritesFromAppleMusic(): Promise<SyncFavouritesResult> {
-  const response = await fetch(`${API_URL}/api/songs/sync-favourites-from-apple-music`, {
+export async function reimportFavouritesFromAppleMusic(): Promise<ReimportFavouritesResult> {
+  const response = await fetch(`${API_URL}/api/songs/reimport-favourites-from-apple-music`, {
     method: 'POST',
   });
 
   if (!response.ok) {
     const body = await response.json();
-    throw new Error(body.error ?? body.message ?? 'Failed to sync favourites from Apple Music');
+    throw new Error(body.error ?? body.message ?? 'Failed to reimport favourites from Apple Music');
   }
 
   return response.json();

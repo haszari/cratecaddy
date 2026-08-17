@@ -32,9 +32,9 @@ Data on Song.sources is refreshed each import. Historical source data is recover
 
 Three-state triage marker: `'starred'` (Apple Music loved), `'normal'` (default), `'disliked'`. Imported from Apple Music's Loved/Disliked booleans. Displayed in CompactSongTable as a star icon.
 
-### Favourite sync (Apple → DB)
+### Favourite reimport (Apple → DB)
 
-The "Sync with Apple Music" button on `/favourited` reconciles hearts without a full XML re-import (see ADR 0013):
+The "Reimport favourites from Apple Music" button on `/favourited` reconciles hearts without a full XML re-import (see ADR 0013):
 
 - Reads all Loved tracks from the Music app via AppleScript (`appleMusicRead.ts`).
 - Starred DB songs whose Apple ID is no longer Loved → `'normal'`.

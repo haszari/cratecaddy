@@ -34,7 +34,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 ## Architecture notes
 
 - UI fetches ALL songs from `GET /api/songs` and filters client-side with `useMemo` hooks. No server-side search/filter endpoints beyond genre stats.
-- API routes: `GET /api/songs`, `GET /api/songs/stats/genres`, CRUD by `:id`, `POST /api/songs/write-to-apple-music[/:id]`, `POST /api/songs/sync-favourites-from-apple-music`
+- API routes: `GET /api/songs`, `GET /api/songs/stats/genres`, CRUD by `:id`
 - Favourite sync (ADR 0013) is **heart-only and one-way Apple → DB**: the `/favourited` button reads Loved tracks via AppleScript and stars/un-stars/creates DB songs accordingly. `Disliked` is untouched; DB hearts are never written back to Apple.
 - Song model has a Mongoose **pre-save hook** that auto-normalizes `artistTitleNormalized` and `genres` — relevant when writing import scripts
 - Merge logic in `songService.upsertSongWithMerge` matches on normalized artist+title+duration (±2s tolerance)
