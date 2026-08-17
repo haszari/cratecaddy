@@ -275,11 +275,14 @@ case "${1:-}" in
         -e "s|__CRATECADDY_LOG_FILE__|$LOG_FILE|" \
       "$INSTALL_ROOT/macos/com.cratecaddy.startup.plist" \
       > ~/Library/LaunchAgents/com.cratecaddy.startup.plist
-    launchctl load ~/Library/LaunchAgents/com.cratecaddy.startup.plist
+    # Unload first (idempotent) then bootstrap — launchctl load is deprecated
+    # on modern macOS and fails when the agent is already loaded.
+    launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.cratecaddy.startup.plist 2>/dev/null || true
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cratecaddy.startup.plist
     echo "Auto-start enabled. CrateCaddy will start on boot."
     ;;
   uninstall)
-    launchctl unload ~/Library/LaunchAgents/com.cratecaddy.startup.plist 2>/dev/null || true
+    launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.cratecaddy.startup.plist 2>/dev/null || true
     rm -f ~/Library/LaunchAgents/com.cratecaddy.startup.plist
     stop_api
     docker compose -f "$PROJECT_DIR/docker-compose.yml" -f "$PROJECT_DIR/docker-compose.prod.yml" down 2>/dev/null || true
