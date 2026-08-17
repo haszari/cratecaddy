@@ -81,7 +81,7 @@ The API binds all network interfaces, so it is reachable from other devices on y
 
 The dev workflow is unaffected — separate ports, container, volume, and compose project (`cratecaddy-dev`). Both can run at the same time. See [Development](./README.md#development) in the README.
 
-## What's installed, where? How to uninstall?
+## What's installed, where? 
 
 Installing the appliance creates these things on your machine:
 
@@ -91,4 +91,16 @@ Installing the appliance creates these things on your machine:
 - `cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
 - `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
 
-Uninstall: `cratecaddy uninstall` removes the launchd agent, the PATH line, and stops everything. The runtime in `~/.cratecaddy` and the prod data volume are kept — remove them yourself with `rm -rf ~/.cratecaddy` and `docker volume rm cratecaddy-mongo-data-prod` if you want them gone.
+## How to uninstall?
+
+
+```bash 
+# Remove the launchd agent, the PATH line, and stop running containers and services. 
+cratecaddy uninstall
+# The runtime in `~/.cratecaddy` and the prod data volume are not automatically deleted.
+# Delete manually:
+rm -rf ~/.cratecaddy
+# Delete the docker data volume: 
+docker volume rm cratecaddy-mongo-data-prod
+``` 
+
