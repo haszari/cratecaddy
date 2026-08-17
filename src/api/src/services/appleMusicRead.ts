@@ -14,27 +14,22 @@ export interface AppleLovedTrack {
 }
 
 const DELIM = String.fromCharCode(31);
-const FIELD_NAMES = [
-  'persistent ID',
-  'name',
-  'artist',
-  'album',
-  'total time',
-  'genre',
-  'grouping',
-  'bpm',
-  'rating',
-  'year',
-];
 
 function buildReadScript(): string {
-  const fields = FIELD_NAMES.join(') & (ASCII character 31) & (');
   return [
+    `on asText(v)`,
+    `  try`,
+    `    return v as text`,
+    `  on error`,
+    `    return ""`,
+    `  end try`,
+    `end asText`,
+    ``,
     `tell application "Music"`,
     `  set out to {}`,
     `  set lovedTracks to (every track of library playlist 1 whose loved is true)`,
     `  repeat with t in lovedTracks`,
-    `    set end of out to (${fields})`,
+    `    set end of out to (asText(persistent ID of t)) & (ASCII character 31) & (asText(name of t)) & (ASCII character 31) & (asText(artist of t)) & (ASCII character 31) & (asText(album of t)) & (ASCII character 31) & (asText(total time of t)) & (ASCII character 31) & (asText(genre of t)) & (ASCII character 31) & (asText(grouping of t)) & (ASCII character 31) & (asText(bpm of t)) & (ASCII character 31) & (asText(rating of t)) & (ASCII character 31) & (asText(year of t))`,
     `  end repeat`,
     `  return out`,
     `end tell`,
@@ -75,7 +70,7 @@ export async function readLovedTracks(): Promise<AppleLovedTrack[]> {
       const tracks: AppleLovedTrack[] = [];
       for (const line of trimmed.split('\n')) {
         const parts = line.split(DELIM);
-        if (parts.length < FIELD_NAMES.length) continue;
+        if (parts.length < 10) continue;
         const persistentId = parts[0].trim();
         if (!persistentId) continue;
         tracks.push({

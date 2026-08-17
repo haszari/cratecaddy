@@ -194,6 +194,7 @@ export class SongController {
       const result = await songService.reimportFavouritesFromAppleMusic();
       res.json(result);
     } catch (error) {
+      console.error('Reimport favourites failed:', error);
       res.status(500).json({ error: 'Failed to reimport favourites from Apple Music' });
     }
   }
