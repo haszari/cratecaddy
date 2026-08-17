@@ -4,60 +4,15 @@ set -e
 # ---------------------------------------------------------------------------
 # cratecaddy — CrateCaddy appliance manager (MongoDB + API daemon)
 #
-# WHAT THIS IS
-#   CrateCaddy is a music metadata explorer. This script runs it as a
-#   self-contained "appliance" on macOS: a MongoDB container (via Docker
-#   Compose) plus the built API process (Node, serving the static UI).
-#
-#   It targets the PRODUCTION build. The prod stack uses distinct defaults so
-#   it never collides with the dev setup (Vite dev server + npm run dev API):
-#     prod API  port -> 5225   (dev uses 5326)
-#     prod Mongo port -> 5227   (dev uses 5327)
-#
-# COMMANDS
-#   cratecaddy start        Start MongoDB container + API daemon
-#   cratecaddy stop         Stop the API and take the MongoDB container down
-#   cratecaddy restart      Stop then start
-#   cratecaddy status       Is the API running? (reads ~/.cratecaddy/api.pid)
-#   cratecaddy logs         Tail the API log file
-#   cratecaddy import [prod|dev] [apple|djay] <file>
-#                           Import music metadata. Source defaults to apple.
-#                           apple — Apple Music XML library
-#                           djay  — djay Pro CSV export
-#                           (default target = $CRATECADDY_ENV from config.env)
-#   cratecaddy install      Install or update the runtime to ~/.cratecaddy,
-#                           add the CLI to PATH, and enable auto-start (launchd)
-#   cratecaddy uninstall    Remove auto-start + PATH line, stop all services
-#
-# CONFIG (all optional, sourced from ~/.cratecaddy/config.env if it exists)
-#   CRATECADDY_ENV  prod|dev   default target for `import` (default: prod)
-#   API_PORT        prod API port (default: 5225)
-#   MONGO_PORT      prod Mongo host port (default: 5227)
-#   CRATECADDY_LOG  API log file (default: ~/.cratecaddy/cratecaddy.log)
-#
-# LAYOUT
-#   ~/.cratecaddy/           the appliance — installed runtime + runtime state
-#     bin/cratecaddy         this CLI (symlink → ../scripts/prod/cratecaddy)
-#     docker-compose.yml     base compose (dev: name cratecaddy-dev)
-#     docker-compose.prod.yml  prod override (name cratecaddy-prod)
-#     macos/                 launchd plist template
-#     src/api/               built API (dist/ + node_modules/ + scripts)
-#     config.env             optional config
-#     cratecaddy.log         API log
-#     api.pid                API PID file
-#
-#   Canonical location in the repo: scripts/prod/cratecaddy
-#   The CLI resolves everything from its own location ($PROJECT_DIR, two levels
-#   up from bin/), so after `install` the copied script runs against the copy in
-#   ~/.cratecaddy — the checkout is no longer needed.
-#
-# INSTALLATION / UPDATE
-#   Clone the repo, npm install in src/ui and src/api, run `./scripts/build-prod.sh`,
-#   then run this script's `install` command from the checkout. It copies the
-#   built runtime into ~/.cratecaddy, adds the CLI to PATH via ~/.zshrc, and
-#   installs the launchd plist for boot auto-start. Docker must be running.
-#   Running `install` again updates the installed copy in place (stops the API
-#   first, copies fresh code, re-enables launchd). Data volumes are preserved.
+# Commands:
+#   start                                Start MongoDB + API daemon
+#   stop                                 Stop API + MongoDB
+#   restart                              Stop then start
+#   status                               Is the API running?
+#   logs                                 Tail API log file
+#   import [prod|dev] [apple|djay] <file>  Import music metadata
+#   install                              Install/update runtime to ~/.cratecaddy
+#   uninstall                            Remove auto-start + PATH, stop services
 # ---------------------------------------------------------------------------
 
 # Config — source ~/.cratecaddy/config.env if it exists (dotenv-style KEY=VALUE
