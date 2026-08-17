@@ -47,7 +47,6 @@ set -e
 #     api.pid                API PID file
 #
 #   Canonical location in the repo: scripts/prod/cratecaddy
-#   bin/cratecaddy is a symlink for backwards compat and PATH.
 #   The CLI resolves everything from its own location ($PROJECT_DIR, two levels
 #   up from bin/), so after `install` the copied script runs against the copy in
 #   ~/.cratecaddy — the checkout is no longer needed.
