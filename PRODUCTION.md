@@ -91,6 +91,4 @@ Installing the appliance creates these things on your machine:
 - `cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
 - `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
 
-None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
-
 Uninstall: `cratecaddy uninstall` removes the launchd agent, the PATH line, and stops everything. The runtime in `~/.cratecaddy` and the prod data volume are kept — remove them yourself with `rm -rf ~/.cratecaddy` and `docker volume rm cratecaddy-mongo-data-prod` if you want them gone.
