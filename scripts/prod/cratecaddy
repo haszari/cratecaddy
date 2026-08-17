@@ -75,7 +75,14 @@ resolve_script() {
 
 REAL_SCRIPT="$(resolve_script "$0")"
 SCRIPT_DIR="$(cd -P "$(dirname "$REAL_SCRIPT")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+# In the installed copy (~/.cratecaddy/bin/cratecaddy), PROJECT_DIR is
+# ~/.cratecaddy. In the repo (scripts/prod/cratecaddy), it is the repo root
+# (three levels up). Detect which by checking if the script lives inside
+# the install directory.
+case "$REAL_SCRIPT" in
+  "$INSTALL_ROOT"/*) PROJECT_DIR="$INSTALL_ROOT" ;;
+  *)                 PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")" ;;
+esac
 
 start_mongodb() {
   # At OS boot, launchd may fire `cratecaddy start` before Docker Desktop is up.
