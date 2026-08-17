@@ -82,19 +82,26 @@ Import music library metadata from Apple Music.
 
 This will import all song metadata with grouping containing `DJing` or `Listening`. 
 
-Import scripts are the same in dev and prod — one source of truth ([import-apple-music.ts](./src/api/scripts/import-apple-music.ts)). The two entry points only differ in which database they target:
+### Import data from djay Pro
 
-- `npm run import:applemusic` (dev) — targets the dev database from the root `.env` config
-- `cratecaddy import` (prod, see [PRODUCTION.md](./PRODUCTION.md)) — targets the prod database, controlled by `cratecaddy import dev|prod <file>`
+Import from a djay Pro CSV export.
+
+- `cd src/api && npm run import:djaypro src/data/dJayPro.csv`
+
+### Import entry points (dev vs prod)
+
+Import scripts are the same in dev and prod — one source of truth. The two entry points only differ in which database they target:
+
+- `npm run import:applemusic` / `npm run import:djaypro` (dev) — targets the dev database from the root `.env` config
+- `cratecaddy import` (prod, see [PRODUCTION.md](./PRODUCTION.md)) — targets the prod database, controlled by `cratecaddy import dev|prod [apple|djay] <file>`
 
 Song data is merged based on artist + title + duration, and import process updates database (can re-import multiple times safely - idempotent).
 
 #### experimental
 
 - `cd src/api && npm run import:rekordbox src/data/rekordbox.xml` 
-- `cd src/api && npm run import:djaypro src/data/dJayPro.csv` 
 
-Experimental import from other sources that include musical key data. As above, can be rerun, data is merged based on key song metadata. Source-specific metadata is stored separately in the mongodb record. 
+Experimental import from Rekordbox that includes musical key data. As above, can be rerun, data is merged based on key song metadata. Source-specific metadata is stored separately in the mongodb record. 
 
 ## Architecture
 

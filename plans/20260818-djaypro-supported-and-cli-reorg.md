@@ -84,3 +84,10 @@ Changes:
 7. Install from checkout: `./scripts/prod/cratecaddy install` updates `~/.cratecaddy/` in place
 8. Reinstall: run install twice — second run stops API, copies fresh code, re-enables launchd
 9. `cratecaddy import djay <csv>` works from any directory after install (PATH)
+
+## Addendum (2026-08-18)
+
+- Removed `bin/cratecaddy` symlink — it was clutter. Canonical location is `scripts/prod/cratecaddy`. Install copies to `~/.cratecaddy/bin/cratecaddy` (regular file).
+- Updated PRODUCTION.md: `./scripts/prod/cratecaddy install`, added djay import syntax and command reference row
+- Updated README.md: promoted djay pro from experimental to supported import source, added dev entry point, updated prod syntax
+- Updated ADR-0009: import syntax examples now include `[apple|djay]` source subcommand
