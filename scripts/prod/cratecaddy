@@ -13,6 +13,30 @@ set -e
 #   import [prod|dev] [apple|djay] <file>  Import music metadata
 #   install                              Install/update runtime to ~/.cratecaddy
 #   uninstall                            Remove auto-start + PATH, stop services
+#
+# Config (all optional, sourced from ~/.cratecaddy/config.env)
+#   CRATECADDY_ENV  prod|dev   default target for `import` (default: prod)
+#   API_PORT        prod API port (default: 5225)
+#   MONGO_PORT      prod Mongo host port (default: 5227)
+#   CRATECADDY_LOG  API log file (default: ~/.cratecaddy/cratecaddy.log)
+#
+# Layout (~/.cratecaddy/ when installed)
+#   bin/cratecaddy         this CLI
+#   docker-compose.yml     base compose (dev: name cratecaddy-dev)
+#   docker-compose.prod.yml  prod override (name cratecaddy-prod)
+#   macos/                 launchd plist template
+#   src/api/               built API (dist/ + node_modules/ + scripts)
+#   config.env             optional config
+#   cratecaddy.log         API log
+#   api.pid                API PID file
+#
+# Install / update
+#   Clone the repo, npm install in src/ui and src/api, run
+#   ./scripts/build-prod.sh, then run `install` from the checkout.
+#   It copies the built runtime into ~/.cratecaddy, adds the CLI to
+#   PATH via ~/.zshrc, and installs the launchd plist for auto-start.
+#   Running `install` again updates in place (stops API first, copies
+#   fresh code, re-enables launchd). Data volumes are preserved.
 # ---------------------------------------------------------------------------
 
 # Config — source ~/.cratecaddy/config.env if it exists (dotenv-style KEY=VALUE
