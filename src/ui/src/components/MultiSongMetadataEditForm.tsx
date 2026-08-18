@@ -252,8 +252,11 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
         setExportMsg(`Written to ${results.length} song${results.length > 1 ? 's' : ''} in Apple Music`);
         setExportIsError(false);
       } else {
-        setExportMsg(`${errors.length} song(s) failed: ${errors[0].message}`);
-        setExportIsError(true);
+        const ok = results.length - errors.length;
+        setExportMsg(ok > 0
+          ? `Written to ${ok}/${results.length} songs. ${errors.length} failed: ${errors[0].message}`
+          : `${errors.length} song(s) failed: ${errors[0].message}`);
+        setExportIsError(ok === 0);
       }
     } catch (err) {
       setExportMsg(err instanceof Error ? err.message : 'Write to Apple Music failed');

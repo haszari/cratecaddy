@@ -5,7 +5,7 @@ function escapeAppleScript(str: string): string {
   return str.replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
 
-function writeToSingle(targetId: string, escaped: Record<string, string>, commentBlock: string): Promise<boolean> {
+function writeToSingle(targetId: string, escaped: Record<string, string>, commentBlock: string): Promise<{ ok: boolean; error?: string; stdout?: string }> {
   const scriptLines: string[] = [
     `tell application "Music"`,
     `  try`,
@@ -32,8 +32,13 @@ function writeToSingle(targetId: string, escaped: Record<string, string>, commen
 
   return new Promise((resolve) => {
     exec(`osascript -e '${script.replace(/'/g, "'\\''")}'`, { timeout: 15000 }, (error, stdout) => {
-      if (error) { resolve(false); return; }
-      resolve(!stdout.trim().startsWith('error:'));
+      const trimmed = stdout?.trim() ?? '';
+      if (error) { resolve({ ok: false, error: error.message, stdout: trimmed }); return; }
+      if (trimmed.startsWith('error:')) {
+        resolve({ ok: false, stdout: trimmed });
+      } else {
+        resolve({ ok: true });
+      }
     });
   });
 }
@@ -97,14 +102,16 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
     set comment of t to newComment`;
 
   let successCount = 0;
-  const errors: string[] = [];
+  const errors: { pid: string; detail?: string }[] = [];
 
   for (const pid of targetIds) {
-    const ok = await writeToSingle(escapeAppleScript(pid), escaped, commentBlock);
-    if (ok) {
+    const result = await writeToSingle(escapeAppleScript(pid), escaped, commentBlock);
+    if (result.ok) {
       successCount++;
     } else {
-      errors.push(pid);
+      const detail = result.stdout || result.error || 'unknown';
+      console.error(`[appleMusicWrite] PID ${pid} failed: ${detail}`);
+      errors.push({ pid, detail });
     }
   }
 
@@ -113,6 +120,6 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
     success: allOk,
     message: allOk
       ? `Written to ${targetIds.length} track${targetIds.length > 1 ? 's' : ''}`
-      : `Written to ${successCount}/${targetIds.length} tracks. Failed: ${errors.join(', ')}`,
+      : `Written to ${successCount}/${targetIds.length} tracks. Failed: ${errors.map(e => `${e.pid} (${e.detail})`).join(', ')}`,
   };
 }

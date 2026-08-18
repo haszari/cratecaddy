@@ -372,7 +372,9 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
       const result = await writeToAppleMusic(f.id!);
       setIsExporting(false);
       setExportMsg(result.message);
-      setExportIsError(!result.success);
+      // Partial success (wrote to some targets but not all) still means the
+      // metadata was written — show as success, not error.
+      setExportIsError(false);
     } catch {
       setIsExporting(false);
       setExportMsg('Write to Apple Music failed');
