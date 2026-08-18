@@ -168,8 +168,11 @@ export class SongController {
       if (result.success) {
         res.json(result);
       } else {
-        console.error(`[writeToAppleMusic] 400 for ${req.params.id}: ${result.message}`);
-        res.status(400).json(result);
+        // Partial success (wrote to some targets but not all) is still a success
+        // from the user's perspective — the metadata was written. Log the failure
+        // but return 200 so the UI shows the message rather than a generic error.
+        console.error(`[writeToAppleMusic] partial failure for ${req.params.id}: ${result.message}`);
+        res.json(result);
       }
     } catch (error) {
       console.error(`[writeToAppleMusic] 500 for ${req.params.id}:`, error);
