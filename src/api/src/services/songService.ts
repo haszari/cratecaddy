@@ -334,10 +334,17 @@ export class SongService {
 
   async writeToAppleMusic(songId: string): Promise<{ success: boolean; message: string }> {
     const song = await Song.findById(songId);
-    if (!song) return { success: false, message: 'Song not found' };
+    if (!song) {
+      console.error(`[writeToAppleMusic] Song not found: ${songId}`);
+      return { success: false, message: 'Song not found' };
+    }
 
     const { writeToAppleMusic: runWrite } = await import('./appleMusicWrite.js');
-    return runWrite(song);
+    const result = await runWrite(song);
+    if (!result.success) {
+      console.error(`[writeToAppleMusic] ${song.artist} - ${song.title}: ${result.message}`);
+    }
+    return result;
   }
 
   async writeToAppleMusicBatch(ids: string[]): Promise<{ results: { id: string; success: boolean; message: string }[] }> {
