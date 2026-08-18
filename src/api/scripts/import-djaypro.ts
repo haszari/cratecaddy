@@ -163,12 +163,10 @@ const importSongs = async (csvPath: string) => {
             bpm,
             key: convertKey(keyRaw),
             album,
-            appleMusicId,
           },
           {
             sourceType: 'djaypro',
             filePath: url || undefined,
-            appleMusicId,
             importMeta: { url },
           }
         );
