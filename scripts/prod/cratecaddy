@@ -291,7 +291,7 @@ case "${1:-}" in
       sed -i '' -e '/^# cratecaddy CLI$/d' -e '/^export PATH="\$HOME\/\.cratecaddy\/bin:\$PATH"$/d' "$HOME/.zshrc"
     fi
     echo "CrateCaddy uninstalled. The runtime in ~/.cratecaddy and the prod data volume are kept."
-    echo "To remove them too: rm -rf ~/.cratecaddy && docker volume rm cratecaddy-mongo-data-prod"
+    echo "To remove them too: rm -rf ~/.cratecaddy && docker volume rm cratecaddy-prod_cratecaddy-mongo-data-prod"
     ;;
   *)
     echo "CrateCaddy — music metadata explorer"
