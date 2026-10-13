@@ -65,7 +65,7 @@ function App() {
           style={{
             position: 'fixed',
             bottom: '8px',
-            right: '8px',
+            left: '8px',
             fontSize: '10px',
             opacity: 0.5,
             pointerEvents: 'none',
