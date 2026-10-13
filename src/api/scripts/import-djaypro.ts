@@ -38,7 +38,7 @@ import { songService } from '../src/services/songService.js';
 
 const connectDB = async () => {
   await mongoose.connect(config.mongoUri);
-  console.log('Connected to MongoDB');
+  console.log(`Connected to MongoDB: ${config.mongoUri}`);
 };
 
 const parseTimeToMs = (timeStr?: string): number | undefined => {
@@ -163,12 +163,10 @@ const importSongs = async (csvPath: string) => {
             bpm,
             key: convertKey(keyRaw),
             album,
-            appleMusicId,
           },
           {
             sourceType: 'djaypro',
             filePath: url || undefined,
-            appleMusicId,
             importMeta: { url },
           }
         );

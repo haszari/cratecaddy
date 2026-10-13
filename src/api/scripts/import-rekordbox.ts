@@ -50,7 +50,7 @@ interface RekordboxTrack {
 
 const connectDB = async () => {
   await mongoose.connect(config.mongoUri);
-  console.log('Connected to MongoDB');
+  console.log(`Connected to MongoDB: ${config.mongoUri}`);
 };
 
 const splitTagsField = (fieldStr?: string): string[] => {

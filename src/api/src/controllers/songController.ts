@@ -168,9 +168,14 @@ export class SongController {
       if (result.success) {
         res.json(result);
       } else {
-        res.status(400).json(result);
+        // Partial success (wrote to some targets but not all) is still a success
+        // from the user's perspective — the metadata was written. Log the failure
+        // but return 200 so the UI shows the message rather than a generic error.
+        console.error(`[writeToAppleMusic] partial failure for ${req.params.id}: ${result.message}`);
+        res.json(result);
       }
     } catch (error) {
+      console.error(`[writeToAppleMusic] 500 for ${req.params.id}:`, error);
       res.status(500).json({ error: 'Failed to write to Apple Music' });
     }
   }
@@ -183,8 +188,13 @@ export class SongController {
         return;
       }
       const result = await songService.writeToAppleMusicBatch(ids);
+      const failures = result.results.filter(r => !r.success);
+      if (failures.length > 0) {
+        console.error(`[writeToAppleMusicBatch] ${failures.length}/${ids.length} failed:`, failures.map(f => `${f.id}: ${f.message}`).join('; '));
+      }
       res.json(result);
     } catch (error) {
+      console.error(`[writeToAppleMusicBatch] 500:`, error);
       res.status(500).json({ error: 'Failed to write to Apple Music' });
     }
   }

@@ -27,7 +27,7 @@ npm install --prefix src/ui
 
 # 4. Install the appliance — copies the built runtime to ~/.cratecaddy and
 #    adds ~/.cratecaddy/bin to your PATH (in ~/.zshrc)
-./bin/cratecaddy install
+./scripts/prod/cratecaddy install
 
 # 5. Start (open a new terminal first, or run: source ~/.zshrc)
 cratecaddy start
@@ -53,11 +53,12 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 | `cratecaddy stop` | Stop the API and take MongoDB down |
 | `cratecaddy status` | Is it running? |
 | `cratecaddy logs` | Tail the API log |
-| `cratecaddy import <file.xml>` | Import an Apple Music library export |
+| `cratecaddy import <file>` | Import music metadata (Apple Music XML by default) |
+| `cratecaddy import djay <file>` | Import from djay Pro CSV export |
 
 ## Importing your music library
 
-`cratecaddy import ~/Music/Music/Library.xml` imports an Apple Music library export (targets `prod` by default; `cratecaddy import dev <file>` for dev). The command prints the target and connection string first, so you can Ctrl-C if it's aimed at the wrong environment.
+`cratecaddy import ~/Music/Music/Library.xml` imports an Apple Music library export (targets `prod` by default; `cratecaddy import dev <file>` for dev). `cratecaddy import djay ~/data/dJayPro.csv` imports from djay Pro. The command prints the target and connection string first, so you can Ctrl-C if it's aimed at the wrong environment.
 
 See [Import data from Apple Music](./README.md#import-data-from-apple-music) for the full import docs (sources, idempotency, merging).
 
@@ -81,16 +82,26 @@ The API binds all network interfaces, so it is reachable from other devices on y
 
 The dev workflow is unaffected — separate ports, container, volume, and compose project (`cratecaddy-dev`). Both can run at the same time. See [Development](./README.md#development) in the README.
 
-## What's installed, where? How to uninstall?
+## What's installed, where? 
 
 Installing the appliance creates these things on your machine:
 
-- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file
+- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file. Source lives at `scripts/prod/cratecaddy` in the repo.
 - a PATH line in `~/.zshrc` pointing at `~/.cratecaddy/bin`, so the `cratecaddy` command works from any terminal
 - `cratecaddy-mongodb-prod` — a Docker container running MongoDB 7.0
-- `cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
+- `cratecaddy-prod_cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)
 - `com.cratecaddy.startup` — a launchd agent (only if you run `cratecaddy install`) that starts the appliance on boot
 
 None of this touches your dev database, containers, or `.env` files — prod uses separate ports (`API_PORT` 5225, `MONGO_PORT` 5227), a separate container, and a separate data volume.
 
-Uninstall: `cratecaddy uninstall` removes the launchd agent, the PATH line, and stops everything. The runtime in `~/.cratecaddy` and the prod data volume are kept — remove them yourself with `rm -rf ~/.cratecaddy` and `docker volume rm cratecaddy-mongo-data-prod` if you want them gone.
+## How to uninstall?
+
+```bash
+# Remove the launchd agent, the PATH line, and stop running containers and services.
+cratecaddy uninstall
+# The runtime in `~/.cratecaddy` and the prod data volume are not automatically deleted.
+# Delete manually:
+rm -rf ~/.cratecaddy
+# Delete the docker data volume:
+docker volume rm cratecaddy-prod_cratecaddy-mongo-data-prod
+```

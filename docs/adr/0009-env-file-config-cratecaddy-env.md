@@ -9,7 +9,7 @@ All values are configurable through env files with defaults when unset. Prod val
 - `CRATECADDY_LOG` — log file path (default `~/.cratecaddy/cratecaddy.log`)
 - `CRATECADDY_ENV` — `prod` (default) or `dev`
 
-`CRATECADDY_ENV` drives the default target of `cratecaddy import`: `cratecaddy import <file>` targets the config's environment (prod for the installed daemon), and `cratecaddy import prod|dev <file>` overrides explicitly. Each target loads its own config and exports `MONGODB_URI` so the import lands in the right database on the right port. The command prints the resolved target and URI first so a wrong-environment import can be Ctrl-C'd.
+`CRATECADDY_ENV` drives the default target of `cratecaddy import`: `cratecaddy import <file>` targets the config's environment (prod for the installed daemon), and `cratecaddy import prod|dev <file>` overrides explicitly. An optional source subcommand (`apple` or `djay`, defaults to `apple`) selects the import format. Each target loads its own config and exports `MONGODB_URI` so the import lands in the right database on the right port. The command prints the resolved target and URI first so a wrong-environment import can be Ctrl-C'd.
 
 Rejected alternatives:
 
