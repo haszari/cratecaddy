@@ -1,25 +1,7 @@
-import { useEffect, useState } from 'react';
-
-export interface VersionInfo {
-  appVersion: string;
-  version: string;
-  gitCommitShort: string;
-  gitCommit: string;
-  gitBranch: string;
-  gitDirty: boolean;
-}
+import { useVersion } from '../hooks/useVersion';
 
 export default function DevVersion() {
-  const [v, setV] = useState<VersionInfo | null>(null);
-
-  useEffect(() => {
-    fetch('/api/version')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) setV(data);
-      })
-      .catch(() => {});
-  }, []);
+  const { data: v } = useVersion();
 
   const isDev = import.meta.env.DEV;
   // @ts-expect-error injected by Vite define
