@@ -1,6 +1,6 @@
 {
   "name": "cratecaddy-api",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Crate Caddy API server",
   "type": "module",
   "main": "dist/server.js",
