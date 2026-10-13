@@ -1,56 +1,65 @@
-import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import './App.scss'
-import GenrePage from './pages/GenreDetail'
-import ArtistPage from './pages/Artist'
-import NoResultsPage from './pages/Favourited'
-import HomePage from './pages/Home'
-import { FilterContextProvider } from './hooks/useFilters'
-import { DataContextProvider } from './hooks/useData'
+import { useEffect, useState } from 'react';
+import { MantineProvider } from '@mantine/core';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './styles/theme';
+import { mantineTheme } from './styles/mantineTheme';
+import './App.scss';
+
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import EditMetadata from './pages/EditMetadata';
+import Favourited from './pages/Favourited';
+import GenreDetail from './pages/GenreDetail';
+import Artist from './pages/Artist';
+import Song from './pages/Song';
 
 function App() {
   const [v, setV] = useState<{
-    appVersion: string
-    version: string
-    gitCommitShort: string
-    gitCommit: string
-    gitBranch: string
-    gitDirty: boolean
-  } | null>(null)
+    appVersion: string;
+    version: string;
+    gitCommitShort: string;
+    gitCommit: string;
+    gitBranch: string;
+    gitDirty: boolean;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/version')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data) setV(data)
+        if (data) setV(data);
       })
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
-  const isDev = import.meta.env.DEV
+  const isDev = import.meta.env.DEV;
   // @ts-expect-error injected by Vite define
-  const devBranch = typeof __GIT_BRANCH__ !== 'undefined' ? (__GIT_BRANCH__ as string) : ''
+  const devBranch = typeof __GIT_BRANCH__ !== 'undefined' ? (__GIT_BRANCH__ as string) : '';
   // @ts-expect-error injected by Vite define
-  const devSha = typeof __GIT_COMMIT_SHORT__ !== 'undefined' ? (__GIT_COMMIT_SHORT__ as string) : ''
+  const devSha = typeof __GIT_COMMIT_SHORT__ !== 'undefined' ? (__GIT_COMMIT_SHORT__ as string) : '';
   // @ts-expect-error injected by Vite define
-  const devDirty = typeof __GIT_DIRTY__ !== 'undefined' ? (__GIT_DIRTY__ as boolean) : false
+  const devDirty = typeof __GIT_DIRTY__ !== 'undefined' ? (__GIT_DIRTY__ as boolean) : false;
 
-  const branchLabel = v?.gitBranch || devBranch || ''
-  const shaLabel = v?.gitCommitShort || devSha || ''
-  const dirtyLabel = v?.gitDirty ?? devDirty
+  const branchLabel = v?.gitBranch || devBranch || '';
+  const shaLabel = v?.gitCommitShort || devSha || '';
+  const dirtyLabel = v?.gitDirty ?? devDirty;
 
   return (
-    <BrowserRouter>
-      <DataContextProvider>
-        <FilterContextProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/genre/:genres" element={<GenrePage />} />
-            <Route path="/artist/:artist" element={<ArtistPage />} />
-            <Route path="/no-results" element={<NoResultsPage />} />
-          </Routes>
-        </FilterContextProvider>
-      </DataContextProvider>
+    <MantineProvider theme={mantineTheme} forceColorScheme="dark">
+      <ThemeProvider theme={theme}>
+        <BrowserRouter>
+          <div className="App">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/edit-metadata" element={<EditMetadata />} />
+              <Route path="/favourited" element={<Favourited />} />
+              <Route path="/genre/:genrePath" element={<GenreDetail />} />
+              <Route path="/artist/:artistName" element={<Artist />} />
+              <Route path="/song/:id" element={<Song />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </ThemeProvider>
       {isDev && (
         <div
           style={{
@@ -76,8 +85,8 @@ function App() {
         data-branch={branchLabel}
         data-dirty={String(dirtyLabel)}
       />
-    </BrowserRouter>
-  )
+    </MantineProvider>
+  );
 }
 
-export default App
+export default App;
