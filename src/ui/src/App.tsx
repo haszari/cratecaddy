@@ -5,13 +5,13 @@ import { mantineTheme } from './styles/mantineTheme';
 import './App.scss';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-import GenreDetail from './pages/GenreDetail';
 import Home from './pages/Home';
+import EditMetadata from './pages/EditMetadata';
+import Favourited from './pages/Favourited';
+import GenreDetail from './pages/GenreDetail';
 import Artist from './pages/Artist';
 import Song from './pages/Song';
-import Favourited from './pages/Favourited';
-import EditMetadata from './pages/EditMetadata';
+import DevVersion from './components/DevVersion';
 
 function App() {
   return (
@@ -30,8 +30,9 @@ function App() {
           </div>
         </BrowserRouter>
       </ThemeProvider>
+      <DevVersion />
     </MantineProvider>
   );
 }
 
-export default App
+export default App;

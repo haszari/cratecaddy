@@ -8,8 +8,9 @@ set -e
 #   start                                Start MongoDB + API daemon
 #   stop                                 Stop API + MongoDB
 #   restart                              Stop then start
-#   status                               Is the API running?
+#   status                               Show status (and version if running)
 #   logs                                 Tail API log file
+#   version                              Show status and version (alias of status)
 #   import [prod|dev] [apple|djay] <file>  Import music metadata
 #   install                              Install/update runtime to ~/.cratecaddy
 #   uninstall                            Remove auto-start + PATH, stop services
@@ -172,11 +173,40 @@ case "${1:-}" in
     ;;
   status)
     if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
-      echo "CrateCaddy is running on port $API_PORT (PID: $(cat $PID_FILE))"
+      STATUS_RUN="yes"
     else
-      echo "CrateCaddy is not running."
+      STATUS_RUN="no"
       rm -f "$PID_FILE" 2>/dev/null
     fi
+    if [ "$STATUS_RUN" = "yes" ]; then
+      VERSION_JSON=""
+      if command -v curl >/dev/null 2>&1; then
+        VERSION_JSON=$(curl -s --connect-timeout 1 --max-time 1 "http://127.0.0.1:${API_PORT}/api/version" 2>/dev/null || true)
+      elif command -v python3 >/dev/null 2>&1; then
+        VERSION_JSON=$(python3 -c "
+import sys
+try:
+  import urllib.request
+  req=urllib.request.Request('http://127.0.0.1:${API_PORT}/api/version', headers={'User-Agent':'cratecaddy-cli'})
+  with urllib.request.urlopen(req, timeout=1) as r:
+    sys.stdout.write(r.read().decode('utf-8'))
+except Exception as e:
+  pass
+" 2>/dev/null || true)
+      fi
+      if [ -n "$VERSION_JSON" ]; then
+        echo "CrateCaddy is running on port $API_PORT (PID: $(cat $PID_FILE))"
+        echo "Version: $(echo "$VERSION_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('version',''))" 2>/dev/null || true)"
+      else
+        echo "CrateCaddy is running on port $API_PORT (PID: $(cat $PID_FILE))"
+        echo "version: unavailable (failed to query /api/version)"
+      fi
+    else
+      echo "CrateCaddy is not running."
+    fi
+    ;;
+  version)
+    exec "$0" status
     ;;
   logs)
     tail -f "$LOG_FILE"
@@ -308,5 +338,6 @@ case "${1:-}" in
     echo "  import djay <csv> Import from djay Pro CSV export"
     echo "  install           Install or update runtime to ~/.cratecaddy"
     echo "  uninstall         Remove auto-start + PATH line, stop services"
+    echo "  version           Show status and version (alias of status)"
     ;;
 esac

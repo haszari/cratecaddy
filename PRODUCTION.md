@@ -36,6 +36,18 @@ cratecaddy start
 Open <http://localhost:5225>.
 
 The appliance is a **copy** — after install you can move or delete the checkout and CrateCaddy keeps working.
+## About the install
+
+This is a **source install**: `cratecaddy install` copies the **built production runtime from the current checkout** (branch/commit/state at install time). It does **not** pull a release or tag. Re-running `install` updates in place from the current checkout and preserves data volumes.
+
+You must run `./scripts/build-prod.sh` before `cratecaddy install`. The install script checks for `src/api/dist/server.js` and will fail if it's missing.
+
+If the checkout is unusual (no git repo, not on `main`, detached HEAD, or has uncommitted changes), `cratecaddy install` prints full source details and prompts with: `Installing unusual source version - proceed?` — type `yes` or `y` to continue; any other input aborts.
+
+## Runtime version
+
+`cratecaddy status` shows status. If the API is running, it queries `GET /api/version` on the running app and includes the version string (e.g. `0.1.0+3cfbcab (branch)-dirty`). `cratecaddy version` is an alias of `status` with identical output. Version is determined from the running app only (no file fallback) — if the app is not running, no version is shown.
+
 
 ## Auto-start on boot
 
