@@ -60,21 +60,19 @@ function App() {
           </div>
         </BrowserRouter>
       </ThemeProvider>
-      {isDev && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '8px',
-            left: '8px',
-            fontSize: '10px',
-            opacity: 0.5,
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        >
-          {`dev • ${branchLabel || '—'} • ${shaLabel || '—'}${dirtyLabel ? ' (dirty)' : ''}`}
-        </div>
-      )}
+      <div
+        style={{
+          marginTop: 'auto',
+          padding: '8px',
+          fontSize: '10px',
+          opacity: 0.5,
+          userSelect: 'none',
+        }}
+      >
+        {isDev && (
+          <span>{`dev • ${branchLabel || '—'} • ${shaLabel || '—'}${dirtyLabel ? ' (dirty)' : ''}`}</span>
+        )}
+      </div>
       <div
         id="cratecaddy-version"
         style={{ display: 'none' }}
