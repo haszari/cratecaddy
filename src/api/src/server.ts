@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './config/database.js';
 import { config } from './config/env.js';
 import songRoutes from './routes/songs.js';
+import versionRoutes from './routes/version.js';
 
 // The API package is ESM ("type": "module"), so `__dirname` is not defined at
 // runtime. Derive it from import.meta.url (same pattern as
@@ -25,6 +26,7 @@ connectDB();
 
 // Routes
 app.use('/api/songs', songRoutes);
+app.use('/api/version', versionRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
