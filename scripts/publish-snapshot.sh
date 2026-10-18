@@ -11,11 +11,13 @@
 #
 # Publishing is deliberately local and manual: CI cannot reach the library
 # database, and a deploy should be a decision, not a side effect of a push.
+# The default run does everything locally and then asks before publishing.
 #
 # Usage:
-#   scripts/publish-snapshot.sh             # publish
-#   scripts/publish-snapshot.sh --force     # skip the count-drop guard and dirty prompt
-#   scripts/publish-snapshot.sh --dry-run   # everything except the push
+#   scripts/publish-snapshot.sh                      # build + validate, then prompt to publish
+#   scripts/publish-snapshot.sh --publish-to-github  # skip the prompt and publish
+#   scripts/publish-snapshot.sh --force              # skip the count-drop guard and dirty prompt
+#   scripts/publish-snapshot.sh --dry-run            # never prompt, never publish
 #
 set -euo pipefail
 
@@ -24,10 +26,12 @@ cd "$ROOT"
 
 FORCE=0
 DRY_RUN=0
+PUBLISH=0
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=1 ;;
     --dry-run) DRY_RUN=1 ;;
+    --publish-to-github) PUBLISH=1 ;;
     --help|-h)
       sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
@@ -139,10 +143,23 @@ done
 echo "  archived to $ARCHIVE_DIR (keeping 3)"
 ls -1dt src/data/snapshot-deploys/*/ | sed 's/^/    /'
 
-say "Push"
+say "Publish?"
 if [ "$DRY_RUN" -eq 1 ]; then
-  echo "  dry run: would publish snapshot $SNAPSHOT_VERSION to gh-pages"
+  echo "  local build complete; not publishing (--dry-run)"
   exit 0
+fi
+
+if [ "$PUBLISH" -ne 1 ]; then
+  if [ ! -t 0 ]; then
+    echo "  local build complete; not publishing (no --publish-to-github, not interactive)"
+    exit 0
+  fi
+  printf 'Publish Snapshot %s (%s songs) to GitHub Pages? [y/N] ' "$SNAPSHOT_VERSION" "$SNAPSHOT_COUNT"
+  read -r answer
+  case "$answer" in
+    y|Y|yes|YES) ;;
+    *) echo "  not published."; exit 0 ;;
+  esac
 fi
 
 if [ -n "$(git status --porcelain)" ] && [ "$FORCE" -ne 1 ]; then

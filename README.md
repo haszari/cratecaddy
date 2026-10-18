@@ -21,8 +21,11 @@ A read-only, offline-capable version of the browse UI can be published from the 
 cd src/api && npm run snapshot
 cd ../ui && npm run build:snapshot
 
-# Or do the whole thing (snapshot, validate, build, archive, publish)
-./scripts/publish-snapshot.sh            # add --dry-run to stop before the push
+# Or snapshot, validate, build and archive, then confirm before publishing
+./scripts/publish-snapshot.sh
+
+# Publish without the prompt
+./scripts/publish-snapshot.sh --publish-to-github
 ```
 
 Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch.

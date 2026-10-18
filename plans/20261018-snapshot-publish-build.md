@@ -128,7 +128,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 
 ## Publish and rollout
 
-`scripts/publish-snapshot.sh` fails closed: snapshot → validate → build → validate → push.
+`scripts/publish-snapshot.sh` fails closed: snapshot → validate → build → validate → archive → confirm → push. A plain run stops after the local build and asks before publishing; `--publish-to-github` skips the prompt, `--dry-run` never asks.
 
 - Pre-build guards: count > 0; abort if count dropped >20% vs the currently published Snapshot (read from `origin/gh-pages`) unless `--force`; banned-key assertion; warn on >20 MB.
 - Post-build guards: exactly one `data/snapshot-*.json`; filename hash matches `snapshot.version`; `index.html` and `.nojekyll` present; print count, size, `takenAt`, version for a final eyeball.
