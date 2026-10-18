@@ -12,6 +12,29 @@ CrateCaddy can run as a self-contained service on macOS. MongoDB in Docker, buil
 
 See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and what it does to your system.
 
+## Published static build (Snapshot)
+
+A read-only, offline-capable version of the browse UI can be published from the same library and codebase.
+
+```bash
+# Write a Snapshot from the local database, then build the static shell
+cd src/api && npm run snapshot
+cd ../ui && npm run build:static
+
+# Or do the whole thing (snapshot, validate, build, archive, publish)
+./scripts/publish-static.sh            # add --dry-run to stop before the push
+```
+
+Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch.
+
+- **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing`. Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
+- **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.
+- **Read-only by construction**: the static shell has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
+- **Rollback**: each publish archives its build to `src/data/static-deploys/<sha8>/` (gitignored, last 3 kept). Republish an archive to roll back.
+- Publishing is manual and local — CI cannot reach the library database.
+
+See [plans/20261018-static-site-build.md](./plans/20261018-static-site-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
+
 ## Development
 
 ### First time setup

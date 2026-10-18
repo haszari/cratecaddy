@@ -1,6 +1,6 @@
 # Static site build — CrateCaddy published Snapshot
 
-**Status:** ready to build
+**Status:** built 2026-10-18 — steps 1–8 done; waypoint 9 (device QA) outstanding
 **Date:** 2026-10-18
 **Supersedes:** [20260717d-static-site-build.md](./20260717d-static-site-build.md) (early draft, stale assumptions)
 **Roadmap:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md) — Step 3
