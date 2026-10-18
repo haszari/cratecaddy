@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { updateSongMetadata, writeToAppleMusic, fetchGenreStats, fetchSongHistory } from '../api/client';
+import { updateSongMetadata, writeToAppleMusic, fetchGenreStats, fetchSongHistory } from '@data';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
 import type { PaginatedResponse, Song } from '../types';
 import TextField from '@mui/material/TextField';

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from './useSongs';
-import { fetchGenreStats } from '../api/client';
+import { fetchGenreStats } from '@data';
 import { useFilters } from './useFilters';
 import { useSortShuffle } from './useSortShuffle';
 import { withSearch } from '../utils/url';

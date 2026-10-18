@@ -25,7 +25,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@cratecaddy-api/*": ["../api/src/helpers/*"]
+      "@cratecaddy-api/*": ["../api/src/helpers/*"],
+      "@data": ["src/data/client.ts"]
     }
   },
   "include": ["src"]

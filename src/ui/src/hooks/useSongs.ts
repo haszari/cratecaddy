@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchSongs } from '../api/client';
+import { fetchSongs } from '@data';
 import type { ApiSongParams } from '@cratecaddy-api/apiParams';
 import type { PaginatedResponse, Song } from '../types';
 

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { fetchGenreStats } from '../api/client';
+import { fetchGenreStats } from '@data';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useFilters } from '../hooks/useFilters';
 import { useSortShuffle } from '../hooks/useSortShuffle';

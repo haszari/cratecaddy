@@ -37,6 +37,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@cratecaddy-api': path.resolve(__dirname, '../api/src/helpers'),
+      '@data': path.resolve(__dirname, './src/data/client.ts'),
     },
   },
   define: {
