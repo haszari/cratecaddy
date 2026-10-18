@@ -1,11 +1,11 @@
 # Smoke tests
 
-Manual checks before trusting a build or a publish. There is no test framework; the one automated check is `npm run check:snapshot-matches-app`, which proves the app and the published site agree on query results.
+Manual checks before trusting a build or a publish. There is no test framework; the one automated check is `npm run check:site-matches-app`, which proves the app and the published site agree on query results.
 
 Two rules:
 
 1. **Test the artefact you are about to trust.** For a publish that means the Snapshot built from the **prod** Library, not dev.
-2. **Dev Library ≠ prod Library.** Dev holds whatever was last imported or edited there, including experimental data. `publish-snapshot-site.sh` reads prod by default; `--use-dev-library` is only for checking the wiring.
+2. **Dev Library ≠ prod Library.** Dev holds whatever was last imported or edited there, including experimental data. `publish-library-site.sh` reads prod by default; `--use-dev-library` is only for checking the wiring.
 
 ---
 
@@ -54,24 +54,24 @@ curl -s localhost:5225/api/version
 - [ ] `cratecaddy stop` then `cratecaddy start` brings it back cleanly
 - [ ] `cratecaddy logs` has no new errors from the checks
 
-## 3. Snapshot site — local, before publishing
+## 3. Library site — local, before publishing
 
 ```bash
-./scripts/publish-snapshot-site.sh            # builds and stops at the publish prompt
+./scripts/publish-library-site.sh            # builds and stops at the publish prompt
 ```
 
 - [ ] Prints `prod — mongodb://127.0.0.1:5227/cratecaddy`, not dev
 - [ ] Song count is plausible against prod, e.g. `docker exec cratecaddy-mongodb-prod mongosh cratecaddy --quiet --eval 'db.songs.countDocuments({grouping:"DJing"})'`
 - [ ] Refuses if prod is not running, with "Start the appliance first"
-- [ ] `check:snapshot-matches-app` runs green
+- [ ] `check:site-matches-app` runs green
 - [ ] Filename version equals the version inside the JSON
 - [ ] Snapshot contains no `filePath`, `fileSize`, `bitRate`, `dateModified`, `lastImportDate`, history fields
-- [ ] One Snapshot file only, in `src/ui/dist-snapshot/data/`
+- [ ] One Snapshot file only, in `src/ui/dist-site/data/`
 
 Serve the built site:
 
 ```bash
-cd src/ui && npm run preview:snapshot          # http://localhost:5328/cratecaddy/
+cd src/ui && npm run preview:site          # http://localhost:5328/cratecaddy/
 ```
 
 - [ ] Loads at `/cratecaddy/` with no console errors
@@ -84,7 +84,7 @@ cd src/ui && npm run preview:snapshot          # http://localhost:5328/cratecadd
 ## 4. Publish and post-deploy
 
 ```bash
-./scripts/publish-snapshot-site.sh --publish-to-github
+./scripts/publish-library-site.sh --publish-to-github
 ```
 
 - [ ] Wait for the Pages deployment, then hard-reload the published URL
@@ -93,7 +93,7 @@ cd src/ui && npm run preview:snapshot          # http://localhost:5328/cratecadd
 - [ ] No Edit button
 - [ ] Phone: open once, add to home screen, then reload offline — still works
 - [ ] Update flow: publish a new Snapshot, return to an already-open old tab, expect "Getting fresh tune data…" then reload with the new date
-- [ ] Rollback: republish an archive from `src/data/snapshot-deploys/<sha8>/`, confirm the footer reverts
+- [ ] Rollback: republish an archive from `src/data/site-deploys/<sha8>/`, confirm the footer reverts
 
 ## 5. Failure drills (occasionally)
 

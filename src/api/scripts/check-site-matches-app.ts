@@ -2,14 +2,15 @@
  * Checks that the published site and the app show the same songs.
  *
  * CrateCaddy has two browse implementations: MongoDB behind the API, and an
- * in-memory filter behind the published Snapshot (ADR-0014). If they drift, a
+ * in-memory filter behind the published site (ADR-0014). If they drift, a
  * track that exists in the app silently disappears from the published site.
  * This check runs the same queries through both and fails when the song sets
  * or the tag counts differ. It gates publishing.
  *
  * Compares the MongoDB query builder (`buildSongFilter`) behind the API
  * against the in-memory predicate (`songQuery.matchesFilters`) behind the
- * Snapshot, over the dev database and a fixed matrix of query params.
+ * published site, over the Library being published and a fixed matrix of
+ * query params.
  *
  * Asserts, per case:
  *   - identical matching Song IDs (membership)
@@ -20,7 +21,7 @@
  *
  * Any new filter must be added to both implementations and to this matrix.
  *
- * Usage: npm run check:snapshot-matches-app
+ * Usage: npm run check:site-matches-app
  * Requires MongoDB running and non-empty (use the dev database).
  */
 import mongoose from 'mongoose';
@@ -188,10 +189,10 @@ async function main() {
 
   console.log('');
   if (failures > 0) {
-    console.error(`Snapshot/app agreement check failed: ${failures}/${CASES.length} cases differ.`);
+    console.error(`Site/app agreement check failed: ${failures}/${CASES.length} cases differ.`);
     process.exitCode = 1;
   } else {
-    console.log(`Snapshot/app agreement check passed: ${CASES.length}/${CASES.length} cases match.`);
+    console.log(`Site/app agreement check passed: ${CASES.length}/${CASES.length} cases match.`);
   }
 }
 

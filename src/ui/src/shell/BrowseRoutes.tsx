@@ -13,7 +13,7 @@ export interface AppRoute {
 
 /**
  * Routes that exist in every build target. Write-only routes (edit metadata)
- * belong in the API shell, never here, so the Snapshot bundle cannot contain them.
+ * belong in the API shell, never here, so the site bundle cannot contain them.
  */
 export const browseRoutes: AppRoute[] = [
   { path: '/', element: <Home /> },

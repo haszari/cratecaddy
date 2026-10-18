@@ -16,4 +16,4 @@ Rejected alternatives:
 
 2. **DuckDB WASM:** ~6 MB WASM bundle — larger than the entire song dataset. Designed for analytical queries on millions of rows, not genre tag filtering on 10K songs. Heavy startup cost, complex setup.
 
-See also [ADR-0013](./0013-snapshot-build-two-shells-shared-engine.md) and [CONTEXT.md](../../CONTEXT.md) for the Snapshot definition.
+See also [ADR-0013](./0013-published-site-two-shells-shared-engine.md) and [CONTEXT.md](../../CONTEXT.md) for the Snapshot definition.

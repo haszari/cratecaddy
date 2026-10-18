@@ -1,5 +1,5 @@
 /**
- * Deterministic shuffle key shared by the API and the Snapshot build.
+ * Deterministic shuffle key shared by the API and the published site.
  *
  * `shuffleHash` is the single implementation. The API needs a self-contained
  * function body to run inside MongoDB's `$function`; `buildShuffleHashFunction`

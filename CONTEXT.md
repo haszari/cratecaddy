@@ -92,13 +92,17 @@ Multiple IDs for the same source type (e.g. one streaming + one local Apple Musi
 
 ## Snapshot
 
-A point-in-time, filtered copy of the Library emitted as static data for the published, read-only version of CrateCaddy.
+A point-in-time, filtered copy of the Library, emitted as static data for the published site. A Snapshot is Library data, not a site: the published site is a read-only build that displays one.
 
 - Taken from CrateCaddy's own database — it does not cross a system boundary, so it is not an Export.
 - **Filtered**: a Snapshot contains a chosen subset of the Library (default: songs grouped `DJing`), not necessarily all Songs.
-- **Read-only**: a Snapshot has no edit, write-back, or history capability.
+- **Read-only use**: a Snapshot is displayed, never written. The published site that shows it has no edit, write-back or history capability.
 - **Provenance**: a Snapshot records when it was taken and the app version that produced it, so staleness is visible.
 - **Identity**: Songs keep their `_id`, so Song links are stable across Snapshots.
+
+## Published site
+
+The read-only, offline-capable build of CrateCaddy that displays a Snapshot. It is published to GitHub Pages and contains no write surface. It is not itself a Snapshot — it shows one, and its footer names which.
 
 ## Edit mode UI
 

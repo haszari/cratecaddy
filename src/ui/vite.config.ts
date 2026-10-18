@@ -48,17 +48,17 @@ function findSnapshotFile(): string | null {
 }
 
 /**
- * The Snapshot build uses the same index.html with a different entry point,
- * so the write-capable API shell is never in the Snapshot bundle.
+ * The published site uses the same index.html with a different entry point,
+ * so the write-capable API shell is never in the site bundle.
  */
-function snapshotEntryPlugin(): Plugin {
+function siteEntryPlugin(): Plugin {
   return {
-    name: 'cratecaddy-snapshot-entry',
+    name: 'cratecaddy-site-entry',
     transformIndexHtml: {
       // Must run before Vite resolves the entry script from index.html.
       order: 'pre',
       handler(html) {
-        return html.replace('/src/main.tsx', '/src/main.snapshot.tsx')
+        return html.replace('/src/main.tsx', '/src/main.site.tsx')
       },
     },
   }
@@ -66,9 +66,9 @@ function snapshotEntryPlugin(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isSnapshot = mode === 'snapshot'
+  const isSite = mode === 'site'
 
-  if (isSnapshot) {
+  if (isSite) {
     if (!findSnapshotFile()) {
       throw new Error(
         'No Snapshot found in src/ui/public/data.\n' +
@@ -77,15 +77,15 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  const snapshotFile = isSnapshot ? findSnapshotFile() : null
+  const snapshotFile = isSite ? findSnapshotFile() : null
 
   return {
-    plugins: isSnapshot
+    plugins: isSite
       ? [
           react(),
-          snapshotEntryPlugin(),
+          siteEntryPlugin(),
           VitePWA({
-            // Registration and the update UX live in shell/SnapshotStatus.
+            // Registration and the update UX live in shell/SiteStatus.
             registerType: 'prompt',
             injectRegister: false,
             includeAssets: ['icon.svg', 'vite.svg'],
@@ -121,7 +121,7 @@ export default defineConfig(({ mode }) => {
         // Build-time swap between the API client and the Snapshot client.
         '@data': path.resolve(
           __dirname,
-          isSnapshot ? './src/data/snapshotClient.ts' : './src/data/client.ts',
+          isSite ? './src/data/snapshotClient.ts' : './src/data/client.ts',
         ),
       },
     },
@@ -134,11 +134,11 @@ export default defineConfig(({ mode }) => {
         JSON.parse(fs.readFileSync(path.resolve(__dirname, '../api/package.json'), 'utf8')).version ?? '0.1.0',
       ),
     },
-    // Published under <custom domain>/cratecaddy/. Dev Snapshot mode uses the same
+    // Published under <custom domain>/cratecaddy/. Dev site mode uses the same
     // prefix so preview and the published build resolve assets identically.
-    base: isSnapshot ? '/cratecaddy/' : '/',
+    base: isSite ? '/cratecaddy/' : '/',
     build: {
-      outDir: isSnapshot ? 'dist-snapshot' : 'dist',
+      outDir: isSite ? 'dist-site' : 'dist',
     },
     server: {
       port: parseInt(process.env.UI_PORT || '5325'),

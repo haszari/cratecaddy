@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Publish a Snapshot site to GitHub Pages.
+# Publish the library site to GitHub Pages.
 #
 #   1. snapshot  — read the library and write src/ui/public/data/snapshot-<sha8>.json
 #   2. validate  — refuse obviously wrong data (empty library, big drop)
-#   3. build     — Snapshot shell into src/ui/dist-snapshot
+#   3. build     — Site shell into src/ui/dist-site
 #   4. validate  — filename hash, required files
 #   5. archive   — keep the last 3 built outputs for rollback (src/data, gitignored)
 #   6. push      — single-commit gh-pages branch (no history, no repo bloat)
@@ -14,12 +14,12 @@
 # The default run does everything locally and then asks before publishing.
 #
 # Usage:
-#   scripts/publish-snapshot-site.sh                          # build + validate, then prompt to publish
-#   scripts/publish-snapshot-site.sh --publish-to-github      # skip the prompt and publish
-#   scripts/publish-snapshot-site.sh --use-dev-library        # publish from the dev database instead
-#   scripts/publish-snapshot-site.sh --allow-smaller-library  # publish even if the song count dropped
-#   scripts/publish-snapshot-site.sh --allow-dirty-build      # publish with uncommitted changes
-#   scripts/publish-snapshot-site.sh --dry-run                # never prompt, never publish
+#   scripts/publish-library-site.sh                          # build + validate, then prompt to publish
+#   scripts/publish-library-site.sh --publish-to-github      # skip the prompt and publish
+#   scripts/publish-library-site.sh --use-dev-library        # publish from the dev database instead
+#   scripts/publish-library-site.sh --allow-smaller-library  # publish even if the song count dropped
+#   scripts/publish-library-site.sh --allow-dirty-build      # publish with uncommitted changes
+#   scripts/publish-library-site.sh --dry-run                # never prompt, never publish
 #
 # The Snapshot is taken from the prod (appliance) database by default. The dev
 # database is for iteration and may hold half-imported or experimental data,
@@ -148,48 +148,48 @@ else
 fi
 
 say "Check published site will match the app"
-(cd src/api && npm run check:snapshot-matches-app) || {
+(cd src/api && npm run check:site-matches-app) || {
   echo "Published site and app disagree for the same query; fix before publishing." >&2
   exit 1
 }
 
-say "Build published Snapshot"
-(cd src/ui && npm run build:snapshot)
+say "Build published site"
+(cd src/ui && npm run build:site)
 
 say "Validate build"
-BUILD_SNAPSHOTS="$(ls src/ui/dist-snapshot/data/snapshot-*.json 2>/dev/null | wc -l | tr -d ' ')"
+BUILD_SNAPSHOTS="$(ls src/ui/dist-site/data/snapshot-*.json 2>/dev/null | wc -l | tr -d ' ')"
 if [ "$BUILD_SNAPSHOTS" != "1" ]; then
-  echo "Expected exactly one Snapshot in dist-snapshot/data, found $BUILD_SNAPSHOTS." >&2
+  echo "Expected exactly one Snapshot in dist-site/data, found $BUILD_SNAPSHOTS." >&2
   exit 1
 fi
-BUILT_FILE="$(ls src/ui/dist-snapshot/data/snapshot-*.json)"
+BUILT_FILE="$(ls src/ui/dist-site/data/snapshot-*.json)"
 BUILT_VERSION="$(field "$BUILT_FILE" 'd.snapshot.version')"
 if [ "$BUILT_VERSION" != "$SNAPSHOT_VERSION" ]; then
   echo "Built Snapshot version $BUILT_VERSION does not match $SNAPSHOT_VERSION." >&2
   exit 1
 fi
-for required in src/ui/dist-snapshot/index.html src/ui/dist-snapshot/.nojekyll; do
+for required in src/ui/dist-site/index.html src/ui/dist-site/.nojekyll; do
   if [ ! -f "$required" ]; then
     echo "Missing required file: $required" >&2
     exit 1
   fi
 done
-if ! grep -q "/cratecaddy/assets/" src/ui/dist-snapshot/index.html; then
+if ! grep -q "/cratecaddy/assets/" src/ui/dist-site/index.html; then
   echo "index.html does not use the /cratecaddy/ base path — check the Vite base config." >&2
   exit 1
 fi
 echo "  build ok: snapshot $BUILT_VERSION, index.html and .nojekyll present"
 
 say "Archive build for rollback"
-ARCHIVE_DIR="src/data/snapshot-deploys/$SNAPSHOT_VERSION"
+ARCHIVE_DIR="src/data/site-deploys/$SNAPSHOT_VERSION"
 mkdir -p "$ARCHIVE_DIR"
-rsync -a --delete src/ui/dist-snapshot/ "$ARCHIVE_DIR/"
+rsync -a --delete src/ui/dist-site/ "$ARCHIVE_DIR/"
 # Keep the three most recent builds; rollback is republishing an archive verbatim.
-ls -1dt src/data/snapshot-deploys/*/ | tail -n +4 | while read -r old; do
+ls -1dt src/data/site-deploys/*/ | tail -n +4 | while read -r old; do
   rm -rf "$old"
 done
 echo "  archived to $ARCHIVE_DIR (keeping 3)"
-ls -1dt src/data/snapshot-deploys/*/ | sed 's/^/    /'
+ls -1dt src/data/site-deploys/*/ | sed 's/^/    /'
 
 say "Publish?"
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -219,7 +219,7 @@ if [ -n "$(git status --porcelain)" ] && [ "$ALLOW_DIRTY_BUILD" -ne 1 ]; then
   esac
 fi
 
-(cd src/ui && npx gh-pages -d dist-snapshot --no-history --dotfiles -b gh-pages \
+(cd src/ui && npx gh-pages -d dist-site --no-history --dotfiles -b gh-pages \
   -m "snapshot $SNAPSHOT_VERSION $SNAPSHOT_TAKEN_AT")
 
 say "Published"

@@ -1,9 +1,9 @@
 /**
- * Snapshot data source for the published build. Selected by the `@data` alias at
+ * Snapshot data source for the published site. Selected by the `@data` alias at
  * build time, so hooks and components are identical across build targets.
  *
  * Read-only by design: there are no mutation exports here. Writes exist only
- * in the API client, which the Snapshot shell never imports.
+ * in the API client, which the site shell never imports.
  *
  * Filtering, sorting and pagination go through the shared songQuery contract so
  * semantics match the API (see docs/adr/0014).

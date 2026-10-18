@@ -18,14 +18,14 @@ function formatTakenAt(takenAt: string | undefined): string {
 }
 
 /**
- * Static-build provenance and freshness: version, Snapshot timestamp, offline
+ * Published-site provenance and freshness: version, Snapshot timestamp, offline
  * state, and the update flow.
  *
  * Updates are never left to chance: a new build is precached, the app shows
  * "Getting fresh tune data…", then activates the new service worker and
  * reloads. No tab can keep serving an old Snapshot once a new one is ready.
  */
-export default function SnapshotStatus() {
+export default function SiteStatus() {
   const [online, setOnline] = useState(() => navigator.onLine);
   const [updating, setUpdating] = useState(false);
   const updateStarted = useRef(false);
@@ -81,17 +81,17 @@ export default function SnapshotStatus() {
   return (
     <>
       {!online && (
-        <div className="SnapshotStatus-offline" role="status">
+        <div className="SiteStatus-offline" role="status">
           Offline · snapshot from {formatTakenAt(snapshot?.takenAt) || 'unknown'}
         </div>
       )}
       {updating && (
-        <div className="SnapshotStatus-update" role="status">
+        <div className="SiteStatus-update" role="status">
           Getting fresh tune data…
-          <div className="SnapshotStatus-progress" aria-hidden="true" />
+          <div className="SiteStatus-progress" aria-hidden="true" />
         </div>
       )}
-      <div className="SnapshotStatus-footer">
+      <div className="SiteStatus-footer">
         {snapshot
           ? `${version} · snapshot ${formatTakenAt(snapshot.takenAt)}`
           : version}

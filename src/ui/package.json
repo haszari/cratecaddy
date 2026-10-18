@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:snapshot": "vite --mode snapshot",
-    "build:snapshot": "tsc -b && vite build --mode snapshot",
-    "preview:snapshot": "vite preview --mode snapshot --port 5328"
+    "dev:site": "vite --mode site",
+    "build:site": "tsc -b && vite build --mode site",
+    "preview:site": "vite preview --mode site --port 5328"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

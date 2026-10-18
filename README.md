@@ -12,34 +12,34 @@ CrateCaddy can run as a self-contained service on macOS. MongoDB in Docker, buil
 
 See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and what it does to your system.
 
-## Published Snapshot build
+## Published library site
 
 A read-only, offline-capable version of the browse UI can be published from the same library and codebase.
 
 ```bash
-# Write a Snapshot from the local database, then build the Snapshot shell
+# Write a Snapshot of the library, then build the site
 cd src/api && npm run snapshot
-cd ../ui && npm run build:snapshot
+cd ../ui && npm run build:site
 
 # Or snapshot, validate, build and archive, then confirm before publishing
-./scripts/publish-snapshot-site.sh
+./scripts/publish-library-site.sh
 
 # Publish without the prompt
-./scripts/publish-snapshot-site.sh --publish-to-github
+./scripts/publish-library-site.sh --publish-to-github
 ```
 
 Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch.
 
 - **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing`. Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
 - **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.
-- **Read-only by construction**: the Snapshot shell has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
-- **Rollback**: each publish archives its build to `src/data/snapshot-deploys/<sha8>/` (gitignored, last 3 kept). Republish an archive to roll back.
+- **Read-only by construction**: the site has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
+- **Rollback**: each publish archives its build to `src/data/site-deploys/<sha8>/` (gitignored, last 3 kept). Republish an archive to roll back.
 - Publishing is manual and local — CI cannot reach the library database.
 - The Snapshot is taken from the **prod** appliance database by default (`--use-dev-library` only for wiring checks).
 
 Run the [smoke tests](./docs/smoke-tests.md) before trusting a build or a publish.
 
-See [plans/20261018-snapshot-publish-build.md](./plans/20261018-snapshot-publish-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
+See [plans/20261018-library-site-build.md](./plans/20261018-library-site-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
 
 ## Development
 
