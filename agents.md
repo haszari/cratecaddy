@@ -48,7 +48,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 
 - Browse queries are server-side: `buildSongFilter` + `pagination` + `shuffleHash` behind `GET /api/songs` and `GET /api/songs/stats/genres`. The UI keeps filter state in URL search params and calls the API through `@data`.
 - Two filter implementations exist on purpose (ADR-0014): Mongo (`buildSongFilter`) for the API and pure JS (`songQuery`) for the static site build. New filters must be added to both and to the parity matrix.
-- API routes: `GET /api/songs`, `GET /api/songs/stats/genres`, CRUD by `:id`
+- API routes: `GET /health` (end-to-end: database state, song count, newest `updatedAt`), `GET /api/songs`, `GET /api/songs/stats/genres`, CRUD by `:id`
 - Song model has a Mongoose **pre-save hook** that auto-normalizes `artistTitleNormalized` and `genres` — relevant when writing import scripts
 - Merge logic in `songService.upsertSongWithMerge` matches on normalized artist+title+duration (±2s tolerance)
 - `src/ui/.env` sets `VITE_API_URL` and `UI_PORT`; `.env` is committed

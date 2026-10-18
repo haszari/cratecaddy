@@ -63,7 +63,7 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 |---|---|
 | `cratecaddy start` | Start MongoDB container + API daemon |
 | `cratecaddy stop` | Stop the API and take MongoDB down |
-| `cratecaddy status` | Is it running? |
+| `cratecaddy status` | Is it running? Version, Library song count and last change (end-to-end health, not just a live process) |
 | `cratecaddy logs` | Tail the API log |
 | `cratecaddy import <file>` | Import music metadata (Apple Music XML by default) |
 | `cratecaddy import djay <file>` | Import from djay Pro CSV export |

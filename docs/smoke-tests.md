@@ -21,7 +21,7 @@ cd src/ui && npm run dev         # :5325
 
 API:
 
-- [ ] `curl -s localhost:5326/health` → `{"status":"ok"}`
+- [ ] `curl -s localhost:5326/health` → `status: ok`, `database.connected: true`, `database.songs` > 0, `newestUpdate` set
 - [ ] `curl -s localhost:5326/api/version` → version, commit, branch (no 500)
 - [ ] `curl -s 'localhost:5326/api/songs?limit=1'` → one song plus a plausible `total`
 - [ ] `curl -s localhost:5326/api/songs/stats/genres` → non-empty list
@@ -49,7 +49,9 @@ curl -s localhost:5225/health
 curl -s localhost:5225/api/version
 ```
 
-- [ ] `cratecaddy status` reports running and the expected version
+- [ ] `cratecaddy status` reports running, the expected version, and `Library: <n> songs, last change <date>`
+- [ ] `curl -s localhost:5225/health` → `status: ok`, `database.connected: true`, `database.songs` matching the Library, `newestUpdate` plausible
+- [ ] `/health` reports `degraded` or an error when MongoDB is stopped (stop it, check, start it again)
 - [ ] UI at `http://localhost:5225` behaves like the dev checks above (at minimum: Home, one genre drill-down, one edit + history)
 - [ ] `cratecaddy stop` then `cratecaddy start` brings it back cleanly
 - [ ] `cratecaddy logs` has no new errors from the checks
