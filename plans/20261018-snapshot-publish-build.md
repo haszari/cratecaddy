@@ -103,7 +103,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
   - BPM range **includes** songs with no BPM; rating range does not;
   - sort fallback chain mirrors `FALLBACK_SORT_CHAIN`; Snapshot build uses byte-wise comparison (closest to Mongo default), and ordering is **not** parity-asserted.
 - Refactor `shuffleHash.ts` into a pure `shuffleHash(id, seed)`; `buildShuffleHashFunction` generates the Mongo `$function` body from it. Static shuffle uses the same function → identical ordering for the same seed.
-- **Snapshot/app agreement check:** `src/api/scripts/check-snapshot-matches-app.ts`, run via `npm run check:snapshot-matches-app` against the dev DB; it gates publishing. Fixed param matrix (genre all/any/not, artist, bpm range incl. missing-BPM songs, rating range, favourite, search, combined filters, empty result, pagination boundaries) asserting identical membership, `total`, and genre stats. Sort order and `limit` slicing are out of scope. It also asserts the Snapshot route set from `BrowseRoutes` contains no write-only route.
+- **Snapshot/app agreement check:** `src/api/scripts/check-snapshot-matches-app.ts`, run via `npm run check:snapshot-matches-app` against the Library being published (prod by default); it gates publishing. Fixed param matrix (genre all/any/not, artist, bpm range incl. missing-BPM songs, rating range, favourite, search, combined filters, empty result, pagination boundaries) asserting identical membership, `total`, and genre stats. Sort order and `limit` slicing are out of scope. It also asserts the Snapshot route set from `BrowseRoutes` contains no write-only route.
 
 ---
 
