@@ -35,7 +35,7 @@ cratecaddy start
 
 Open <http://localhost:5225>.
 
-The appliance is a **copy** — after install you can move or delete the checkout and CrateCaddy keeps working.
+The appliance is a **copy** — CrateCaddy keeps running if you move or delete the checkout. Publishing the static site is the exception: it builds from source, so **keep the checkout** (or point at one with `--source`). Making publishing self-contained in the appliance is a future improvement.
 ## About the install
 
 This is a **source install**: `cratecaddy install` copies the **built production runtime from the current checkout** (branch/commit/state at install time). It does **not** pull a release or tag. Re-running `install` updates in place from the current checkout and preserves data volumes.
@@ -67,6 +67,7 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 | `cratecaddy logs` | Tail the API log |
 | `cratecaddy import <file>` | Import music metadata (Apple Music XML by default) |
 | `cratecaddy import djay <file>` | Import from djay Pro CSV export |
+| `cratecaddy publish` | Snapshot the prod Library, build the static site, then ask before publishing. Needs the checkout; add `--publish-to-github` to skip the prompt |
 
 ## Smoke testing
 
@@ -86,6 +87,7 @@ All values are optional — defaults work as-is. Override by creating `~/.cratec
 API_PORT=5225
 MONGO_PORT=5227
 CRATECADDY_LOG=/path/to/cratecaddy.log
+SOURCE_DIR=/path/to/cratecaddy-checkout   # recorded by install; used by `cratecaddy publish`
 ```
 
 After changing config, restart: `cratecaddy restart`.

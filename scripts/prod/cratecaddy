@@ -12,6 +12,7 @@ set -e
 #   logs                                 Tail API log file
 #   version                              Show status and version (alias of status)
 #   import [prod|dev] [apple|djay] <file>  Import music metadata
+#   publish [options]                    Publish the static site (needs the checkout)
 #   install                              Install/update runtime to ~/.cratecaddy
 #   uninstall                            Remove auto-start + PATH, stop services
 #
@@ -20,6 +21,7 @@ set -e
 #   API_PORT        prod API port (default: 5225)
 #   MONGO_PORT      prod Mongo host port (default: 5227)
 #   CRATECADDY_LOG  API log file (default: ~/.cratecaddy/cratecaddy.log)
+#   SOURCE_DIR      checkout to publish from (default: recorded at install)
 #
 # Layout (~/.cratecaddy/ when installed)
 #   bin/cratecaddy         this CLI
@@ -27,7 +29,7 @@ set -e
 #   docker-compose.prod.yml  prod override (name cratecaddy-prod)
 #   macos/                 launchd plist template
 #   src/api/               built API (dist/ + node_modules/ + scripts)
-#   config.env             optional config
+#   config.env             optional config (source dir recorded at install)
 #   cratecaddy.log         API log
 #   api.pid                API PID file
 #
@@ -258,6 +260,42 @@ except Exception as e:
       djay)  npm run import:djaypro "$@" ;;
     esac
     ;;
+  publish)
+    # Publishing builds the static site from source, so it needs the checkout.
+    # The appliance is the runtime; the checkout is the release workspace.
+    # This command only locates the checkout and delegates, so there is one
+    # publish implementation (scripts/publish-static-site.sh).
+    PUBLISH_ARGS=()
+    SOURCE_ARG=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        # Consume the "publish" subcommand word.
+        publish) shift ;;
+        --source)
+          if [ $# -lt 2 ]; then
+            echo "ERROR: --source needs a directory." >&2
+            exit 1
+          fi
+          SOURCE_ARG="$2"; shift 2 ;;
+        --source=*) SOURCE_ARG="${1#--source=}"; shift ;;
+        *) PUBLISH_ARGS+=("$1"); shift ;;
+      esac
+    done
+
+    SOURCE="${SOURCE_ARG:-${CRATECADDY_SOURCE:-${SOURCE_DIR:-}}}"
+    if [ -z "$SOURCE" ]; then
+      echo "ERROR: no checkout found for publishing." >&2
+      echo "Pass --source <path-to-checkout>, set CRATECADDY_SOURCE, or re-run install from the checkout." >&2
+      exit 1
+    fi
+    if [ ! -x "$SOURCE/scripts/publish-static-site.sh" ]; then
+      echo "ERROR: no CrateCaddy checkout at $SOURCE" >&2
+      echo "Publishing needs the source tree (the appliance only holds the built API)." >&2
+      echo "Clone the repo there, or pass --source <path-to-checkout>." >&2
+      exit 1
+    fi
+    exec "$SOURCE/scripts/publish-static-site.sh" "${PUBLISH_ARGS[@]}"
+    ;;
   install)
     # Install or update the built runtime into ~/.cratecaddy. Safe to run
     # repeatedly: copies fresh code, re-enables launchd, preserves data.
@@ -282,6 +320,20 @@ except Exception as e:
       # pre-create it and copy the contents rather than the directory itself.
       mkdir -p "$INSTALL_ROOT/src/api"
       cp -R "$PROJECT_DIR/src/api/." "$INSTALL_ROOT/src/api/"
+      # Record the checkout so `cratecaddy publish` can find it later. The
+      # appliance keeps running if the checkout moves, but publishing needs it.
+      CONFIG_FILE="$INSTALL_ROOT/config.env"
+      mkdir -p "$INSTALL_ROOT"
+      if [ ! -f "$CONFIG_FILE" ]; then
+        {
+          echo "# CrateCaddy appliance config — see PRODUCTION.md"
+          echo "SOURCE_DIR=\"$PROJECT_DIR\""
+        } > "$CONFIG_FILE"
+      elif grep -q '^SOURCE_DIR=' "$CONFIG_FILE"; then
+        sed -i '' "s|^SOURCE_DIR=.*|SOURCE_DIR=\"$PROJECT_DIR\"|" "$CONFIG_FILE"
+      else
+        printf '\nSOURCE_DIR="%s"\n' "$PROJECT_DIR" >> "$CONFIG_FILE"
+      fi
     fi
     # PATH line in ~/.zshrc so `cratecaddy` resolves anywhere. Idempotent:
     # a full-line grep guard means re-running install never duplicates it.
@@ -336,6 +388,7 @@ except Exception as e:
     echo "  logs              Tail API log file"
     echo "  import <path>     Import from Apple Music XML (default)"
     echo "  import djay <csv> Import from djay Pro CSV export"
+    echo "  publish           Build the static site (add --publish-to-github to deploy)"
     echo "  install           Install or update runtime to ~/.cratecaddy"
     echo "  uninstall         Remove auto-start + PATH line, stop services"
     echo "  version           Show status and version (alias of status)"

@@ -26,6 +26,9 @@ cd ../ui && npm run build:static
 
 # Publish without the prompt
 ./scripts/publish-static-site.sh --publish-to-github
+
+# Same thing from the installed CLI (needs the checkout, recorded as SOURCE_DIR at install)
+cratecaddy publish --publish-to-github
 ```
 
 Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch.

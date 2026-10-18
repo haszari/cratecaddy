@@ -53,6 +53,8 @@ curl -s localhost:5225/api/version
 - [ ] UI at `http://localhost:5225` behaves like the dev checks above (at minimum: Home, one genre drill-down, one edit + history)
 - [ ] `cratecaddy stop` then `cratecaddy start` brings it back cleanly
 - [ ] `cratecaddy logs` has no new errors from the checks
+- [ ] `cratecaddy publish` reaches the same publish prompt (needs the checkout)
+- [ ] Move or rename the checkout, `cratecaddy publish` fails with the source-not-found message; `cratecaddy publish --source <path>` works again
 
 ## 3. Static site — local, before publishing
 

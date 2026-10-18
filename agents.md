@@ -5,11 +5,12 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 ## Repo structure
 
 - `src/api/` — Express TypeScript server, `server.ts` is entrypoint
-- `src/ui/` — Vite + React SPA. `main.tsx` is the API shell entrypoint, `main.static.tsx` the published static site
+- `src/ui/` — Vite + React SPA. `main.tsx` is the API shell entrypoint, `main.static.tsx` the static site shell
   - `src/ui/src/shell/` — per-build shells, shared routes (`BrowseRoutes`) and providers
   - `src/ui/src/data/` — data sources: `client.ts` (API), `snapshotClient.ts` (Snapshot), swapped via the `@data` alias
 - `snapshot.config.json` — Snapshot filter (default: grouping contains `DJing`)
-- `scripts/publish-static-site.sh` — snapshot, build and publish the static site to GitHub Pages
+- `scripts/publish-static-site.sh` — snapshot, build and publish the static site to GitHub Pages; needs the checkout
+- `cratecaddy publish` — the installed CLI delegates to that script, using `SOURCE_DIR` recorded at install (or `--source`). Publishing needs the checkout; the appliance only holds the built API
 - `src/tools/` — sample Library loader (`load-sample-library.sh` + `sample-songs.json`)
 - `src/data/` — gitignored user data (import files, CSVs)
 - `plans/` — design documents and refactor plans (review before executing)

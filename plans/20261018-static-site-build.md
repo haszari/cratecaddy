@@ -134,7 +134,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 - Post-build guards: exactly one `data/snapshot-*.json`; filename hash matches `snapshot.version`; `index.html` and `.nojekyll` present; print count, size, `takenAt`, version for a final eyeball.
 - Push: `gh-pages -d src/ui/dist-static --no-history --dotfiles -b gh-pages -m "snapshot <sha8> <takenAt>"` over the existing SSH remote. Interactive confirm if the working tree is dirty (footer would read `-dirty`).
 - **Rollback:** archive the last 3 built `dist-static/` outputs to `src/data/static-deploys/<sha8>/` (gitignored). Rollback = republish an archive verbatim; re-snapshotting is not a rollback because the DB has moved on.
-- **Pages setup (one-time, manual, documented):** source `gh-pages` /(root). Custom domain is account-level (`lab.cartoonbeats.com`), so no `CNAME` in this repo; project URL `https://lab.cartoonbeats.com/cratecaddy`. `base: '/cratecaddy/'` must match — a mismatch is the classic blank page. Publishing is manual and local; no CI, no secrets, no Mongo in CI.
+- **Pages setup (one-time, manual, documented):** source `gh-pages` /(root). Custom domain is account-level (`lab.cartoonbeats.com`), so no `CNAME` in this repo; project URL `https://lab.cartoonbeats.com/cratecaddy`. `base: '/cratecaddy/'` must match — a mismatch is the classic blank page. Publishing is manual and local; no CI, no secrets, no Mongo in CI. `cratecaddy publish` delegates to the same script; the checkout is required and recommended to keep. Making publishing self-contained in the appliance is a future improvement.
 
 ---
 
