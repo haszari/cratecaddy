@@ -9,8 +9,8 @@
  *   - Populates a genres column (semicolon-delimited)
  *   - Adds new rows for artists not yet in the CSV
  *
- * Usage: npm run crossref:nzxml           # preview to stdout
- *        npm run crossref:nzxml -- --write  # update data/artists.csv in place
+ * Usage: npm run artists:enrich-nz           # preview to stdout
+ *        npm run artists:enrich-nz -- --write  # update data/artists.csv in place
  */
 
 import { readFileSync, writeFileSync } from 'fs';

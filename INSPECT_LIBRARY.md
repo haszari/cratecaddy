@@ -1,6 +1,6 @@
-# Database Query Guide
+# Inspecting the Library
 
-Simple ways to inspect and query the MongoDB database.
+Ways to inspect and query the Library database.
 
 MongoDB runs in Docker (`docker compose up -d`). The API runs on the host.
 
@@ -57,12 +57,12 @@ Use the built-in query script with common queries:
 
 ```bash
 cd src/api
-npm run query:db count        # Total song count
-npm run query:db sample       # Show 3 sample songs
-npm run query:db with-key     # Count songs with key
-npm run query:db sources      # Source type statistics
-npm run query:db duplicates   # Find potential duplicates
-npm run query:db "search:Jump"  # Search songs by word in title (returns JSON)
+npm run inspect:library count        # Total song count
+npm run inspect:library sample       # Show 3 sample songs
+npm run inspect:library with-key     # Count songs with key
+npm run inspect:library sources      # Source type statistics
+npm run inspect:library duplicates   # Find potential duplicates
+npm run inspect:library "search:Jump"  # Search songs by word in title (returns JSON)
 ```
 
 ## Option 3: One-liner Queries

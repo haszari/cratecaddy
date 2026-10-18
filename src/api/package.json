@@ -12,12 +12,12 @@
     "import:rekordbox": "tsx scripts/import-rekordbox.ts",
     "import:applemusic": "tsx scripts/import-apple-music.ts",
     "import:djaypro": "tsx scripts/import-djaypro.ts",
-    "query:db": "tsx scripts/query-db.ts",
-    "export:artists": "tsx scripts/export-artists.ts",
-    "enrich:artists": "tsx scripts/enrich-artists.ts",
-    "crossref:nzxml": "tsx scripts/crossref-nzxml.ts",
     "check:browse": "tsx scripts/check-browse.ts",
-    "snapshot": "tsx scripts/snapshot.ts"
+    "snapshot": "tsx scripts/snapshot.ts",
+    "inspect:library": "tsx scripts/inspect-library.ts",
+    "artists:export": "tsx scripts/artists-export.ts",
+    "artists:enrich": "tsx scripts/artists-enrich.ts",
+    "artists:enrich-nz": "tsx scripts/artists-enrich-nz.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

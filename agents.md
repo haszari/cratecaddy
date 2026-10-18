@@ -27,7 +27,10 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 | api | `npm run import:applemusic <path>` | Needs MongoDB running; filters to songs with "DJing"/"Listening" grouping |
 | api | `npm run import:rekordbox <path>` | Experimental, includes musical key |
 | api | `npm run import:djaypro <path>` | Experimental, includes musical key |
-| api | `npm run query:db <cmd>` | `count`, `sample`, `with-key`, `sources`, `duplicates`, `search:term` |
+| api | `npm run inspect:library <cmd>` | Library checks: `count`, `sample`, `with-key`, `sources`, `duplicates`, `search:term` |
+| api | `npm run artists:export` | Writes the artist roster CSV |
+| api | `npm run artists:enrich` | Enriches the roster with MusicBrainz/Wikipedia country data |
+| api | `npm run artists:enrich-nz` | Matches NZ scene artists from a WordPress export into the roster |
 | api | `npm run snapshot` | Writes `src/ui/public/data/snapshot-<sha8>.json`; needs MongoDB. See `snapshot.config.json` |
 | api | `npm run check:browse` | Checks the API and Snapshot return the same songs for a query matrix; needs MongoDB with data |
 | ui | `npm run dev` | `vite` (serves on port from `src/ui/.env`) |

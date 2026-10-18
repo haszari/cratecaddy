@@ -9,7 +9,7 @@
  * 3. Unmatched artists fall back to Wikipedia OpenSearch
  * 4. Outputs CSV with artist, country, year, country-guess, source
  *
- * Usage: npm run enrich:artists > artists-enriched.csv
+ * Usage: npm run artists:enrich > artists-enriched.csv
  */
 
 import mongoose from 'mongoose';
