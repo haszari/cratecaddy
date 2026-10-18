@@ -15,7 +15,8 @@
     "query:db": "tsx scripts/query-db.ts",
     "export:artists": "tsx scripts/export-artists.ts",
     "enrich:artists": "tsx scripts/enrich-artists.ts",
-    "crossref:nzxml": "tsx scripts/crossref-nzxml.ts"
+    "crossref:nzxml": "tsx scripts/crossref-nzxml.ts",
+    "check:parity": "tsx scripts/check-parity.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
