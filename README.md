@@ -31,7 +31,7 @@ cd ../ui && npm run build:static
 cratecaddy publish --publish-to-github
 ```
 
-Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch. First-time Pages and custom-domain setup, plus per-publish deploy checks, are in [smoke tests](./docs/smoke-tests.md#0-github-setup-one-time-before-the-first-publish).
+Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch. First-time Pages and custom-domain setup, plus per-publish deploy checks, are in [smoke tests](./docs/smoke-tests.md).
 
 - **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing`. Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
 - **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.
@@ -40,7 +40,7 @@ Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-
 - Publishing is manual and local — CI cannot reach the library database.
 - The Snapshot is taken from the **prod** appliance database by default (`--use-dev-library` only for wiring checks).
 
-Run the [smoke tests](./docs/smoke-tests.md) before trusting a build or a publish.
+Run the [smoke tests](./docs/smoke-tests.md) before trusting a build or a publish; the ordered dev → prod → publish sequence is the [release run-through](./docs/smoke-tests.md).
 
 See [plans/20261018-static-site-build.md](./plans/20261018-static-site-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
 

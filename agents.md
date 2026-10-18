@@ -11,6 +11,8 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - `snapshot.config.json` — Snapshot filter (default: grouping contains `DJing`)
 - `scripts/publish-static-site.sh` — snapshot, build and publish the static site to GitHub Pages; needs the checkout
 - `cratecaddy publish` — the installed CLI delegates to that script, using `SOURCE_DIR` recorded at install (or `--source`). Publishing needs the checkout; the appliance only holds the built API
+- `cratecaddy rebuild-prod` — build from the checkout, install and restart in one step (also resolves `SOURCE_DIR`)
+- `cratecaddy install` — copies the built runtime; the installed copy cannot install itself, so run it from the checkout or pass `--source`
 - `src/tools/` — sample Library loader (`load-sample-library.sh` + `sample-songs.json`)
 - `src/data/` — gitignored user data (import files, CSVs)
 - `plans/` — design documents and refactor plans (review before executing)
