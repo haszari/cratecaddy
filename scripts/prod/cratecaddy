@@ -13,6 +13,7 @@ set -e
 #   version                              Show status and version (alias of status)
 #   import [prod|dev] [apple|djay] <file>  Import music metadata
 #   publish [options]                    Publish the static site (needs the checkout)
+#   rebuild-prod [--source <dir>]        Build from the checkout, install, restart
 #   install [--source <dir>]             Install/update runtime to ~/.cratecaddy
 #   uninstall                            Remove auto-start + PATH, stop services
 #
@@ -75,6 +76,20 @@ except Exception:
     pass
 PY
   fi
+}
+
+wait_for_api() {
+  # Poll until the API answers, so rebuild-prod reports the new version rather
+  # than racing the process start.
+  local attempts=0
+  while [ "$attempts" -lt 20 ]; do
+    if [ -n "$(fetch_json "http://127.0.0.1:${API_PORT}/api/version")" ]; then
+      return 0
+    fi
+    sleep 0.5
+    attempts=$((attempts + 1))
+  done
+  return 1
 }
 
 # Follow any symlink chain to the real file before computing SCRIPT_DIR, so
@@ -299,6 +314,54 @@ if data.get("error"):
       djay)  npm run import:djaypro "$@" ;;
     esac
     ;;
+  rebuild-prod)
+    # One release refresh: build the runtime from the checkout, install it, and
+    # restart. The checkout is resolved like publish/install because the
+    # installed copy cannot build itself.
+    REBUILD_SOURCE=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        rebuild-prod) shift ;;
+        --source)
+          if [ $# -lt 2 ]; then
+            echo "ERROR: --source needs a directory." >&2
+            exit 1
+          fi
+          REBUILD_SOURCE="$2"; shift 2 ;;
+        --source=*) REBUILD_SOURCE="${1#--source=}"; shift ;;
+        *)
+          echo "Unknown option: $1" >&2
+          exit 1 ;;
+      esac
+    done
+    if [ -z "$REBUILD_SOURCE" ]; then
+      REBUILD_SOURCE="${CRATECADDY_SOURCE:-}"
+    fi
+    if [ -z "$REBUILD_SOURCE" ] && [ "$PROJECT_DIR" != "$INSTALL_ROOT" ]; then
+      REBUILD_SOURCE="$PROJECT_DIR"
+    fi
+    if [ -z "$REBUILD_SOURCE" ] && [ -n "${SOURCE_DIR:-}" ]; then
+      REBUILD_SOURCE="$SOURCE_DIR"
+    fi
+    if [ -z "$REBUILD_SOURCE" ] || [ ! -x "$REBUILD_SOURCE/scripts/build-prod.sh" ]; then
+      echo "ERROR: no CrateCaddy checkout found to rebuild from." >&2
+      echo "Pass --source <path-to-checkout>, set CRATECADDY_SOURCE, or run from the checkout." >&2
+      exit 1
+    fi
+    echo "Rebuilding CrateCaddy from $REBUILD_SOURCE ..."
+    ( cd "$REBUILD_SOURCE" && ./scripts/build-prod.sh )
+    echo ""
+    "$REAL_SCRIPT" install --source "$REBUILD_SOURCE"
+    echo ""
+    "$REAL_SCRIPT" start
+    echo ""
+    if wait_for_api; then
+      echo "API ready."
+    else
+      echo "warning: API did not answer within 10s; check 'cratecaddy logs'." >&2
+    fi
+    "$REAL_SCRIPT" status
+    ;;
   publish)
     # Publishing builds the static site from source, so it needs the checkout.
     # The appliance is the runtime; the checkout is the release workspace.
@@ -467,6 +530,7 @@ if data.get("error"):
     echo "  logs              Tail API log file"
     echo "  import <path>     Import from Apple Music XML (default)"
     echo "  import djay <csv> Import from djay Pro CSV export"
+    echo "  rebuild-prod      Build from the checkout, install and restart"
     echo "  publish           Build the static site (add --publish-to-github to deploy)"
     echo "  install [--source <dir>]  Install or update runtime to ~/.cratecaddy"
     echo "  uninstall         Remove auto-start + PATH line, stop services"

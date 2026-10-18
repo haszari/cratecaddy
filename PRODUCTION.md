@@ -33,6 +33,9 @@ npm install --prefix src/ui
 
 # 5. Start (open a new terminal first, or run: source ~/.zshrc)
 cratecaddy start
+
+# After the first install, a code update is one command:
+#   cratecaddy rebuild-prod        # build from the checkout, install, restart
 ```
 
 Open <http://localhost:5225>.
@@ -63,6 +66,7 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 
 | Command | What it does |
 |---|---|
+| `cratecaddy rebuild-prod` | Build from the checkout, install the runtime and restart. Uses the recorded `SOURCE_DIR`; pass `--source <dir>` to override |
 | `cratecaddy start` | Start MongoDB container + API daemon |
 | `cratecaddy stop` | Stop the API and take MongoDB down |
 | `cratecaddy status` | Is it running? Version, Library song count and last change (end-to-end health, not just a live process) |

@@ -26,12 +26,12 @@ Checks: §1. Dev and prod use separate ports, so leaving dev running is harmless
 ### 2. Update the prod appliance
 
 ```bash
-./scripts/build-prod.sh
-./scripts/prod/cratecaddy install
-cratecaddy start
+cratecaddy rebuild-prod          # build from the checkout, install, restart
+# manual equivalent:
+# ./scripts/build-prod.sh && ./scripts/prod/cratecaddy install && cratecaddy start
 ```
 
-`build-prod.sh` must run before `install`; `install` stops the API and records `SOURCE_DIR`. Checks: §2.
+`rebuild-prod` resolves the checkout (`--source`, `CRATECADDY_SOURCE`, or the recorded `SOURCE_DIR`), runs `build-prod.sh`, installs and restarts. Checks: §2.
 
 ### 3. Publish the static site
 
@@ -44,7 +44,7 @@ First time only: create `gh-pages` with a publish, then configure Pages and the 
 
 Gotchas:
 
-- `install` does not start the API. Forgetting `cratecaddy start` shows "not running" with a healthy MongoDB.
+- `install` does not start the API; `rebuild-prod` does. After a plain `install`, run `cratecaddy start`.
 - Dev edits never reach prod. If the change is data, import or edit on prod; the dev run only proves code.
 - A publish before `install` produces a valid site whose footer version is older than the running appliance; update prod first.
 
