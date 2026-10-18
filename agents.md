@@ -71,9 +71,11 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 ## Commit format
 
 ```
-[agent <harness>-<model> <agent_skill_task_or_step>] <what changed and why>
+[agent <harness>-<model> <domain-task>] <what changed and why>
 ```
 
+- `<domain-task>` is the task in business-domain terms, not the type of activity: `static-site`, `import`, `metadata-editor`, `library-model`, `commit-conventions`.
+- The activity type may be included alongside it when useful: `build static-site`, `docs static-site`, `fix import`.
 - One commit per logical step (waypoint commits).
 - Subject line is plain English: what changed and why. No shorthand like `s/foo/bar`.
 - Body can add detail if needed.
