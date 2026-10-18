@@ -1,0 +1,1 @@
+{"name":"CrateCaddy","short_name":"CrateCaddy","description":"Browse a DJ library by genre, tempo and key. Works offline.","start_url":"/cratecaddy/","display":"standalone","background_color":"#141414","theme_color":"#141414","lang":"en","scope":"/cratecaddy/","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
