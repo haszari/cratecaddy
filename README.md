@@ -17,18 +17,17 @@ See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and wha
 A read-only, offline-capable version of the browse UI can be published from the same library and codebase.
 
 ```bash
-# Write a Snapshot of the library, then build the site
+# Publish: snapshot the prod Library → check → build → confirm → push
+cratecaddy publish
+cratecaddy publish --publish-to-github     # skip the prompt
+
+# Build locally without publishing, then preview
+./scripts/publish-static-site.sh --dry-run
+cd src/ui && npm run preview:static        # http://localhost:5328/cratecaddy/
+
+# Develop against the static build with the dev Library
 cd src/api && npm run snapshot
-cd ../ui && npm run build:static
-
-# Or snapshot, validate, build and archive, then confirm before publishing
-./scripts/publish-static-site.sh
-
-# Publish without the prompt
-./scripts/publish-static-site.sh --publish-to-github
-
-# Same thing from the installed CLI (needs the checkout, recorded as SOURCE_DIR at install)
-cratecaddy publish --publish-to-github
+cd ../ui && npm run dev:static
 ```
 
 Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch. First-time Pages and custom-domain setup, plus per-publish deploy checks, are in [smoke tests](./docs/smoke-tests.md).
