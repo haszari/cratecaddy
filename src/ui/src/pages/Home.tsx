@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { fetchGenreStats } from '@data';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useFilters } from '../hooks/useFilters';
@@ -79,7 +79,7 @@ export default function Home() {
       />
       <p className="home-help">
         Combine genres with <code>+</code> (AND) or <code>,</code> (OR) — e.g.{' '}
-        <a href="/genre/BAM,Deep"><code>/genre/BAM,Deep</code></a> or <a href="/genre/BAM+Deep"><code>/genre/BAM+Deep</code></a>
+        <Link to="/genre/BAM,Deep"><code>/genre/BAM,Deep</code></Link> or <Link to="/genre/BAM+Deep"><code>/genre/BAM+Deep</code></Link>
       </p>
       {stats && (
         <p className="song-count">{totalSongs} song{totalSongs !== 1 ? 's' : ''} across {Object.keys(tags).length} style{Object.keys(tags).length !== 1 ? 's' : ''}</p>
