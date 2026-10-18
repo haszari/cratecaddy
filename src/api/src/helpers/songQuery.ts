@@ -9,9 +9,8 @@
  * - The functions here evaluate params against an in-memory song list and are
  *   used by the Snapshot build in the browser.
  *
- * Both are deliberate and are kept honest by `scripts/check-browse.ts` (`npm run check:browse`), which
- * asserts identical membership, counts, and genre stats for a fixed param
- * matrix. Sort order is NOT asserted: MongoDB collation cannot be mirrored
+ * Both are deliberate and are kept honest by `scripts/check-snapshot-matches-app.ts`, which asserts identical membership,
+ * counts, and genre stats for a fixed param matrix. Sort order is NOT asserted: MongoDB collation cannot be mirrored
  * exactly, and ordering is presentation, not correctness. Strings are compared
  * byte-wise (UTF-16 code units), which is the closest practical match to
  * MongoDB's default ordering.

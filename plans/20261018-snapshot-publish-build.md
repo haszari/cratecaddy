@@ -103,7 +103,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
   - BPM range **includes** songs with no BPM; rating range does not;
   - sort fallback chain mirrors `FALLBACK_SORT_CHAIN`; Snapshot build uses byte-wise comparison (closest to Mongo default), and ordering is **not** parity-asserted.
 - Refactor `shuffleHash.ts` into a pure `shuffleHash(id, seed)`; `buildShuffleHashFunction` generates the Mongo `$function` body from it. Static shuffle uses the same function → identical ordering for the same seed.
-- **Browse query check:** `src/api/scripts/check-browse.ts`, run via `npm run check:browse` against the dev DB. Fixed param matrix (genre all/any/not, artist, bpm range incl. missing-BPM songs, rating range, favourite, search, combined filters, empty result, pagination boundaries) asserting identical membership, `total`, and genre stats. Sort order and `limit` slicing are out of scope. It also asserts the Snapshot route set from `BrowseRoutes` contains no write-only route.
+- **Snapshot/app agreement check:** `src/api/scripts/check-snapshot-matches-app.ts`, run via `npm run check:snapshot-matches-app` against the dev DB; it gates publishing. Fixed param matrix (genre all/any/not, artist, bpm range incl. missing-BPM songs, rating range, favourite, search, combined filters, empty result, pagination boundaries) asserting identical membership, `total`, and genre stats. Sort order and `limit` slicing are out of scope. It also asserts the Snapshot route set from `BrowseRoutes` contains no write-only route.
 
 ---
 
@@ -141,7 +141,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 ## Implementation order (waypoint commits)
 
 1. **Shared query contract:** extract `songQuery.ts` + pure `shuffleHash(id, seed)`; no behaviour change.
-2. **Browse query check skeleton:** `check-browse.ts` + `npm run check:browse`, matrix green against the current API.
+2. **Agreement check skeleton:** `check-snapshot-matches-app.ts` + `npm run check:snapshot-matches-app`, matrix green against the current API.
 3. **Data layer:** move `client.ts` → `data/`, add `data/index.ts` + `@data` alias, hooks switch imports. API behaviour unchanged.
 4. **Shell split:** `shell/Providers.tsx`, `shell/BrowseRoutes.tsx`, `main.tsx`, `main.snapshot.tsx`; API shell parity with today's routes.
 5. **Snapshot script:** config, whitelist, derived `isLocal`, validation, versioned filename, `SourcesIcons` change. Verify by hand against `DJing` counts.

@@ -32,7 +32,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 | api | `npm run artists:enrich` | Enriches the roster with MusicBrainz/Wikipedia country data |
 | api | `npm run artists:enrich-nz` | Matches NZ scene artists from a WordPress export into the roster |
 | api | `npm run snapshot` | Writes `src/ui/public/data/snapshot-<sha8>.json`; needs MongoDB. See `snapshot.config.json` |
-| api | `npm run check:browse` | Checks the API and Snapshot return the same songs for a query matrix; needs MongoDB with data |
+| api | `npm run check:snapshot-matches-app` | Checks the published Snapshot and the app return the same songs for a query matrix; needs MongoDB with data |
 | ui | `npm run dev` | `vite` (serves on port from `src/ui/.env`) |
 | ui | `npm run build` | `tsc -b && vite build` (API shell → `dist/`) |
 | ui | `npm run dev:snapshot` | Snapshot shell at `/cratecaddy/`; requires a Snapshot |
@@ -40,7 +40,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 | api | `npm run lint` | ESLint 8, config via `eslint src --ext .ts` |
 | ui | `npm run lint` | ESLint 9 flat config (`eslint.config.js`) |
 
-**No test framework** is configured. `npm run check:browse` (api) is the contract check for the two browse query implementations. No `typecheck` script exists; use `npx tsc -b` (ui) and `npx tsc --noEmit` (api).
+**No test framework** is configured. `npm run check:snapshot-matches-app` (api) is the contract check for the two query implementations. No `typecheck` script exists; use `npx tsc -b` (ui) and `npx tsc --noEmit` (api).
 
 ## Architecture notes
 
