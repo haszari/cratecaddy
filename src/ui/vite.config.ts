@@ -66,7 +66,7 @@ function staticEntryPlugin(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isStatic = mode === 'site'
+  const isStatic = mode === 'static'
 
   if (isStatic) {
     if (!findSnapshotFile()) {

@@ -157,12 +157,12 @@ say "Build static site"
 (cd src/ui && npm run build:static)
 
 say "Validate build"
-BUILD_SNAPSHOTS="$(ls src/ui/dist-static/data/snapshot-*.json 2>/dev/null | wc -l | tr -d ' ')"
+BUILD_SNAPSHOTS="$({ ls src/ui/dist-static/data/snapshot-*.json 2>/dev/null || true; } | wc -l | tr -d ' ')"
 if [ "$BUILD_SNAPSHOTS" != "1" ]; then
   echo "Expected exactly one Snapshot in dist-static/data, found $BUILD_SNAPSHOTS." >&2
   exit 1
 fi
-BUILT_FILE="$(ls src/ui/dist-static/data/snapshot-*.json)"
+BUILT_FILE="$(ls src/ui/dist-static/data/snapshot-*.json 2>/dev/null || true)"
 BUILT_VERSION="$(field "$BUILT_FILE" 'd.snapshot.version')"
 if [ "$BUILT_VERSION" != "$SNAPSHOT_VERSION" ]; then
   echo "Built Snapshot version $BUILT_VERSION does not match $SNAPSHOT_VERSION." >&2
