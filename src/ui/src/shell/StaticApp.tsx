@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { HashRouter, Navigate } from 'react-router-dom';
 import BrowseRoutes from './BrowseRoutes';
+import SnapshotStatus from './SnapshotStatus';
 // The static shell owns its data source; shared pages/hooks go through @data.
 import { loadSnapshot } from '../data/staticClient';
 
@@ -56,6 +57,7 @@ export default function StaticApp() {
         <BrowseRoutes
           extraRoutes={[{ path: '*', element: <Navigate to="/" replace /> }]}
         />
+        <SnapshotStatus />
       </div>
     </HashRouter>
   );

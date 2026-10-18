@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'node:fs'
 import { execSync } from 'node:child_process'
+import { VitePWA } from 'vite-plugin-pwa'
 
 function safeExec(cmd: string) {
   try {
@@ -79,7 +80,40 @@ export default defineConfig(({ mode }) => {
   const snapshotFile = isStatic ? findSnapshotFile() : null
 
   return {
-    plugins: isStatic ? [react(), staticEntryPlugin()] : [react()],
+    plugins: isStatic
+      ? [
+          react(),
+          staticEntryPlugin(),
+          VitePWA({
+            // Registration and the update UX live in shell/SnapshotStatus.
+            registerType: 'prompt',
+            injectRegister: false,
+            includeAssets: ['icon.svg', 'vite.svg'],
+            manifest: {
+              name: 'CrateCaddy',
+              short_name: 'CrateCaddy',
+              description: 'Browse a DJ library by genre, tempo and key. Works offline.',
+              theme_color: '#141414',
+              background_color: '#141414',
+              display: 'standalone',
+              start_url: '/cratecaddy/',
+              scope: '/cratecaddy/',
+              icons: [
+                { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+              ],
+            },
+            workbox: {
+              // The Snapshot is precached with a content revision, so a new
+              // build replaces it atomically and no stale data can be served.
+              globPatterns: ['**/*.{js,css,html,svg,png,ico,json,woff2}'],
+              // Snapshot is ~4 MB raw (~600 KB gzipped); Workbox defaults to 2 MB.
+              maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+              cleanupOutdatedCaches: true,
+              navigateFallback: 'index.html',
+            },
+          }),
+        ]
+      : [react()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -96,6 +130,9 @@ export default defineConfig(({ mode }) => {
       __GIT_COMMIT_SHORT__: JSON.stringify(gitCommitShort || ''),
       __GIT_DIRTY__: JSON.stringify(gitDirty),
       __SNAPSHOT_FILE__: JSON.stringify(snapshotFile ?? ''),
+      __APP_VERSION__: JSON.stringify(
+        JSON.parse(fs.readFileSync(path.resolve(__dirname, '../api/package.json'), 'utf8')).version ?? '0.1.0',
+      ),
     },
     // Published under <custom domain>/cratecaddy/. Dev static uses the same
     // prefix so preview and the published build resolve assets identically.
