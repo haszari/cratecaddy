@@ -34,8 +34,8 @@ interface UseSongPageOptions {
   excludedGenres?: string[];
   /** Extra FilterBar props (favouriteMode, doneHref, etc.) */
   filterBarExtras?: Partial<FilterBarProps>;
-  /** Pre-computed editHref (page provides this) */
-  editHref: string;
+  /** Pre-computed editHref, when the shell offers editing (API build only) */
+  editHref?: string;
 }
 
 export function useSongPage({

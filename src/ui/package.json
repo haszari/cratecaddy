@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:static": "vite --mode static",
+    "build:static": "tsc -b && vite build --mode static",
+    "preview:static": "vite preview --mode static --port 5328"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

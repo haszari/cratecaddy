@@ -30,7 +30,8 @@
  *
  * Add new filters to both implementations and to the parity matrix.
  */
-import { KEY, ApiFilterParams } from './apiParams.js';
+import { KEY } from './apiParams.js';
+import type { ApiFilterParams } from './apiParams.js';
 
 /** Fields the query layer needs. Structurally satisfied by ISong and the UI Song type. */
 export interface QueryableSong {
@@ -234,6 +235,9 @@ export function sortSongs<T extends QueryableSong>(
   });
 }
 
+/** Page size cap, matching the API's parsePagination. */
+export const MAX_PAGE_LIMIT = 500;
+
 export interface PageResult<T> {
   data: T[];
   page: number;
@@ -245,7 +249,7 @@ export interface PageResult<T> {
 /** Slices an already filtered and sorted list into a page, matching the API response shape. */
 export function paginateSongs<T>(songs: T[], page = 1, limit = 50): PageResult<T> {
   const safePage = page >= 1 ? Math.floor(page) : 1;
-  const safeLimit = limit >= 1 ? Math.floor(limit) : 50;
+  const safeLimit = limit >= 1 ? Math.min(Math.floor(limit), MAX_PAGE_LIMIT) : 50;
   const skip = (safePage - 1) * safeLimit;
   return {
     data: songs.slice(skip, skip + safeLimit),

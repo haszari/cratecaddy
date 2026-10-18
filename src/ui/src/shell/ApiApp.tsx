@@ -1,5 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import BrowseRoutes from './BrowseRoutes';
+import { EditLinksProvider } from './EditLinksContext';
 import DevVersion from '../components/DevVersion';
 import EditMetadata from '../pages/EditMetadata';
 
@@ -10,10 +11,12 @@ import EditMetadata from '../pages/EditMetadata';
 export default function ApiApp() {
   return (
     <BrowserRouter>
+      <EditLinksProvider value={true}>
       <div className="App">
         <BrowseRoutes extraRoutes={[{ path: '/edit-metadata', element: <EditMetadata /> }]} />
         <DevVersion />
       </div>
+      </EditLinksProvider>
     </BrowserRouter>
   );
 }

@@ -6,12 +6,14 @@ import { GenreTagCloud } from '../components/GenreTagCloud';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import { buildEditUrl } from '../utils/urlBuilder';
+import { useEditLinks } from '../shell/EditLinksContext';
 import { splitCSV } from '../utils/urlParams';
 import { Heart } from 'lucide-react';
 import { KEY } from '@cratecaddy-api/apiParams';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function Favourited() {
+  const editLinks = useEditLinks();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
@@ -20,7 +22,7 @@ export default function Favourited() {
 
   useDocumentTitle('Favourited');
 
-  const editHref = buildEditUrl(location.search, 'favourited', { favorite: 'starred' });
+  const editHref = editLinks ? buildEditUrl(location.search, 'favourited', { favorite: 'starred' }) : undefined;
 
   const {
     setPage, addExclude,
