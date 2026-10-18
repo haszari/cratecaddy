@@ -9,7 +9,7 @@
  * - The functions here evaluate params against an in-memory song list and are
  *   used by the static Snapshot build in the browser.
  *
- * Both are deliberate and are kept honest by `scripts/check-parity.ts`, which
+ * Both are deliberate and are kept honest by `scripts/check-browse.ts` (`npm run check:browse`), which
  * asserts identical membership, counts, and genre stats for a fixed param
  * matrix. Sort order is NOT asserted: MongoDB collation cannot be mirrored
  * exactly, and ordering is presentation, not correctness. Strings are compared

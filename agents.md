@@ -29,7 +29,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 | api | `npm run import:djaypro <path>` | Experimental, includes musical key |
 | api | `npm run query:db <cmd>` | `count`, `sample`, `with-key`, `sources`, `duplicates`, `search:term` |
 | api | `npm run snapshot` | Writes `src/ui/public/data/snapshot-<sha8>.json`; needs MongoDB. See `snapshot.config.json` |
-| api | `npm run check:parity` | Compares Mongo and in-memory filter implementations over a param matrix; needs MongoDB with data |
+| api | `npm run check:browse` | Checks the API and Snapshot return the same songs for a query matrix; needs MongoDB with data |
 | ui | `npm run dev` | `vite` (serves on port from `src/ui/.env`) |
 | ui | `npm run build` | `tsc -b && vite build` (API shell → `dist/`) |
 | ui | `npm run dev:static` | Static shell at `/cratecaddy/`; requires a Snapshot |
@@ -37,7 +37,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 | api | `npm run lint` | ESLint 8, config via `eslint src --ext .ts` |
 | ui | `npm run lint` | ESLint 9 flat config (`eslint.config.js`) |
 
-**No test framework** is configured. `npm run check:parity` (api) is the contract check for the two filter implementations. No `typecheck` script exists; use `npx tsc -b` (ui) and `npx tsc --noEmit` (api).
+**No test framework** is configured. `npm run check:browse` (api) is the contract check for the two browse query implementations. No `typecheck` script exists; use `npx tsc -b` (ui) and `npx tsc --noEmit` (api).
 
 ## Architecture notes
 

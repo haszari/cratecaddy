@@ -1,9 +1,10 @@
 /**
- * Parity check for the two browse filter implementations (ADR-0014).
+ * Browse query check: the same browse queries must return the same songs
+ * in the API build and the published Snapshot build (ADR-0014).
  *
- * Compares the MongoDB query builder (`buildSongFilter`) against the pure
- * in-memory predicate (`songQuery.matchesFilters`) over the dev database for a
- * fixed matrix of query params.
+ * Compares the MongoDB query builder (`buildSongFilter`) behind the API
+ * against the in-memory predicate (`songQuery.matchesFilters`) behind the
+ * Snapshot, over the dev database and a fixed matrix of query params.
  *
  * Asserts, per case:
  *   - identical matching Song IDs (membership)
@@ -14,7 +15,7 @@
  *
  * Any new filter must be added to both implementations and to this matrix.
  *
- * Usage: npm run check:parity
+ * Usage: npm run check:browse
  * Requires MongoDB running and non-empty (use the dev database).
  */
 import mongoose from 'mongoose';
@@ -182,10 +183,10 @@ async function main() {
 
   console.log('');
   if (failures > 0) {
-    console.error(`Parity check failed: ${failures}/${CASES.length} cases differ.`);
+    console.error(`Browse query check failed: ${failures}/${CASES.length} cases differ.`);
     process.exitCode = 1;
   } else {
-    console.log(`Parity check passed: ${CASES.length}/${CASES.length} cases match.`);
+    console.log(`Browse query check passed: ${CASES.length}/${CASES.length} cases match.`);
   }
 }
 

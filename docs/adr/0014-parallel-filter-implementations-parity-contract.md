@@ -4,7 +4,7 @@ Browse queries must work against MongoDB (API build) and against an in-memory Sn
 
 Reasons: native Mongo querying is the right tool for the future cloud/multi-user library API, while a database cannot be shipped to the browser. A single JS implementation used by both would mean loading candidate documents into Node and filtering there, discarding the server-side query work and the indexes.
 
-The parity script (`src/api/scripts/check-parity.ts`) runs a fixed matrix of query params through both implementations over the dev database and asserts identical **filter membership, counts, and genre stats**. Sort order is explicitly out of scope: Mongo collation cannot be mirrored exactly, and ordering is presentation, not correctness.
+The browse query check (`npm run check:browse`, `src/api/scripts/check-browse.ts`) runs a fixed matrix of query params through both implementations over the dev database and asserts identical **filter membership, counts, and genre stats**. Sort order is explicitly out of scope: Mongo collation cannot be mirrored exactly, and ordering is presentation, not correctness.
 
 Compromises are documented in the contract module and negotiated over time. Logic is promoted from Mongo to JS only when exact matching matters more than query performance — not pre-emptively.
 
