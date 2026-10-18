@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Publish a Snapshot to GitHub Pages.
+# Publish a Snapshot site to GitHub Pages.
 #
 #   1. snapshot  — read the library and write src/ui/public/data/snapshot-<sha8>.json
 #   2. validate  — refuse obviously wrong data (empty library, big drop)
@@ -14,22 +14,25 @@
 # The default run does everything locally and then asks before publishing.
 #
 # Usage:
-#   scripts/publish-snapshot.sh                      # build + validate, then prompt to publish
-#   scripts/publish-snapshot.sh --publish-to-github  # skip the prompt and publish
-#   scripts/publish-snapshot.sh --force              # skip the count-drop guard and dirty prompt
-#   scripts/publish-snapshot.sh --dry-run            # never prompt, never publish
+#   scripts/publish-snapshot-site.sh                          # build + validate, then prompt to publish
+#   scripts/publish-snapshot-site.sh --publish-to-github      # skip the prompt and publish
+#   scripts/publish-snapshot-site.sh --allow-smaller-library  # publish even if the song count dropped
+#   scripts/publish-snapshot-site.sh --allow-dirty-build      # publish with uncommitted changes
+#   scripts/publish-snapshot-site.sh --dry-run                # never prompt, never publish
 #
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-FORCE=0
+ALLOW_SMALLER_LIBRARY=0
+ALLOW_DIRTY_BUILD=0
 DRY_RUN=0
 PUBLISH=0
 for arg in "$@"; do
   case "$arg" in
-    --force) FORCE=1 ;;
+    --allow-smaller-library) ALLOW_SMALLER_LIBRARY=1 ;;
+    --allow-dirty-build) ALLOW_DIRTY_BUILD=1 ;;
     --dry-run) DRY_RUN=1 ;;
     --publish-to-github) PUBLISH=1 ;;
     --help|-h)
@@ -93,11 +96,11 @@ fi
 if [ "$PUBLISHED_COUNT" -gt 0 ]; then
   THRESHOLD=$((PUBLISHED_COUNT * 80 / 100))
   printf '  published: %s songs\n  new:       %s songs\n' "$PUBLISHED_COUNT" "$SNAPSHOT_COUNT"
-  if [ "$SNAPSHOT_COUNT" -lt "$THRESHOLD" ] && [ "$FORCE" -ne 1 ]; then
+  if [ "$SNAPSHOT_COUNT" -lt "$THRESHOLD" ] && [ "$ALLOW_SMALLER_LIBRARY" -ne 1 ]; then
     cat >&2 <<EOF
 
 Refusing to publish: the Snapshot dropped from $PUBLISHED_COUNT to $SNAPSHOT_COUNT songs.
-If that is intended, re-run with --force.
+If that is intended, re-run with --allow-smaller-library.
 EOF
     exit 1
   fi
@@ -162,7 +165,7 @@ if [ "$PUBLISH" -ne 1 ]; then
   esac
 fi
 
-if [ -n "$(git status --porcelain)" ] && [ "$FORCE" -ne 1 ]; then
+if [ -n "$(git status --porcelain)" ] && [ "$ALLOW_DIRTY_BUILD" -ne 1 ]; then
   printf 'Working tree is dirty — the published footer will read -dirty. Continue? [y/N] '
   read -r answer
   case "$answer" in

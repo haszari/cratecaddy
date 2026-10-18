@@ -22,10 +22,10 @@ cd src/api && npm run snapshot
 cd ../ui && npm run build:snapshot
 
 # Or snapshot, validate, build and archive, then confirm before publishing
-./scripts/publish-snapshot.sh
+./scripts/publish-snapshot-site.sh
 
 # Publish without the prompt
-./scripts/publish-snapshot.sh --publish-to-github
+./scripts/publish-snapshot-site.sh --publish-to-github
 ```
 
 Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch.

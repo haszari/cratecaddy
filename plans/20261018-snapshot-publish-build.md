@@ -91,7 +91,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 - **Scripts:**
   - `src/api`: `npm run snapshot` (`tsx scripts/snapshot.ts`) — writes the versioned JSON into `src/ui/public/data/`.
   - `src/ui`: `npm run dev:snapshot` (`vite --mode snapshot`; clear error + guidance if no Snapshot present), `npm run build:snapshot` (`tsc -b && vite build --mode snapshot`).
-  - Root: `scripts/publish-snapshot.sh` — snapshot → validate → build → validate → push.
+  - Root: `scripts/publish-snapshot-site.sh` — snapshot → validate → build → validate → push.
 
 ---
 
@@ -128,9 +128,9 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 
 ## Publish and rollout
 
-`scripts/publish-snapshot.sh` fails closed: snapshot → validate → build → validate → archive → confirm → push. A plain run stops after the local build and asks before publishing; `--publish-to-github` skips the prompt, `--dry-run` never asks.
+`scripts/publish-snapshot-site.sh` fails closed: snapshot → validate → build → validate → archive → confirm → push. A plain run stops after the local build and asks before publishing; `--publish-to-github` skips the prompt, `--dry-run` never asks. Guard bypasses are named for what they allow: `--allow-smaller-library` and `--allow-dirty-build`.
 
-- Pre-build guards: count > 0; abort if count dropped >20% vs the currently published Snapshot (read from `origin/gh-pages`) unless `--force`; banned-key assertion; warn on >20 MB.
+- Pre-build guards: count > 0; abort if count dropped >20% vs the currently published Snapshot (read from `origin/gh-pages`) unless `--allow-smaller-library`; banned-key assertion; warn on >20 MB.
 - Post-build guards: exactly one `data/snapshot-*.json`; filename hash matches `snapshot.version`; `index.html` and `.nojekyll` present; print count, size, `takenAt`, version for a final eyeball.
 - Push: `gh-pages -d src/ui/dist-snapshot --no-history --dotfiles -b gh-pages -m "snapshot <sha8> <takenAt>"` over the existing SSH remote. Interactive confirm if the working tree is dirty (footer would read `-dirty`).
 - **Rollback:** archive the last 3 built `dist-snapshot/` outputs to `src/data/snapshot-deploys/<sha8>/` (gitignored). Rollback = republish an archive verbatim; re-snapshotting is not a rollback because the DB has moved on.
