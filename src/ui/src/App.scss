@@ -319,13 +319,13 @@ thead th:last-child {
 }
 
 /* Snapshot build: provenance, offline and update status */
-.SiteApp-status {
+.StaticApp-status {
   padding: 24px;
   max-width: 32rem;
   margin: 0 auto;
 }
 
-.SiteStatus-footer {
+.StaticStatus-footer {
   margin-top: auto;
   padding: 8px;
   font-size: 10px;
@@ -333,8 +333,8 @@ thead th:last-child {
   user-select: none;
 }
 
-.SiteStatus-offline,
-.SiteStatus-update {
+.StaticStatus-offline,
+.StaticStatus-update {
   position: sticky;
   bottom: 0;
   padding: 6px 10px;
@@ -343,11 +343,11 @@ thead th:last-child {
   border-top: 1px solid #333;
 }
 
-.SiteStatus-offline {
+.StaticStatus-offline {
   color: #ffd8a8;
 }
 
-.SiteStatus-progress {
+.StaticStatus-progress {
   margin-top: 6px;
   height: 3px;
   border-radius: 2px;

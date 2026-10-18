@@ -1,6 +1,6 @@
 # Step 3: Published Snapshot
 
-**Status:** superseded by [20261018-library-site-build.md](./20261018-library-site-build.md). This draft assumed client-side filtering over all songs and an unversioned `songs.json`; the current plan uses two shells over a shared engine and a versioned Snapshot.
+**Status:** superseded by [20261018-static-site-build.md](./20261018-static-site-build.md). This draft assumed client-side filtering over all songs and an unversioned `songs.json`; the current plan uses two shells over a shared engine and a versioned Snapshot.
 
 **Parent:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md)
 
@@ -241,7 +241,7 @@ export default defineConfig(({ mode }) => {
           },
     },
     build: {
-      outDir: isStatic ? 'dist-site' : 'dist',
+      outDir: isStatic ? 'dist-static' : 'dist',
     },
     server: {
       port: isStatic ? 7627 : undefined,
@@ -314,26 +314,26 @@ GitHub Pages doesn't support server-side routing fallback. HashRouter uses `#/` 
 "scripts": {
   "dev": "vite",
   "build": "tsc -b && vite build",
-  "dev:site": "vite --mode site",
-  "build:site": "npm run --prefix ../api export:static && tsc -b && vite build --mode site",
-  "preview:site": "vite preview --mode site --port 7628"
+  "dev:static": "vite --mode static",
+  "build:static": "npm run --prefix ../api export:static && tsc -b && vite build --mode static",
+  "preview:static": "vite preview --mode static --port 7628"
 }
 ```
 
-**Build command:** `npm run build:site` (runs export script + TypeScript check + Vite build)
+**Build command:** `npm run build:static` (runs export script + TypeScript check + Vite build)
 
-**Output:** `src/ui/dist-site/` — self-contained published Snapshot, deployable to any static host.
+**Output:** `src/ui/dist-static/` — self-contained published Snapshot, deployable to any static host.
 
 ### 7. GitHub Pages deployment
 
-**Option A: Deploy from dist-site/ to gh-pages branch:**
+**Option A: Deploy from dist-static/ to gh-pages branch:**
 
 ```bash
 # Build
-cd src/ui && npm run build:site
+cd src/ui && npm run build:static
 
 # Deploy to gh-pages branch
-npx gh-pages -d dist-site -r git@github.com:user/cratecaddy.git -b gh-pages
+npx gh-pages -d dist-static -r git@github.com:user/cratecaddy.git -b gh-pages
 ```
 
 **Option B: GitHub Actions workflow (`.github/workflows/deploy-static.yml`):**
@@ -356,15 +356,15 @@ jobs:
         with:
           node-version: 20
       - run: cd src/api && npm install && npm run build
-      - run: cd src/ui && npm install && npm run build:site
+      - run: cd src/ui && npm install && npm run build:static
       - uses: actions/deploy-pages@v4
         with:
-          artifact_path: src/ui/dist-site
+          artifact_path: src/ui/dist-static
 ```
 
 **Option C: Custom endpoint (e.g. S3, Netlify, Vercel):**
 
-Just push `dist-site/` to the hosting provider. The build output is a standard published Snapshot — no special deployment logic needed.
+Just push `dist-static/` to the hosting provider. The build output is a standard published Snapshot — no special deployment logic needed.
 
 **Open question:** Which deployment target? The user mentioned "branch of origin repo or custom endpoint." If it's a personal tool, `gh-pages` branch via `npx gh-pages` is simplest. If sharing, GitHub Actions + Pages is more maintainable.
 

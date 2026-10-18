@@ -25,7 +25,7 @@ function formatTakenAt(takenAt: string | undefined): string {
  * "Getting fresh tune data…", then activates the new service worker and
  * reloads. No tab can keep serving an old Snapshot once a new one is ready.
  */
-export default function SiteStatus() {
+export default function StaticStatus() {
   const [online, setOnline] = useState(() => navigator.onLine);
   const [updating, setUpdating] = useState(false);
   const updateStarted = useRef(false);
@@ -81,17 +81,17 @@ export default function SiteStatus() {
   return (
     <>
       {!online && (
-        <div className="SiteStatus-offline" role="status">
+        <div className="StaticStatus-offline" role="status">
           Offline · snapshot from {formatTakenAt(snapshot?.takenAt) || 'unknown'}
         </div>
       )}
       {updating && (
-        <div className="SiteStatus-update" role="status">
+        <div className="StaticStatus-update" role="status">
           Getting fresh tune data…
-          <div className="SiteStatus-progress" aria-hidden="true" />
+          <div className="StaticStatus-progress" aria-hidden="true" />
         </div>
       )}
-      <div className="SiteStatus-footer">
+      <div className="StaticStatus-footer">
         {snapshot
           ? `${version} · snapshot ${formatTakenAt(snapshot.takenAt)}`
           : version}

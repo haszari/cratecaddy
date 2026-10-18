@@ -1,8 +1,8 @@
 /**
  * Translates browse params into a MongoDB query. This is the API's filter
  * implementation; `songQuery.matchesFilters` is the in-memory equivalent used
- * by the published site. They are kept deliberately parallel (ADR-0014):
- * add new filters to both and to `npm run check:site-matches-app`.
+ * by the static site. They are kept deliberately parallel (ADR-0014):
+ * add new filters to both and to `npm run check:static-site-matches-app`.
  */
 import { FilterQuery } from 'mongoose';
 import { ISong } from '../models/Song.js';

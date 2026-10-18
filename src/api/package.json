@@ -17,7 +17,7 @@
     "artists:export": "tsx scripts/artists-export.ts",
     "artists:enrich": "tsx scripts/artists-enrich.ts",
     "artists:enrich-nz": "tsx scripts/artists-enrich-nz.ts",
-    "check:site-matches-app": "tsx scripts/check-site-matches-app.ts"
+    "check:static-site-matches-app": "tsx scripts/check-static-site-matches-app.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

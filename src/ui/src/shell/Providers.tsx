@@ -12,7 +12,7 @@ import '../App.scss';
  * Providers shared by both build targets.
  *
  * Keep this free of router and data-source choices: the API shell and the
- * published site shell each wrap this with their own router and data module.
+ * published static site each wrap this with their own router and data module.
  */
 export default function Providers({ children }: { children: ReactNode }) {
   return (

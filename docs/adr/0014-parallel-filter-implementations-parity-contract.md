@@ -1,10 +1,10 @@
 # Parallel filter implementations with a parity contract
 
-Browse queries must work against MongoDB (API build) and against an in-memory Snapshot (Site build). We keep **two implementations on purpose** — the Mongo query builder for the API, a pure JS predicate for the Site build — and make the duplication explicit with a shared contract and a parity check.
+Browse queries must work against MongoDB (API build) and against an in-memory Snapshot (Static static site build). We keep **two implementations on purpose** — the Mongo query builder for the API, a pure JS predicate for the Static static site build — and make the duplication explicit with a shared contract and a parity check.
 
 Reasons: native Mongo querying is the right tool for the future cloud/multi-user library API, while a database cannot be shipped to the browser. A single JS implementation used by both would mean loading candidate documents into Node and filtering there, discarding the server-side query work and the indexes.
 
-The agreement check (`npm run check:site-matches-app`, `src/api/scripts/check-site-matches-app.ts`) runs a fixed matrix of query params through both implementations over the dev database and asserts identical **filter membership, counts, and genre stats**. Sort order is explicitly out of scope: Mongo collation cannot be mirrored exactly, and ordering is presentation, not correctness.
+The agreement check (`npm run check:static-site-matches-app`, `src/api/scripts/check-static-site-matches-app.ts`) runs a fixed matrix of query params through both implementations over the dev database and asserts identical **filter membership, counts, and genre stats**. Sort order is explicitly out of scope: Mongo collation cannot be mirrored exactly, and ordering is presentation, not correctness.
 
 Compromises are documented in the contract module and negotiated over time. Logic is promoted from Mongo to JS only when exact matching matters more than query performance — not pre-emptively.
 

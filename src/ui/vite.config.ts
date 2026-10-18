@@ -48,17 +48,17 @@ function findSnapshotFile(): string | null {
 }
 
 /**
- * The published site uses the same index.html with a different entry point,
+ * The static site uses the same index.html with a different entry point,
  * so the write-capable API shell is never in the site bundle.
  */
-function siteEntryPlugin(): Plugin {
+function staticEntryPlugin(): Plugin {
   return {
-    name: 'cratecaddy-site-entry',
+    name: 'cratecaddy-static-entry',
     transformIndexHtml: {
       // Must run before Vite resolves the entry script from index.html.
       order: 'pre',
       handler(html) {
-        return html.replace('/src/main.tsx', '/src/main.site.tsx')
+        return html.replace('/src/main.tsx', '/src/main.static.tsx')
       },
     },
   }
@@ -66,9 +66,9 @@ function siteEntryPlugin(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isSite = mode === 'site'
+  const isStatic = mode === 'site'
 
-  if (isSite) {
+  if (isStatic) {
     if (!findSnapshotFile()) {
       throw new Error(
         'No Snapshot found in src/ui/public/data.\n' +
@@ -77,15 +77,15 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  const snapshotFile = isSite ? findSnapshotFile() : null
+  const snapshotFile = isStatic ? findSnapshotFile() : null
 
   return {
-    plugins: isSite
+    plugins: isStatic
       ? [
           react(),
-          siteEntryPlugin(),
+          staticEntryPlugin(),
           VitePWA({
-            // Registration and the update UX live in shell/SiteStatus.
+            // Registration and the update UX live in shell/StaticStatus.
             registerType: 'prompt',
             injectRegister: false,
             includeAssets: ['icon.svg', 'vite.svg'],
@@ -121,7 +121,7 @@ export default defineConfig(({ mode }) => {
         // Build-time swap between the API client and the Snapshot client.
         '@data': path.resolve(
           __dirname,
-          isSite ? './src/data/snapshotClient.ts' : './src/data/client.ts',
+          isStatic ? './src/data/snapshotClient.ts' : './src/data/client.ts',
         ),
       },
     },
@@ -136,9 +136,9 @@ export default defineConfig(({ mode }) => {
     },
     // Published under <custom domain>/cratecaddy/. Dev site mode uses the same
     // prefix so preview and the published build resolve assets identically.
-    base: isSite ? '/cratecaddy/' : '/',
+    base: isStatic ? '/cratecaddy/' : '/',
     build: {
-      outDir: isSite ? 'dist-site' : 'dist',
+      outDir: isStatic ? 'dist-static' : 'dist',
     },
     server: {
       port: parseInt(process.env.UI_PORT || '5325'),

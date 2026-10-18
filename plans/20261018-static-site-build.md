@@ -1,4 +1,4 @@
-# Library site build — publishing a Snapshot
+# Static site build — publishing a Snapshot
 
 **Status:** built 2026-10-18 — steps 1–8 done; smoke tests documented, device checks outstanding
 **Date:** 2026-10-18
@@ -6,9 +6,9 @@
 **Roadmap:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md) — Step 3
 
 **Decisions:**
-- [ADR-0013](../docs/adr/0013-published-site-two-shells-shared-engine.md) — two shells over a shared engine (supersedes archived ADR-0005)
+- [ADR-0013](../docs/adr/0013-static-site-two-shells-shared-engine.md) — two shells over a shared engine (supersedes archived ADR-0005)
 - [ADR-0014](../docs/adr/0014-parallel-filter-implementations-parity-contract.md) — parallel filter implementations with a parity contract
-- [ADR-0006](../docs/adr/0006-json-snapshot-published-site.md) — JSON Snapshot for published Snapshot data
+- [ADR-0006](../docs/adr/0006-json-snapshot-static-site.md) — JSON Snapshot for the static site
 
 **Glossary:** [CONTEXT.md](../CONTEXT.md) — **Snapshot** = point-in-time, filtered, read-only copy of the Library. **Export** stays interop with Apple Music.
 
@@ -18,7 +18,7 @@
 
 Publish a read-only CrateCaddy to GitHub Pages (`lab.cartoonbeats.com/cratecaddy`), with the same browse/search UX as the app, backed by a build-time Snapshot of the `DJing` library. It must work offline after first load and must never get stuck on a stale Snapshot.
 
-One app, one Library, two build targets: API shell (full app) and the published site (read-only).
+One app, one Library, two build targets: API shell (full app) and the static site (read-only).
 
 ---
 
@@ -46,7 +46,7 @@ src/ui/src/
     Providers.tsx      ← Mantine + MUI theme + QueryClient
     BrowseRoutes.tsx   ← route table: /, /genre/:genrePath, /artist/:artistName, /favourited, /song/:id
   main.tsx             ← API shell: BrowserRouter, + /edit-metadata, VersionStatus
-  main.site.tsx      ← site shell: HashRouter, Snapshot bootstrap, no write routes, Snapshot footer
+  main.static.tsx      ← static site: HashRouter, Snapshot bootstrap, no write routes, Snapshot footer
 ```
 
 Hooks and pages do **not** change: they import `@data`, so the engine is genuinely shared. Only the shell decides which routes exist.
@@ -85,13 +85,13 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 
 ## Build wiring
 
-- **Entry selection:** one `index.html`; a small Vite plugin swaps the script `src` to `/src/main.site.tsx` when `mode === 'snapshot'`. No second HTML file.
-- **Per-mode config:** snapshot → `base: '/cratecaddy/'`, `outDir: 'dist-site'`; normal → `base: '/'`, `outDir: 'dist'`. `define` gains `__SNAPSHOT_FILE__`. Existing git defines stay.
+- **Entry selection:** one `index.html`; a small Vite plugin swaps the script `src` to `/src/main.static.tsx` when `mode === 'snapshot'`. No second HTML file.
+- **Per-mode config:** snapshot → `base: '/cratecaddy/'`, `outDir: 'dist-static'`; normal → `base: '/'`, `outDir: 'dist'`. `define` gains `__SNAPSHOT_FILE__`. Existing git defines stay.
 - **Typecheck:** both mains live under `src/`, so `tsc -b` covers them. Both shells build in normal mode too, so neither rots.
 - **Scripts:**
   - `src/api`: `npm run snapshot` (`tsx scripts/snapshot.ts`) — writes the versioned JSON into `src/ui/public/data/`.
-  - `src/ui`: `npm run dev:site` (`vite --mode site`; clear error + guidance if no Snapshot present), `npm run build:site` (`tsc -b && vite build --mode site`).
-  - Root: `scripts/publish-library-site.sh` — snapshot → validate → build → validate → push.
+  - `src/ui`: `npm run dev:static` (`vite --mode static`; clear error + guidance if no Snapshot present), `npm run build:static` (`tsc -b && vite build --mode static`).
+  - Root: `scripts/publish-static-site.sh` — snapshot → validate → build → validate → push.
 
 ---
 
@@ -101,9 +101,9 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 - Documented compromises in the module header:
   - genre/artist matching is case-insensitive **substring**, not equality;
   - BPM range **includes** songs with no BPM; rating range does not;
-  - sort fallback chain mirrors `FALLBACK_SORT_CHAIN`; site build uses byte-wise comparison (closest to Mongo default), and ordering is **not** parity-asserted.
+  - sort fallback chain mirrors `FALLBACK_SORT_CHAIN`; static site build uses byte-wise comparison (closest to Mongo default), and ordering is **not** parity-asserted.
 - Refactor `shuffleHash.ts` into a pure `shuffleHash(id, seed)`; `buildShuffleHashFunction` generates the Mongo `$function` body from it. Static shuffle uses the same function → identical ordering for the same seed.
-- **Snapshot/app agreement check:** `src/api/scripts/check-site-matches-app.ts`, run via `npm run check:site-matches-app` against the Library being published (prod by default); it gates publishing. Fixed param matrix (genre all/any/not, artist, bpm range incl. missing-BPM songs, rating range, favourite, search, combined filters, empty result, pagination boundaries) asserting identical membership, `total`, and genre stats. Sort order and `limit` slicing are out of scope. It also asserts the Site route set from `BrowseRoutes` contains no write-only route.
+- **Snapshot/app agreement check:** `src/api/scripts/check-static-site-matches-app.ts`, run via `npm run check:static-site-matches-app` against the Library being published (prod by default); it gates publishing. Fixed param matrix (genre all/any/not, artist, bpm range incl. missing-BPM songs, rating range, favourite, search, combined filters, empty result, pagination boundaries) asserting identical membership, `total`, and genre stats. Sort order and `limit` slicing are out of scope. It also asserts the static site route set from `BrowseRoutes` contains no write-only route.
 
 ---
 
@@ -111,7 +111,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 
 - `snapshotClient.ts` implements the existing `client.ts` read surface only: `fetchSongs`, `fetchSongById`, `fetchGenreStats`. No mutation exports.
 - Loads the Snapshot once (`__SNAPSHOT_FILE__` + `BASE_URL`), keeps it in memory, applies `songQuery` functions. React Query stays, so hooks and components are unchanged.
-- site shell fetches before rendering routes: minimal "Loading library…" splash, then app. First-visit failure with no cache shows an explicit message, not a blank app.
+- static site fetches before rendering routes: minimal "Loading library…" splash, then app. First-visit failure with no cache shows an explicit message, not a blank app.
 - `genreStats` is computed in the browser per filter change (Map reduce). Fine at 10k songs; revisit only if it shows up in profiling.
 
 ---
@@ -128,12 +128,12 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 
 ## Publish and rollout
 
-`scripts/publish-library-site.sh` fails closed: snapshot → validate → build → validate → archive → confirm → push. A plain run stops after the local build and asks before publishing; `--publish-to-github` skips the prompt, `--dry-run` never asks. Guard bypasses are named for what they allow: `--allow-smaller-library` and `--allow-dirty-build`.
+`scripts/publish-static-site.sh` fails closed: snapshot → validate → build → validate → archive → confirm → push. A plain run stops after the local build and asks before publishing; `--publish-to-github` skips the prompt, `--dry-run` never asks. Guard bypasses are named for what they allow: `--allow-smaller-library` and `--allow-dirty-build`.
 
 - Pre-build guards: count > 0; abort if count dropped >20% vs the currently published Snapshot (read from `origin/gh-pages`) unless `--allow-smaller-library`; banned-key assertion; warn on >20 MB.
 - Post-build guards: exactly one `data/snapshot-*.json`; filename hash matches `snapshot.version`; `index.html` and `.nojekyll` present; print count, size, `takenAt`, version for a final eyeball.
-- Push: `gh-pages -d src/ui/dist-site --no-history --dotfiles -b gh-pages -m "snapshot <sha8> <takenAt>"` over the existing SSH remote. Interactive confirm if the working tree is dirty (footer would read `-dirty`).
-- **Rollback:** archive the last 3 built `dist-site/` outputs to `src/data/site-deploys/<sha8>/` (gitignored). Rollback = republish an archive verbatim; re-snapshotting is not a rollback because the DB has moved on.
+- Push: `gh-pages -d src/ui/dist-static --no-history --dotfiles -b gh-pages -m "snapshot <sha8> <takenAt>"` over the existing SSH remote. Interactive confirm if the working tree is dirty (footer would read `-dirty`).
+- **Rollback:** archive the last 3 built `dist-static/` outputs to `src/data/static-deploys/<sha8>/` (gitignored). Rollback = republish an archive verbatim; re-snapshotting is not a rollback because the DB has moved on.
 - **Pages setup (one-time, manual, documented):** source `gh-pages` /(root). Custom domain is account-level (`lab.cartoonbeats.com`), so no `CNAME` in this repo; project URL `https://lab.cartoonbeats.com/cratecaddy`. `base: '/cratecaddy/'` must match — a mismatch is the classic blank page. Publishing is manual and local; no CI, no secrets, no Mongo in CI.
 
 ---
@@ -141,20 +141,20 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 ## Implementation order (waypoint commits)
 
 1. **Shared query contract:** extract `songQuery.ts` + pure `shuffleHash(id, seed)`; no behaviour change.
-2. **Agreement check skeleton:** `check-site-matches-app.ts` + `npm run check:site-matches-app`, matrix green against the current API.
+2. **Agreement check skeleton:** `check-static-site-matches-app.ts` + `npm run check:static-site-matches-app`, matrix green against the current API.
 3. **Data layer:** move `client.ts` → `data/`, add `data/index.ts` + `@data` alias, hooks switch imports. API behaviour unchanged.
-4. **Shell split:** `shell/Providers.tsx`, `shell/BrowseRoutes.tsx`, `main.tsx`, `main.site.tsx`; API shell parity with today's routes.
+4. **Shell split:** `shell/Providers.tsx`, `shell/BrowseRoutes.tsx`, `main.tsx`, `main.static.tsx`; API shell parity with today's routes.
 5. **Snapshot script:** config, whitelist, derived `isLocal`, validation, versioned filename, `SourcesIcons` change. Verify by hand against `DJing` counts.
-6. **Static client + build wiring:** `snapshotClient.ts`, Vite mode plugin, `base`/`outDir`, `__SNAPSHOT_FILE__`, `dev:site`, `build:site`. Browse check green for Snapshot vs API.
+6. **Static client + build wiring:** `snapshotClient.ts`, Vite mode plugin, `base`/`outDir`, `__SNAPSHOT_FILE__`, `dev:static`, `build:static`. Browse check green for Snapshot vs API.
 7. **PWA + provenance:** precache, update flow, footer version with Snapshot timestamp, offline banner.
 8. **Publish script:** guardrails, rollback archive, Pages setup docs, README/PRODUCTION additions.
-9. **Smoke tests:** the checklist in [docs/smoke-tests.md](../docs/smoke-tests.md) covers the app, the appliance and the published Library site, including device checks (offline, update, touch targets, cold start).
+9. **Smoke tests:** the checklist in [docs/smoke-tests.md](../docs/smoke-tests.md) covers the app, the appliance and the static site, including device checks (offline, update, touch targets, cold start).
 
 ---
 
 ## Out of scope
 
-- Playback, playlists, requests, or any write action in the site build.
+- Playback, playlists, requests, or any write action in the static site build.
 - Authentication (out of scope for the app at this stage).
 - CI-driven publishing, separate data repo, custom-domain automation.
 - The cloud library API; the Snapshot wrapper is designed so a library-scoped API response can reuse it later.

@@ -1,15 +1,15 @@
 /**
- * Checks that the published site and the app show the same songs.
+ * Checks that the static site and the app show the same songs.
  *
  * CrateCaddy has two browse implementations: MongoDB behind the API, and an
- * in-memory filter behind the published site (ADR-0014). If they drift, a
- * track that exists in the app silently disappears from the published site.
+ * in-memory filter behind the static site (ADR-0014). If they drift, a
+ * track that exists in the app silently disappears from the static site.
  * This check runs the same queries through both and fails when the song sets
  * or the tag counts differ. It gates publishing.
  *
  * Compares the MongoDB query builder (`buildSongFilter`) behind the API
  * against the in-memory predicate (`songQuery.matchesFilters`) behind the
- * published site, over the Library being published and a fixed matrix of
+ * static site, over the Library being published and a fixed matrix of
  * query params.
  *
  * Asserts, per case:
@@ -21,7 +21,7 @@
  *
  * Any new filter must be added to both implementations and to this matrix.
  *
- * Usage: npm run check:site-matches-app
+ * Usage: npm run check:static-site-matches-app
  * Requires MongoDB running and non-empty (use the dev database).
  */
 import mongoose from 'mongoose';

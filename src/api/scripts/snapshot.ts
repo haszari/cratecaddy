@@ -12,7 +12,7 @@
  *   npm run snapshot -- --grouping "" --genre.all=Techno --bpm.gte=120
  *
  * The payload is an explicit allowlist: new Song fields never reach the
- * published site unless they are added here. Local filesystem paths, file
+ * static site unless they are added here. Local filesystem paths, file
  * sizes, bit rates and import provenance are deliberately dropped; `sources`
  * keeps just what the UI renders, with `isLocal` derived from `filePath`.
  *

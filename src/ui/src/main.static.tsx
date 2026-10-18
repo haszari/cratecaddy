@@ -1,16 +1,16 @@
-// Published site entrypoint: read-only, data precached for offline use.
-// Swapped in for main.tsx by the Vite plugin when building --mode site.
+// Static site entrypoint: read-only, data precached for offline use.
+// Swapped in for main.tsx by the Vite plugin when building --mode static.
 import '@mantine/core/styles.css';
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import Providers from './shell/Providers'
-import SiteApp from './shell/SiteApp'
+import StaticApp from './shell/StaticApp'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Providers>
-      <SiteApp />
+      <StaticApp />
     </Providers>
   </StrictMode>,
 )

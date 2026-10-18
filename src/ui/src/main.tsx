@@ -1,5 +1,5 @@
 // API shell entrypoint: full app, including editing and write-back.
-// The published site build swaps this file for main.site.tsx in index.html.
+// The static static site build swaps this file for main.static.tsx in index.html.
 import '@mantine/core/styles.css';
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

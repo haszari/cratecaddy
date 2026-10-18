@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 /**
  * Edit affordances are provided by the API shell, not by a feature flag.
- * The published site has no edit route, so it renders no provider and the edit
+ * The static site has no edit route, so it renders no provider and the edit
  * link stays undefined.
  */
 const EditLinksContext = createContext(false);
