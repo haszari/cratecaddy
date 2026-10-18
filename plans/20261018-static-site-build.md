@@ -90,7 +90,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 - **Typecheck:** both mains live under `src/`, so `tsc -b` covers them. Both shells build in normal mode too, so neither rots.
 - **Scripts:**
   - `src/api`: `npm run snapshot` (`tsx scripts/snapshot.ts`) — writes the versioned JSON into `src/ui/public/data/`.
-  - `src/ui`: `npm run dev:static` (`vite --mode static`; clear error + guidance if no Snapshot present), `npm run build:static` (`tsc -b && vite build --mode static`).
+  - `src/ui`: `npm run dev:static` (`vite --config vite.static.config.ts`; clear error + guidance if no Snapshot present), `npm run build:static` (`tsc -b && vite build --config vite.static.config.ts`). The target is the config file, not a Vite mode.
   - Root: `scripts/publish-static-site.sh` — snapshot → validate → build → validate → push.
 
 ---

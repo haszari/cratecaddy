@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:static": "vite --mode static",
-    "build:static": "tsc -b && vite build --mode static",
-    "preview:static": "vite preview --mode static --port 5328"
+    "dev:static": "vite --config vite.static.config.ts",
+    "build:static": "tsc -b && vite build --config vite.static.config.ts",
+    "preview:static": "vite preview --config vite.static.config.ts --port 5328"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

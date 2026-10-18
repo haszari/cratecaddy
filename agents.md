@@ -62,7 +62,8 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - UI tsconfig uses `moduleResolution: "bundler"` with `verbatimModuleSyntax: true` and `erasableSyntaxOnly: true` — requires `import type` for type-only imports, no `enum`/`namespace`
 - UI uses SCSS (`.scss` files) — `sass-embedded` is a devDependency
 - UI has a Vite alias `@cratecaddy-api` pointing to `src/api/src/helpers/` — shared params, `songQuery` and `shuffleHash`
-- UI has a Vite alias `@data` — resolves to `data/client.ts` normally and `data/snapshotClient.ts` in `--mode static`. Hooks/pages import `@data`; only the static site imports `snapshotClient` directly
+- UI has a Vite alias `@data` — resolves to `data/client.ts` in the API build and `data/snapshotClient.ts` in the static site build. Hooks/pages import `@data`; only the static site imports `snapshotClient` directly
+- The build target is chosen by config file, not Vite mode: `vite.config.ts` (API) and `vite.static.config.ts` (static site), both calling `createConfig` in `vite.shared.ts`. Do not add a `--mode` branch for the target
 - Shared files under `src/api/src/helpers/` are compiled by both tsconfigs: use `import type` for types (UI has `verbatimModuleSyntax`) and keep `.js` extensions on relative imports
 - Genre page URLs use `+` for AND (genre.all) and `,` for OR (genre.any): e.g. `/genre/Techno+Minimal` or `/genre/Techno,Deep`
 - Pills render orange for AND mode, sage green for OR mode
