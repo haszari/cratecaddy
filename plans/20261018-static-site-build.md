@@ -6,9 +6,9 @@
 **Roadmap:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md) — Step 3
 
 **Decisions:**
-- [ADR-0013](../docs/adr/0013-static-build-two-shells-shared-engine.md) — two shells over a shared engine (supersedes ADR-0005)
+- [ADR-0013](../docs/adr/0013-static-build-two-shells-shared-engine.md) — two shells over a shared engine (supersedes archived ADR-0005)
 - [ADR-0014](../docs/adr/0014-parallel-filter-implementations-parity-contract.md) — parallel filter implementations with a parity contract
-- [ADR-0006](../docs/adr/0006-json-export-static-data.md) — JSON Snapshot, amended by ADR-0013
+- [ADR-0006](../docs/adr/0006-json-snapshot-static-data.md) — JSON Snapshot for static site data
 
 **Glossary:** [CONTEXT.md](../CONTEXT.md) — **Snapshot** = point-in-time, filtered, read-only copy of the Library. **Export** stays interop with Apple Music.
 

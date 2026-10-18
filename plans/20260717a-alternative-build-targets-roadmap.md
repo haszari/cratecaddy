@@ -5,8 +5,8 @@ Three-step roadmap for CrateCaddy build targets. Each step builds on the previou
 **Decisions captured in ADRs:**
 - [ADR-0003: Swift + WKWebView](../docs/adr/0003-swift-wkwebview-native-app.md)
 - [ADR-0004: NeDB for native app](../docs/adr/0004-nedb-native-app-database.md)
-- [ADR-0005: Vite mode for static site](../docs/adr/0005-vite-mode-static-site.md)
-- [ADR-0006: JSON export for static data](../docs/adr/0006-json-export-static-data.md)
+- [ADR-0006: JSON Snapshot for static data](../docs/adr/0006-json-snapshot-static-data.md)
+- [ADR-0013: Static build as two shells over a shared engine](../docs/adr/0013-static-build-two-shells-shared-engine.md) — replaces archived ADR-0005
 
 **Full analysis:** [20260715-alternative-build-targets.md](./20260715-alternative-build-targets.md)
 

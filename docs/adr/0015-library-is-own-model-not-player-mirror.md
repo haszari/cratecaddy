@@ -1,7 +1,5 @@
 # Library is CrateCaddy's own model, not a mirror of a music player
 
-**Status:** accepted
-
 CrateCaddy keeps its own **Library** — the Songs in its database — as the source of truth for collection metadata. Apple Music, Rekordbox and djay Pro are peer systems that exchange data with it via Import and Export; none of them owns the Library. The Library's relationship to those systems is the app's core architecture, not an implementation detail of a particular import script.
 
 This is what makes the rest possible: merging several sources into one Song, recording a History of writes, choosing a canonical Apple Music ID per Song, and serving builds (the API app, a published Snapshot) without any player running.

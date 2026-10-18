@@ -1,8 +1,10 @@
 # Static build as two shells over a shared engine
 
-**Status:** accepted — supersedes [ADR-0005](./0005-vite-mode-static-site.md)
+**Status:** accepted
 
 CrateCaddy needs a read-only build that can be published and used offline, sharing one codebase and one Library with the API-backed app. We build **two entry points over a shared engine** instead of one app with runtime feature flags.
+
+This supersedes the archived [ADR-0005](./archive/0005-vite-mode-static-site.md), which proposed one shell with an alias-swapped API client.
 
 - `main.tsx` — API shell: `BrowserRouter`, edit route, version from `/api/version`.
 - `main.static.tsx` — static shell: `HashRouter`, Snapshot bootstrap, no write routes, version from baked build defines + Snapshot metadata.
@@ -12,7 +14,7 @@ Write code is absent from the static bundle **by construction** (no route, no im
 
 Rejected:
 
-1. **Capability flags in one shell (ADR-0005's spirit):** write code still ships, routes are registered at runtime, and every component must remember to consult the flag.
+1. **Capability flags in one shell (the archived ADR-0005's spirit):** write code still ships, routes are registered at runtime, and every component must remember to consult the flag.
 2. **Alias-swapped API client only:** swaps data access but leaves the write surface registered; solves half the problem.
 3. **Runtime conditional import in `main.tsx`:** the static build still contains the full app graph, so the write code ships.
 
