@@ -16,7 +16,8 @@
     "export:artists": "tsx scripts/export-artists.ts",
     "enrich:artists": "tsx scripts/enrich-artists.ts",
     "crossref:nzxml": "tsx scripts/crossref-nzxml.ts",
-    "check:parity": "tsx scripts/check-parity.ts"
+    "check:parity": "tsx scripts/check-parity.ts",
+    "snapshot": "tsx scripts/snapshot.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
