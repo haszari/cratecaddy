@@ -10,7 +10,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
   - `src/ui/src/data/` — data sources: `client.ts` (API), `snapshotClient.ts` (Snapshot), swapped via the `@data` alias
 - `snapshot.config.json` — Snapshot filter (default: grouping contains `DJing`)
 - `scripts/publish-snapshot.sh` — snapshot, build and publish the published Snapshot to GitHub Pages
-- `src/tools/` — seed scripts (`seed-db.sh` + `sample-songs.json`)
+- `src/tools/` — sample Library loader (`load-sample-library.sh` + `sample-songs.json`)
 - `src/data/` — gitignored user data (import files, CSVs)
 - `plans/` — design documents and refactor plans (review before executing)
   - Naming: `YYYYMMDD[a/b/c...]-descriptive-name.md`. Multiple plans on the same day get suffixed `a`, `b`, `c` in chronological order. Current/active plan is always the highest letter.
@@ -95,3 +95,4 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - File references as markdown links with workspace-relative paths
 - TypeScript ES modules, `tsx` runner for scripts
 - NZ/GB English spelling throughout (favourite, colour, centre, etc.)
+- Names and comments capture design intent: why the thing exists and what it guarantees, not the mechanics of how it works

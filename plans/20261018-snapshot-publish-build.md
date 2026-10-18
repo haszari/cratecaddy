@@ -27,7 +27,7 @@ One app, one Library, two build targets: API shell (full app) and Snapshot shell
 - Filtering, pagination, sort and shuffle are **server-side**: `buildSongFilter.ts`, `pagination.ts`, `shuffleHash.ts`, `songService.querySongs`.
 - UI pages (`Home`, `GenreDetail`, `Artist`, `Favourited`) share `useSongPage`; filter state is URL search params (`useFilters`, `useSortShuffle`); params are flat dot keys (`genre.all`, `bpm.gte`, …) from `@cratecaddy-api/apiParams`.
 - Data access is `src/ui/src/api/client.ts`, imported directly by `useSongs`, `useSongPage`, `Song`, edit components.
-- Write surface: `/edit-metadata` route, `EditLayout`, `Single/MultiSongMetadataEditForm` (mutations, history, write-to-Apple), `DevVersion` → `/api/version`.
+- Write surface: `/edit-metadata` route, `EditLayout`, `Single/MultiSongMetadataEditForm` (mutations, history, write-to-Apple), `VersionStatus` → `/api/version`.
 - No root `package.json`; cross-package work is shell scripts (`scripts/build-prod.sh`, `scripts/prod/cratecaddy`).
 
 ---
@@ -45,7 +45,7 @@ src/ui/src/
   shell/
     Providers.tsx      ← Mantine + MUI theme + QueryClient
     BrowseRoutes.tsx   ← route table: /, /genre/:genrePath, /artist/:artistName, /favourited, /song/:id
-  main.tsx             ← API shell: BrowserRouter, + /edit-metadata, DevVersion
+  main.tsx             ← API shell: BrowserRouter, + /edit-metadata, VersionStatus
   main.snapshot.tsx      ← Snapshot shell: HashRouter, Snapshot bootstrap, no write routes, Snapshot footer
 ```
 

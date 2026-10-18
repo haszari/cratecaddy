@@ -1,6 +1,12 @@
 import { useVersion } from '../hooks/useVersion';
 
-export default function DevVersion() {
+/**
+ * Says which build is running, for two audiences: a quiet badge while
+ * developing, and hidden data attributes that `cratecaddy status` and
+ * support checks read in production.
+ */
+
+export default function VersionStatus() {
   const { data: v } = useVersion();
 
   const isDev = import.meta.env.DEV;

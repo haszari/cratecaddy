@@ -1,3 +1,9 @@
+/**
+ * Translates browse params into a MongoDB query. This is the API's filter
+ * implementation; `songQuery.matchesFilters` is the in-memory equivalent used
+ * by the Snapshot build. They are kept deliberately parallel (ADR-0014):
+ * add new filters to both and to `npm run check:browse`.
+ */
 import { FilterQuery } from 'mongoose';
 import { ISong } from '../models/Song.js';
 import { KEY, ApiFilterParams } from './apiParams.js';

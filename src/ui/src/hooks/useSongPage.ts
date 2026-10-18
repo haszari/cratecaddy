@@ -1,3 +1,8 @@
+/**
+ * The browse pages' shared query pipeline: filter state from the URL, related
+ * tag stats, sorting and shuffle. Pages supply only what makes them different
+ * (genre in the path, artist, favourites, or nothing for Home).
+ */
 import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
