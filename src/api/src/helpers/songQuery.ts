@@ -7,7 +7,7 @@
  * - `buildSongFilter.ts` translates the same params into a MongoDB query and is
  *   the path used by the API.
  * - The functions here evaluate params against an in-memory song list and are
- *   used by the static Snapshot build in the browser.
+ *   used by the Snapshot build in the browser.
  *
  * Both are deliberate and are kept honest by `scripts/check-browse.ts` (`npm run check:browse`), which
  * asserts identical membership, counts, and genre stats for a fixed param

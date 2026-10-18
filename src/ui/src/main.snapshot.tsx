@@ -3,12 +3,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import Providers from './shell/Providers'
-import StaticApp from './shell/StaticApp'
+import SnapshotApp from './shell/SnapshotApp'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Providers>
-      <StaticApp />
+      <SnapshotApp />
     </Providers>
   </StrictMode>,
 )

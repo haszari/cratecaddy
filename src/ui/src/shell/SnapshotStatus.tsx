@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { getSnapshotMeta } from '../data/staticClient';
+import { getSnapshotMeta } from '../data/snapshotClient';
 
 const UPDATE_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 

@@ -48,17 +48,17 @@ function findSnapshotFile(): string | null {
 }
 
 /**
- * The static build uses the same index.html with a different entry point,
- * so the write-capable API shell is never in the static bundle.
+ * The Snapshot build uses the same index.html with a different entry point,
+ * so the write-capable API shell is never in the Snapshot bundle.
  */
-function staticEntryPlugin(): Plugin {
+function snapshotEntryPlugin(): Plugin {
   return {
-    name: 'cratecaddy-static-entry',
+    name: 'cratecaddy-snapshot-entry',
     transformIndexHtml: {
       // Must run before Vite resolves the entry script from index.html.
       order: 'pre',
       handler(html) {
-        return html.replace('/src/main.tsx', '/src/main.static.tsx')
+        return html.replace('/src/main.tsx', '/src/main.snapshot.tsx')
       },
     },
   }
@@ -66,9 +66,9 @@ function staticEntryPlugin(): Plugin {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isStatic = mode === 'static'
+  const isSnapshot = mode === 'snapshot'
 
-  if (isStatic) {
+  if (isSnapshot) {
     if (!findSnapshotFile()) {
       throw new Error(
         'No Snapshot found in src/ui/public/data.\n' +
@@ -77,13 +77,13 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  const snapshotFile = isStatic ? findSnapshotFile() : null
+  const snapshotFile = isSnapshot ? findSnapshotFile() : null
 
   return {
-    plugins: isStatic
+    plugins: isSnapshot
       ? [
           react(),
-          staticEntryPlugin(),
+          snapshotEntryPlugin(),
           VitePWA({
             // Registration and the update UX live in shell/SnapshotStatus.
             registerType: 'prompt',
@@ -121,7 +121,7 @@ export default defineConfig(({ mode }) => {
         // Build-time swap between the API client and the Snapshot client.
         '@data': path.resolve(
           __dirname,
-          isStatic ? './src/data/staticClient.ts' : './src/data/client.ts',
+          isSnapshot ? './src/data/snapshotClient.ts' : './src/data/client.ts',
         ),
       },
     },
@@ -134,11 +134,11 @@ export default defineConfig(({ mode }) => {
         JSON.parse(fs.readFileSync(path.resolve(__dirname, '../api/package.json'), 'utf8')).version ?? '0.1.0',
       ),
     },
-    // Published under <custom domain>/cratecaddy/. Dev static uses the same
+    // Published under <custom domain>/cratecaddy/. Dev Snapshot mode uses the same
     // prefix so preview and the published build resolve assets identically.
-    base: isStatic ? '/cratecaddy/' : '/',
+    base: isSnapshot ? '/cratecaddy/' : '/',
     build: {
-      outDir: isStatic ? 'dist-static' : 'dist',
+      outDir: isSnapshot ? 'dist-snapshot' : 'dist',
     },
     server: {
       port: parseInt(process.env.UI_PORT || '5325'),

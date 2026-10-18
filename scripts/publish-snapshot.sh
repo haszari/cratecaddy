@@ -4,7 +4,7 @@
 #
 #   1. snapshot  — read the library and write src/ui/public/data/snapshot-<sha8>.json
 #   2. validate  — refuse obviously wrong data (empty library, big drop)
-#   3. build     — static shell into src/ui/dist-static
+#   3. build     — Snapshot shell into src/ui/dist-snapshot
 #   4. validate  — filename hash, required files
 #   5. archive   — keep the last 3 built outputs for rollback (src/data, gitignored)
 #   6. push      — single-commit gh-pages branch (no history, no repo bloat)
@@ -13,9 +13,9 @@
 # database, and a deploy should be a decision, not a side effect of a push.
 #
 # Usage:
-#   scripts/publish-static.sh             # publish
-#   scripts/publish-static.sh --force     # skip the count-drop guard and dirty prompt
-#   scripts/publish-static.sh --dry-run   # everything except the push
+#   scripts/publish-snapshot.sh             # publish
+#   scripts/publish-snapshot.sh --force     # skip the count-drop guard and dirty prompt
+#   scripts/publish-snapshot.sh --dry-run   # everything except the push
 #
 set -euo pipefail
 
@@ -101,43 +101,43 @@ else
   echo "  no published Snapshot found (first publish?)"
 fi
 
-say "Build static site"
-(cd src/ui && npm run build:static)
+say "Build published Snapshot"
+(cd src/ui && npm run build:snapshot)
 
 say "Validate build"
-BUILD_SNAPSHOTS="$(ls src/ui/dist-static/data/snapshot-*.json 2>/dev/null | wc -l | tr -d ' ')"
+BUILD_SNAPSHOTS="$(ls src/ui/dist-snapshot/data/snapshot-*.json 2>/dev/null | wc -l | tr -d ' ')"
 if [ "$BUILD_SNAPSHOTS" != "1" ]; then
-  echo "Expected exactly one Snapshot in dist-static/data, found $BUILD_SNAPSHOTS." >&2
+  echo "Expected exactly one Snapshot in dist-snapshot/data, found $BUILD_SNAPSHOTS." >&2
   exit 1
 fi
-BUILT_FILE="$(ls src/ui/dist-static/data/snapshot-*.json)"
+BUILT_FILE="$(ls src/ui/dist-snapshot/data/snapshot-*.json)"
 BUILT_VERSION="$(field "$BUILT_FILE" 'd.snapshot.version')"
 if [ "$BUILT_VERSION" != "$SNAPSHOT_VERSION" ]; then
   echo "Built Snapshot version $BUILT_VERSION does not match $SNAPSHOT_VERSION." >&2
   exit 1
 fi
-for required in src/ui/dist-static/index.html src/ui/dist-static/.nojekyll; do
+for required in src/ui/dist-snapshot/index.html src/ui/dist-snapshot/.nojekyll; do
   if [ ! -f "$required" ]; then
     echo "Missing required file: $required" >&2
     exit 1
   fi
 done
-if ! grep -q "/cratecaddy/assets/" src/ui/dist-static/index.html; then
+if ! grep -q "/cratecaddy/assets/" src/ui/dist-snapshot/index.html; then
   echo "index.html does not use the /cratecaddy/ base path — check the Vite base config." >&2
   exit 1
 fi
 echo "  build ok: snapshot $BUILT_VERSION, index.html and .nojekyll present"
 
 say "Archive build for rollback"
-ARCHIVE_DIR="src/data/static-deploys/$SNAPSHOT_VERSION"
+ARCHIVE_DIR="src/data/snapshot-deploys/$SNAPSHOT_VERSION"
 mkdir -p "$ARCHIVE_DIR"
-rsync -a --delete src/ui/dist-static/ "$ARCHIVE_DIR/"
+rsync -a --delete src/ui/dist-snapshot/ "$ARCHIVE_DIR/"
 # Keep the three most recent builds; rollback is republishing an archive verbatim.
-ls -1dt src/data/static-deploys/*/ | tail -n +4 | while read -r old; do
+ls -1dt src/data/snapshot-deploys/*/ | tail -n +4 | while read -r old; do
   rm -rf "$old"
 done
 echo "  archived to $ARCHIVE_DIR (keeping 3)"
-ls -1dt src/data/static-deploys/*/ | sed 's/^/    /'
+ls -1dt src/data/snapshot-deploys/*/ | sed 's/^/    /'
 
 say "Push"
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -154,7 +154,7 @@ if [ -n "$(git status --porcelain)" ] && [ "$FORCE" -ne 1 ]; then
   esac
 fi
 
-(cd src/ui && npx gh-pages -d dist-static --no-history --dotfiles -b gh-pages \
+(cd src/ui && npx gh-pages -d dist-snapshot --no-history --dotfiles -b gh-pages \
   -m "snapshot $SNAPSHOT_VERSION $SNAPSHOT_TAKEN_AT")
 
 say "Published"

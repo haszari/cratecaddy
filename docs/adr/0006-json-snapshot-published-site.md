@@ -1,6 +1,6 @@
-# JSON Snapshot for static site data
+# JSON Snapshot for the published site
 
-**Question:** If we build a static site, what data format delivers the song database to the browser with no backend?
+**Question:** If we build a published Snapshot, what data format delivers the song database to the browser with no backend?
 
 The Snapshot is a plain JSON file (`src/ui/public/data/snapshot-<sha8>.json`), written at build time by `npm run snapshot` from MongoDB. The browser loads it once and filters in memory. The filename is the content hash of the song list, so a changed library produces a new URL and an unchanged one keeps the same name.
 
@@ -16,4 +16,4 @@ Rejected alternatives:
 
 2. **DuckDB WASM:** ~6 MB WASM bundle — larger than the entire song dataset. Designed for analytical queries on millions of rows, not genre tag filtering on 10K songs. Heavy startup cost, complex setup.
 
-See also [ADR-0013](./0013-static-build-two-shells-shared-engine.md) and [CONTEXT.md](../../CONTEXT.md) for the Snapshot definition.
+See also [ADR-0013](./0013-snapshot-build-two-shells-shared-engine.md) and [CONTEXT.md](../../CONTEXT.md) for the Snapshot definition.

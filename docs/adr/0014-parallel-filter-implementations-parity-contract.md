@@ -1,6 +1,6 @@
 # Parallel filter implementations with a parity contract
 
-Browse queries must work against MongoDB (API build) and against an in-memory Snapshot (static build). We keep **two implementations on purpose** — the Mongo query builder for the API, a pure JS predicate for the static build — and make the duplication explicit with a shared contract and a parity check.
+Browse queries must work against MongoDB (API build) and against an in-memory Snapshot (Snapshot build). We keep **two implementations on purpose** — the Mongo query builder for the API, a pure JS predicate for the Snapshot build — and make the duplication explicit with a shared contract and a parity check.
 
 Reasons: native Mongo querying is the right tool for the future cloud/multi-user library API, while a database cannot be shipped to the browser. A single JS implementation used by both would mean loading candidate documents into Node and filtering there, discarding the server-side query work and the indexes.
 
@@ -11,7 +11,7 @@ Compromises are documented in the contract module and negotiated over time. Logi
 Rejected:
 
 1. **Single JS implementation for both:** exact parity by construction, but loses native querying and does not scale to the cloud library API.
-2. **Ad-hoc duplication in the static client:** fastest, and guarantees drift the next time a filter is added, with nothing to catch it.
+2. **Ad-hoc duplication in the Snapshot client:** fastest, and guarantees drift the next time a filter is added, with nothing to catch it.
 
 Consequences:
 
