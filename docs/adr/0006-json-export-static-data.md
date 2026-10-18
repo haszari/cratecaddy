@@ -1,5 +1,7 @@
 # JSON export for static site data
 
+**Status:** amended by [ADR-0013](./0013-static-build-two-shells-shared-engine.md). The data is a **Snapshot** (point-in-time, filtered, content-hashed filename) rather than an unversioned `public/data/songs.json`. Plain JSON, loaded once, filtered in memory — unchanged.
+
 **Question:** If we build a static site, what data format delivers the song database to the browser with no backend?
 
 We will use a plain JSON file (`public/data/songs.json`) generated at build time by an export script that queries MongoDB. The browser will load it once and filter in memory.

@@ -1,5 +1,7 @@
 # Step 3: Static site
 
+**Status:** superseded by [20261018-static-site-build.md](./20261018-static-site-build.md). This draft assumed client-side filtering over all songs and an unversioned `songs.json`; the current plan uses two shells over a shared engine and a versioned Snapshot.
+
 **Parent:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md)
 
 Build-time static site with configurable song list, deployable to GitHub Pages or custom endpoint.

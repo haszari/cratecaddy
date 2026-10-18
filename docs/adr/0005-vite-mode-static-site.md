@@ -1,5 +1,7 @@
 # Vite mode for static site build
 
+**Status:** superseded by [ADR-0013](./0013-static-build-two-shells-shared-engine.md). The static build is now two shells over a shared engine with a swapped data module, not one app with an alias-swapped API client. The Vite `--mode static` mechanism and the shared-code intent still stand.
+
 **Question:** If we build a static site, how do we structure the build to share the existing UI codebase?
 
 We will use Vite's `--mode static` feature within the existing `src/ui/` package. A `.env.static` file will set `VITE_STATIC_MODE=true`. The Vite config will swap the API client via alias (`client.ts` → `staticClient.ts`) and output to `dist-static/`.
