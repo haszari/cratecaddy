@@ -32,6 +32,12 @@ Heavy import provenance (bit rate, file size, dates, track type, protection stat
 
 Data on Song.sources is refreshed each import. Historical source data is recoverable from History.
 
+### Ownership
+
+- **Owned**: at least one source is a local file (a codec other than the streaming marker, or a `file://` path).
+- **Streaming-only**: has a streaming source and no local file.
+- Query param: `ownership=owned|streaming`. A Snapshot defaults to `owned`, so published sites contain no cloud-only Songs.
+
 ### Starred
 
 Three-state triage marker: `'starred'` (Apple Music loved), `'normal'` (default), `'disliked'`. Imported from Apple Music's Loved/Disliked booleans. Displayed in CompactSongTable as a star icon.

@@ -139,7 +139,7 @@ cratecaddy publish --dry-run                # builds and stops at the publish pr
 ```
 
 - [ ] Prints `prod — mongodb://127.0.0.1:5227/cratecaddy`, not dev
-- [ ] Song count is plausible against prod, e.g. `docker exec cratecaddy-mongodb-prod mongosh cratecaddy --quiet --eval 'db.songs.countDocuments({grouping:"DJing"})'`
+- [ ] Song count is plausible for **owned** DJing songs (fewer than all DJing), and the printed filter includes `ownership: owned`
 - [ ] Refuses if prod is not running, with "Start the appliance first"
 - [ ] `check:static-site-matches-app` runs green
 - [ ] Filename version equals the version inside the JSON

@@ -33,6 +33,13 @@ import { KEY } from './apiParams.js';
 import type { ApiFilterParams } from './apiParams.js';
 
 /** Fields the query layer needs. Structurally satisfied by ISong and the UI Song type. */
+export interface QueryableSource {
+  format?: string;
+  filePath?: string;
+  /** Derived at Snapshot time. */
+  isLocal?: boolean;
+}
+
 export interface QueryableSong {
   artist?: string;
   title?: string;
@@ -42,6 +49,24 @@ export interface QueryableSong {
   year?: number;
   key?: string;
   favorite?: 'starred' | 'normal' | 'disliked';
+  sources?: QueryableSource[];
+}
+
+/** A Song is owned when at least one source is a local file (not a stream). */
+function isOwned(song: QueryableSong): boolean {
+  return (song.sources ?? []).some(
+    (source) =>
+      source.isLocal === true ||
+      (source.format !== undefined && source.format !== 'applemusicstream') ||
+      (source.filePath?.startsWith('file://') ?? false),
+  );
+}
+
+/** Cloud-only: has a streaming source and no local file. */
+function isStreamingOnly(song: QueryableSong): boolean {
+  const sources = song.sources ?? [];
+  const hasStream = sources.some((source) => source.format === 'applemusicstream');
+  return hasStream && !isOwned(song);
 }
 
 /** Secondary sort always applied, in this order, after the user's sort field. */
@@ -160,6 +185,10 @@ export function matchesFilters(song: QueryableSong, params: ApiFilterParams): bo
   } else if (favorite === 'disliked') {
     if (song.favorite !== 'disliked') return false;
   }
+
+  const ownership = params[KEY.ownership];
+  if (ownership === 'owned' && !isOwned(song)) return false;
+  if (ownership === 'streaming' && !isStreamingOnly(song)) return false;
 
   const searchTerm = params[KEY.search];
   if (searchTerm && searchTerm.trim()) {

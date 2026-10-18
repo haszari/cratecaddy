@@ -73,6 +73,11 @@ const CASES: ParityCase[] = [
   { name: 'favorite disliked', params: { [KEY.favorite]: 'disliked' } },
   { name: 'favorite ignored value', params: { [KEY.favorite]: 'false' } },
 
+  { name: 'ownership owned', params: { [KEY.ownership]: 'owned' } },
+  { name: 'ownership streaming', params: { [KEY.ownership]: 'streaming' } },
+  { name: 'ownership owned + genre.all', params: { [KEY.ownership]: 'owned', [KEY.genreAll]: 'House' } },
+  { name: 'ownership ignored value', params: { [KEY.ownership]: 'borrowed' } },
+
   { name: 'search artist', params: { [KEY.search]: 'bailey' } },
   { name: 'search title', params: { [KEY.search]: 'love' } },
   { name: 'search genre', params: { [KEY.search]: 'house' } },

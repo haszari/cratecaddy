@@ -32,7 +32,7 @@ cd ../ui && npm run dev:static
 
 Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch. First-time Pages and custom-domain setup, plus per-publish deploy checks, are in [smoke tests](./docs/smoke-tests.md).
 
-- **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing`. Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
+- **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing` **and that are owned** (a local file, not cloud-only). Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
 - **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.
 - **Read-only by construction**: the site has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
 - **Rollback**: each publish archives its build to `src/data/static-deploys/<sha8>/` (gitignored, last 3 kept). Roll back with `cratecaddy publish --publish-archive=<sha8>`.

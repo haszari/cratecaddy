@@ -55,7 +55,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 
 ## Snapshot contract
 
-- **Filter:** `grouping` **contains** `DJing` (`grouping: { $in: ['DJing'] }`). `[DJing]` and `[DJing, Listening]` included; `[Listening]` and empty/missing excluded. Config is "any of", never AND. Default lives in `snapshot.config.json` at repo root; additional filters reuse the app's existing param vocabulary (`genre.all`, `bpm.gte`, `rating.gte`, `favorite`, `search`, …) composed through `buildSongFilter`, overridable per run by CLI flags.
+- **Filter:** `grouping` **contains** `DJing` (`grouping: { $in: ['DJing'] }`). `[DJing]` and `[DJing, Listening]` included; `[Listening]` and empty/missing excluded. Config is "any of", never AND. The Snapshot also defaults to `ownership: 'owned'` so cloud-only Songs are excluded. Default lives in `snapshot.config.json`; additional filters reuse the app's param vocabulary (`genre.all`, `bpm.gte`, `rating.gte`, `favorite`, `ownership`, `search`, …) composed through `buildSongFilter`, overridable per run by CLI flags.
 - **Payload:** wrapper + unchanged `Song` shape.
   ```json
   { "snapshot": { "version": "<sha8>", "takenAt": "ISO", "appVersion": "0.1.0",
