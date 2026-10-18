@@ -16,9 +16,14 @@
 # Usage:
 #   scripts/publish-snapshot-site.sh                          # build + validate, then prompt to publish
 #   scripts/publish-snapshot-site.sh --publish-to-github      # skip the prompt and publish
+#   scripts/publish-snapshot-site.sh --use-dev-library        # publish from the dev database instead
 #   scripts/publish-snapshot-site.sh --allow-smaller-library  # publish even if the song count dropped
 #   scripts/publish-snapshot-site.sh --allow-dirty-build      # publish with uncommitted changes
 #   scripts/publish-snapshot-site.sh --dry-run                # never prompt, never publish
+#
+# The Snapshot is taken from the prod (appliance) database by default. The dev
+# database is for iteration and may hold half-imported or experimental data,
+# so publishing from it is an explicit choice.
 #
 set -euo pipefail
 
@@ -29,12 +34,14 @@ ALLOW_SMALLER_LIBRARY=0
 ALLOW_DIRTY_BUILD=0
 DRY_RUN=0
 PUBLISH=0
+USE_DEV_LIBRARY=0
 for arg in "$@"; do
   case "$arg" in
     --allow-smaller-library) ALLOW_SMALLER_LIBRARY=1 ;;
     --allow-dirty-build) ALLOW_DIRTY_BUILD=1 ;;
     --dry-run) DRY_RUN=1 ;;
     --publish-to-github) PUBLISH=1 ;;
+    --use-dev-library) USE_DEV_LIBRARY=1 ;;
     --help|-h)
       sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
@@ -48,10 +55,42 @@ done
 
 say() { printf '\n== %s\n' "$*"; }
 
+# The appliance's database is the Library of record. Its config lives outside
+# the checkout and its defaults differ from the dev .env, so resolve it here
+# rather than inheriting the dev MongoDB URI.
+CRATECADDY_HOME="${CRATECADDY_HOME:-$HOME/.cratecaddy}"
+if [ -f "$CRATECADDY_HOME/config.env" ]; then
+  # shellcheck disable=SC1091
+  set -a; . "$CRATECADDY_HOME/config.env"; set +a
+fi
+
+if [ "$USE_DEV_LIBRARY" -eq 1 ]; then
+  export MONGODB_URI="mongodb://127.0.0.1:${DEV_MONGO_PORT:-5327}/cratecaddy"
+  LIBRARY_SOURCE="dev"
+else
+  export MONGODB_URI="mongodb://127.0.0.1:${MONGO_PORT:-5227}/cratecaddy"
+  LIBRARY_SOURCE="prod"
+fi
+
 field() {
   # field <json-file> <js-expression>
   node -e "const d=require(require('path').resolve(process.argv[1]));console.log(eval(process.argv[2]))" "$1" "$2"
 }
+
+say "Library source"
+echo "  $LIBRARY_SOURCE — $MONGODB_URI"
+if [ "$LIBRARY_SOURCE" = "dev" ]; then
+  echo "  warning: publishing from the dev Library; it may hold incomplete or experimental data."
+fi
+if ! (cd src/api && npm run inspect:library count >/dev/null 2>&1); then
+  echo "Cannot read the $LIBRARY_SOURCE Library at $MONGODB_URI." >&2
+  if [ "$LIBRARY_SOURCE" = "prod" ]; then
+    echo "Start the appliance first: cratecaddy start" >&2
+  else
+    echo "Start the dev database first: docker compose up -d" >&2
+  fi
+  exit 1
+fi
 
 say "Snapshot"
 (cd src/api && npm run snapshot)
@@ -107,6 +146,12 @@ EOF
 else
   echo "  no published Snapshot found (first publish?)"
 fi
+
+say "Check published site will match the app"
+(cd src/api && npm run check:snapshot-matches-app) || {
+  echo "Published site and app disagree for the same query; fix before publishing." >&2
+  exit 1
+}
 
 say "Build published Snapshot"
 (cd src/ui && npm run build:snapshot)
