@@ -90,6 +90,18 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - **Never amend, rebase, or otherwise edit commit history.** Only ever create new commits.
 - **Only commit when explicitly instructed.**
 
+## Boundaries
+
+Default scope is local. You may read, edit, run dev commands, and commit to the current branch. **Touching prod or anything remote requires an explicit request in the current conversation.**
+
+Never run without being asked:
+- `cratecaddy start|stop|restart|install|rebuild-prod|publish`, or `./scripts/prod/cratecaddy`
+- `./scripts/build-prod.sh` when its output feeds the appliance
+- `git push`, force-pushing `gh-pages`, `publish-static-site.sh --publish-to-github`
+- any write to the prod database or prod API, including imports and metadata edits
+
+If a fix seems to need a prod or remote action, stop and ask. Say exactly which command you would run and what it changes. Demonstrate the change locally instead: dev DB, `--dry-run`, a local build, `preview:static`.
+
 ## Best Practices
 
 - Use `<Link>` over `<button onClick={navigate(...)}>` for navigation elements so cmd-click opens in new tab.
