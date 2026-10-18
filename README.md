@@ -31,7 +31,7 @@ cd ../ui && npm run build:static
 cratecaddy publish --publish-to-github
 ```
 
-Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch.
+Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch. First-time Pages and custom-domain setup, plus per-publish deploy checks, are in [smoke tests](./docs/smoke-tests.md#0-github-setup-one-time-before-the-first-publish).
 
 - **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing`. Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
 - **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.

@@ -67,7 +67,7 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 | `cratecaddy logs` | Tail the API log |
 | `cratecaddy import <file>` | Import music metadata (Apple Music XML by default) |
 | `cratecaddy import djay <file>` | Import from djay Pro CSV export |
-| `cratecaddy publish` | Snapshot the prod Library, build the static site, then ask before publishing. Needs the checkout; add `--publish-to-github` to skip the prompt |
+| `cratecaddy publish` | Snapshot the prod Library, build the static site, then ask before publishing. Needs the checkout; add `--publish-to-github` to skip the prompt. First-time GitHub Pages setup: [smoke tests](./docs/smoke-tests.md#0-github-setup-one-time-before-the-first-publish) |
 
 ## Smoke testing
 
