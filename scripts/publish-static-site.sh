@@ -20,6 +20,7 @@
 #   scripts/publish-static-site.sh --allow-smaller-library  # publish even if the song count dropped
 #   scripts/publish-static-site.sh --allow-dirty-build      # publish with uncommitted changes
 #   scripts/publish-static-site.sh --dry-run                # never prompt, never publish
+#   scripts/publish-static-site.sh --publish-archive=<sha8> # republish an archived build (rollback)
 #
 # The Snapshot is taken from the prod (appliance) database by default. The dev
 # database is for iteration and may hold half-imported or experimental data,
@@ -35,6 +36,7 @@ ALLOW_DIRTY_BUILD=0
 DRY_RUN=0
 PUBLISH=0
 USE_DEV_LIBRARY=0
+ARCHIVE_VERSION=""
 for arg in "$@"; do
   case "$arg" in
     --allow-smaller-library) ALLOW_SMALLER_LIBRARY=1 ;;
@@ -42,6 +44,10 @@ for arg in "$@"; do
     --dry-run) DRY_RUN=1 ;;
     --publish-to-github) PUBLISH=1 ;;
     --use-dev-library) USE_DEV_LIBRARY=1 ;;
+    --publish-archive)
+      echo "ERROR: --publish-archive needs a version (e.g. --publish-archive=b2419676)." >&2
+      exit 1 ;;
+    --publish-archive=*) ARCHIVE_VERSION="${arg#--publish-archive=}" ;;
     --help|-h)
       sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
@@ -72,11 +78,55 @@ else
   LIBRARY_SOURCE="prod"
 fi
 
+push_static_site() {
+  # push_static_site <build-dir> <snapshot-version> <taken-at>
+  #
+  # Build the branch from an empty directory containing only the static site.
+  # Committing from the checkout leaked repo files onto gh-pages, and the
+  # checkout's .gitignore then excluded data/ (which holds the Snapshot).
+  local build_dir="$1" version="$2" taken_at="$3"
+  local remote tmp
+  remote="$(git remote get-url origin)"
+  tmp="$(mktemp -d "${TMPDIR:-/tmp}/cratecaddy-pages.XXXXXX")"
+  trap 'rm -rf "$tmp"' EXIT
+
+  cp -R "$build_dir/." "$tmp/"
+  (
+    cd "$tmp"
+    git init -q -b gh-pages
+    git add -A
+    git -c user.name="cratecaddy" -c user.email="cratecaddy@localhost" \
+      commit -q -m "snapshot $version $taken_at"
+    git push --force "$remote" gh-pages
+  )
+
+  rm -rf "$tmp"
+  trap - EXIT
+}
+
 field() {
   # field <json-file> <js-expression>
   node -e "const d=require(require('path').resolve(process.argv[1]));console.log(eval(process.argv[2]))" "$1" "$2"
 }
 
+if [ -n "$ARCHIVE_VERSION" ]; then
+  BUILD_DIR="src/data/static-deploys/$ARCHIVE_VERSION"
+  if [ ! -f "$BUILD_DIR/index.html" ]; then
+    echo "No archived build at $BUILD_DIR" >&2
+    ls -1dt src/data/static-deploys/*/ 2>/dev/null | sed 's/^/  /' >&2 || true
+    exit 1
+  fi
+  SNAPSHOT_FILE="$({ ls "$BUILD_DIR"/data/snapshot-*.json 2>/dev/null || true; } | head -1)"
+  if [ -z "$SNAPSHOT_FILE" ]; then
+    echo "Archived build has no Snapshot file: $BUILD_DIR" >&2
+    exit 1
+  fi
+  SNAPSHOT_VERSION="$(field "$SNAPSHOT_FILE" 'd.snapshot.version')"
+  SNAPSHOT_COUNT="$(field "$SNAPSHOT_FILE" 'd.snapshot.count')"
+  SNAPSHOT_TAKEN_AT="$(field "$SNAPSHOT_FILE" 'd.snapshot.takenAt')"
+  say "Publish archived build"
+  echo "  $BUILD_DIR — snapshot $SNAPSHOT_VERSION ($SNAPSHOT_COUNT songs)"
+else
 say "Library source"
 echo "  $LIBRARY_SOURCE — $MONGODB_URI"
 if [ "$LIBRARY_SOURCE" = "dev" ]; then
@@ -190,6 +240,8 @@ ls -1dt src/data/static-deploys/*/ | tail -n +4 | while read -r old; do
 done
 echo "  archived to $ARCHIVE_DIR (keeping 3)"
 ls -1dt src/data/static-deploys/*/ | sed 's/^/    /'
+BUILD_DIR="src/ui/dist-static"
+fi
 
 say "Publish?"
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -219,13 +271,12 @@ if [ -n "$(git status --porcelain)" ] && [ "$ALLOW_DIRTY_BUILD" -ne 1 ]; then
   esac
 fi
 
-(cd src/ui && npx gh-pages -d dist-static --no-history --dotfiles -b gh-pages \
-  -m "snapshot $SNAPSHOT_VERSION $SNAPSHOT_TAKEN_AT")
+push_static_site "$BUILD_DIR" "$SNAPSHOT_VERSION" "$SNAPSHOT_TAKEN_AT"
 
 say "Published"
 cat <<EOF
   URL:      https://lab.cartoonbeats.com/cratecaddy
   Snapshot: $SNAPSHOT_VERSION ($SNAPSHOT_COUNT songs, taken $SNAPSHOT_TAKEN_AT)
-  Rollback: republish the archived build, e.g.
-            (cd src/ui && npx gh-pages -d ../../$ARCHIVE_DIR --no-history --dotfiles -b gh-pages)
+  Rollback: cratecaddy publish --publish-archive=<sha8> --publish-to-github
+            (archives live in src/data/static-deploys/)
 EOF

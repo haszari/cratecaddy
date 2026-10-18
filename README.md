@@ -35,7 +35,7 @@ Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-
 - **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing`. Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
 - **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.
 - **Read-only by construction**: the site has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
-- **Rollback**: each publish archives its build to `src/data/static-deploys/<sha8>/` (gitignored, last 3 kept). Republish an archive to roll back.
+- **Rollback**: each publish archives its build to `src/data/static-deploys/<sha8>/` (gitignored, last 3 kept). Roll back with `cratecaddy publish --publish-archive=<sha8>`.
 - Publishing is manual and local — CI cannot reach the library database.
 - The Snapshot is taken from the **prod** appliance database by default (`--use-dev-library` only for wiring checks).
 

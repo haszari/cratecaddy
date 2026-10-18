@@ -176,7 +176,7 @@ cratecaddy publish --publish-to-github
 - [ ] No Edit button
 - [ ] Phone: open once, add to home screen, then reload offline — still works
 - [ ] Update flow: publish a new Snapshot, return to an already-open old tab, expect "Getting fresh tune data…" then reload with the new date
-- [ ] Rollback: republish an archive from `src/data/static-deploys/<sha8>/`, confirm the footer reverts
+- [ ] Rollback: `cratecaddy publish --publish-archive=<sha8>` (from `src/data/static-deploys/`), confirm the footer reverts
 
 ## 5. Failure drills (occasionally)
 
