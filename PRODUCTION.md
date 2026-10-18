@@ -68,6 +68,10 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 | `cratecaddy import <file>` | Import music metadata (Apple Music XML by default) |
 | `cratecaddy import djay <file>` | Import from djay Pro CSV export |
 
+## Smoke testing
+
+After install or update, run the [smoke tests](./docs/smoke-tests.md) against the appliance and the running app.
+
 ## Importing your music library
 
 `cratecaddy import ~/Music/Music/Library.xml` imports an Apple Music library export (targets `prod` by default; `cratecaddy import dev <file>` for dev). `cratecaddy import djay ~/data/dJayPro.csv` imports from djay Pro. The command prints the target and connection string first, so you can Ctrl-C if it's aimed at the wrong environment.

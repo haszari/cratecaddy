@@ -35,6 +35,9 @@ Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-
 - **Read-only by construction**: the Snapshot shell has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
 - **Rollback**: each publish archives its build to `src/data/snapshot-deploys/<sha8>/` (gitignored, last 3 kept). Republish an archive to roll back.
 - Publishing is manual and local — CI cannot reach the library database.
+- The Snapshot is taken from the **prod** appliance database by default (`--use-dev-library` only for wiring checks).
+
+Run the [smoke tests](./docs/smoke-tests.md) before trusting a build or a publish.
 
 See [plans/20261018-snapshot-publish-build.md](./plans/20261018-snapshot-publish-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
 

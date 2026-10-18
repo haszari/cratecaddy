@@ -16,6 +16,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
   - Naming: `YYYYMMDD[a/b/c...]-descriptive-name.md`. Multiple plans on the same day get suffixed `a`, `b`, `c` in chronological order. Current/active plan is always the highest letter.
 - `docs/adr/` — architecture decision records, current decisions only. Superseded or withdrawn ADRs move to `docs/adr/archive/`; never reuse a number.
 - `CONTEXT.md` — domain language glossary (ubiquitous language)
+- `docs/smoke-tests.md` — manual smoke tests for the app, the appliance and the published Snapshot site; run before trusting a build or publish
 - No root `package.json` — each sub-package is independent
 
 ## Commands (run from `src/api/` or `src/ui/`)
@@ -40,7 +41,7 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 | api | `npm run lint` | ESLint 8, config via `eslint src --ext .ts` |
 | ui | `npm run lint` | ESLint 9 flat config (`eslint.config.js`) |
 
-**No test framework** is configured. `npm run check:snapshot-matches-app` (api) is the contract check for the two query implementations. No `typecheck` script exists; use `npx tsc -b` (ui) and `npx tsc --noEmit` (api).
+**No test framework** is configured. `npm run check:snapshot-matches-app` (api) is the contract check for the two query implementations; everything else is covered by the checklist in `docs/smoke-tests.md`. No `typecheck` script exists; use `npx tsc -b` (ui) and `npx tsc --noEmit` (api).
 
 ## Architecture notes
 

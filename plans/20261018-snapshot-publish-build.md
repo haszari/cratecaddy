@@ -1,6 +1,6 @@
 # Snapshot publish build — CrateCaddy's published site
 
-**Status:** built 2026-10-18 — steps 1–8 done; waypoint 9 (device QA) outstanding
+**Status:** built 2026-10-18 — steps 1–8 done; smoke tests documented, device checks outstanding
 **Date:** 2026-10-18
 **Supersedes:** [20260717d-snapshot-publish-build.md](./20260717d-snapshot-publish-build.md) (early draft, stale assumptions)
 **Roadmap:** [20260717a-alternative-build-targets-roadmap.md](./20260717a-alternative-build-targets-roadmap.md) — Step 3
@@ -148,7 +148,7 @@ Hooks and pages do **not** change: they import `@data`, so the engine is genuine
 6. **Static client + build wiring:** `snapshotClient.ts`, Vite mode plugin, `base`/`outDir`, `__SNAPSHOT_FILE__`, `dev:snapshot`, `build:snapshot`. Browse check green for Snapshot vs API.
 7. **PWA + provenance:** precache, update flow, footer version with Snapshot timestamp, offline banner.
 8. **Publish script:** guardrails, rollback archive, Pages setup docs, README/PRODUCTION additions.
-9. **Device QA:** phone, offline after first load, update-on-reconnect, touch targets, cold-start size.
+9. **Smoke tests:** the checklist in [docs/smoke-tests.md](../docs/smoke-tests.md) covers the app, the appliance and the published Snapshot site, including device checks (offline, update, touch targets, cold start).
 
 ---
 
