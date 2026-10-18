@@ -67,6 +67,9 @@ echo "Building API..."
 cd ../api
 npm run build
 
+# Ship the build identity as a plain file as well as the generated module, so
+# the changeset is visible in the installed runtime without starting the API.
+echo "$VERSION_STR" > dist/VERSION
 echo "Bundling static UI into API dist..."
 rm -rf dist/static
 mkdir -p dist/static

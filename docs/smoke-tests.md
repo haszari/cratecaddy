@@ -123,6 +123,7 @@ curl -s localhost:5225/api/version
 ```
 
 - [ ] `cratecaddy status` reports running, the expected version, and `Library: <n> songs, last change <date>`
+- [ ] `cat ~/.cratecaddy/src/api/dist/VERSION` matches the Status version (ignoring any `-dirty`)
 - [ ] `curl -s localhost:5225/health` → `status: ok`, `database.connected: true`, `database.songs` matching the Library, `newestUpdate` plausible
 - [ ] `/health` reports `degraded` or an error when MongoDB is stopped (stop it, check, start it again)
 - [ ] UI at `http://localhost:5225` behaves like the dev checks above (at minimum: Home, one genre drill-down, one edit + history)

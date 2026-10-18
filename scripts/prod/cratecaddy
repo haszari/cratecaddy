@@ -13,7 +13,7 @@ set -e
 #   version                              Show status and version (alias of status)
 #   import [prod|dev] [apple|djay] <file>  Import music metadata
 #   publish [options]                    Publish the static site (needs the checkout)
-#   install                              Install/update runtime to ~/.cratecaddy
+#   install [--source <dir>]             Install/update runtime to ~/.cratecaddy
 #   uninstall                            Remove auto-start + PATH, stop services
 #
 # Config (all optional, sourced from ~/.cratecaddy/config.env)
@@ -338,8 +338,48 @@ if data.get("error"):
   install)
     # Install or update the built runtime into ~/.cratecaddy. Safe to run
     # repeatedly: copies fresh code, re-enables launchd, preserves data.
+    # The installed runtime cannot install itself, so resolve the checkout:
+    # --source, then CRATECADDY_SOURCE, then the current checkout, then the
+    # SOURCE_DIR recorded by a previous install.
+    INSTALL_SOURCE=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        install) shift ;;
+        --source)
+          if [ $# -lt 2 ]; then
+            echo "ERROR: --source needs a directory." >&2
+            exit 1
+          fi
+          INSTALL_SOURCE="$2"; shift 2 ;;
+        --source=*) INSTALL_SOURCE="${1#--source=}"; shift ;;
+        *)
+          echo "Unknown option: $1" >&2
+          exit 1 ;;
+      esac
+    done
+    if [ -z "$INSTALL_SOURCE" ]; then
+      INSTALL_SOURCE="${CRATECADDY_SOURCE:-}"
+    fi
+    if [ -z "$INSTALL_SOURCE" ] && [ "$PROJECT_DIR" != "$INSTALL_ROOT" ]; then
+      INSTALL_SOURCE="$PROJECT_DIR"
+    fi
+    if [ -z "$INSTALL_SOURCE" ] && [ -n "${SOURCE_DIR:-}" ]; then
+      INSTALL_SOURCE="$SOURCE_DIR"
+    fi
+    if [ -z "$INSTALL_SOURCE" ] || [ "$INSTALL_SOURCE" = "$INSTALL_ROOT" ]; then
+      echo "ERROR: install must run from the checkout, or with --source <path>." >&2
+      echo "The installed runtime only holds the built API; it cannot install itself." >&2
+      echo "From the checkout: ./scripts/prod/cratecaddy install" >&2
+      exit 1
+    fi
+    PROJECT_DIR="$INSTALL_SOURCE"
+    if [ ! -d "$PROJECT_DIR" ]; then
+      echo "ERROR: checkout not found at $PROJECT_DIR" >&2
+      exit 1
+    fi
     if [ "$PROJECT_DIR" = "$INSTALL_ROOT" ]; then
-      echo "Already running from $INSTALL_ROOT — nothing to copy." >&2
+      echo "ERROR: source is the install root; run from the checkout or pass --source." >&2
+      exit 1
     else
       if [ ! -f "$PROJECT_DIR/src/api/dist/server.js" ]; then
         echo "ERROR: no production build found (src/api/dist/server.js missing)." >&2
@@ -428,7 +468,7 @@ if data.get("error"):
     echo "  import <path>     Import from Apple Music XML (default)"
     echo "  import djay <csv> Import from djay Pro CSV export"
     echo "  publish           Build the static site (add --publish-to-github to deploy)"
-    echo "  install           Install or update runtime to ~/.cratecaddy"
+    echo "  install [--source <dir>]  Install or update runtime to ~/.cratecaddy"
     echo "  uninstall         Remove auto-start + PATH line, stop services"
     echo "  version           Show status and version (alias of status)"
     ;;
