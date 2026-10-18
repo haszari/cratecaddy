@@ -47,7 +47,7 @@ The appliance is a **copy** — CrateCaddy keeps running if you move or delete t
 
 This is a **source install**: `cratecaddy install` copies the **built production runtime from a checkout** (branch/commit/state at build time). It does **not** pull a release or tag. Re-running `install` updates in place and preserves data volumes. The checkout is resolved from `--source`, `CRATECADDY_SOURCE`, the current checkout, or the `SOURCE_DIR` recorded by a previous install.
 
-You must run `./scripts/build-prod.sh` before `cratecaddy install` (install checks for `src/api/dist/server.js`). `cratecaddy rebuild-prod` does both and restarts: build → install → start.
+For the **first** install, run `./scripts/build-prod.sh` from the checkout, then `./scripts/prod/cratecaddy install`. After that, use `cratecaddy rebuild-prod` for every update: build → install → start in one step.
 
 If the checkout is unusual (no git repo, not on `main`, detached HEAD, or has uncommitted changes), `cratecaddy install` prints full source details and prompts with: `Installing unusual source version - proceed?` — type `yes` or `y` to continue; any other input aborts.
 

@@ -101,3 +101,4 @@ Music metadata explorer with genre tag clouds. Two independent packages under `s
 - TypeScript ES modules, `tsx` runner for scripts
 - NZ/GB English spelling throughout (favourite, colour, centre, etc.)
 - Names and comments capture design intent: why the thing exists and what it guarantees, not the mechanics of how it works
+- User-facing docs prefer `cratecaddy` commands (`rebuild-prod`, `publish`, `install`, `status`). Repo scripts are implementation detail or first-install fallbacks; mention them only when the CLI cannot be used yet

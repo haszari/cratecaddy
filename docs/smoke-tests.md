@@ -27,7 +27,7 @@ Checks: §1. Dev and prod use separate ports, so leaving dev running is harmless
 
 ```bash
 cratecaddy rebuild-prod          # build from the checkout, install, restart
-# manual equivalent:
+# first install or fallback (the CLI must already be installed for rebuild-prod):
 # ./scripts/build-prod.sh && ./scripts/prod/cratecaddy install && cratecaddy start
 ```
 
@@ -37,7 +37,7 @@ cratecaddy rebuild-prod          # build from the checkout, install, restart
 
 ```bash
 cratecaddy publish              # snapshot prod → check → build → prompt
-# or: ./scripts/publish-static-site.sh --publish-to-github
+cratecaddy publish --publish-to-github
 ```
 
 First time only: create `gh-pages` with a publish, then configure Pages and the custom domain (§0). Checks: §4.
@@ -135,7 +135,7 @@ curl -s localhost:5225/api/version
 ## 3. Static site — local, before publishing
 
 ```bash
-./scripts/publish-static-site.sh            # builds and stops at the publish prompt
+cratecaddy publish --dry-run                # builds and stops at the publish prompt
 ```
 
 - [ ] Prints `prod — mongodb://127.0.0.1:5227/cratecaddy`, not dev
@@ -162,7 +162,7 @@ cd src/ui && npm run preview:static          # http://localhost:5328/cratecaddy/
 ## 4. Publish and post-deploy
 
 ```bash
-./scripts/publish-static-site.sh --publish-to-github
+cratecaddy publish --publish-to-github
 ```
 
 - [ ] Wait for the Pages deployment, then hard-reload the published URL

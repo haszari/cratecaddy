@@ -22,7 +22,7 @@ cratecaddy publish
 cratecaddy publish --publish-to-github     # skip the prompt
 
 # Build locally without publishing, then preview
-./scripts/publish-static-site.sh --dry-run
+cratecaddy publish --dry-run
 cd src/ui && npm run preview:static        # http://localhost:5328/cratecaddy/
 
 # Develop against the static build with the dev Library
