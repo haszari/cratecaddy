@@ -4,6 +4,7 @@ import { buildSongFilter } from '../helpers/buildSongFilter.js';
 import { ApiFilterParams, ApiPaginationParams } from '../helpers/apiParams.js';
 import { parsePagination, PaginationResult } from '../helpers/pagination.js';
 import { buildShuffleHashFunction } from '../helpers/shuffleHash.js';
+import { FALLBACK_SORT_CHAIN } from '../helpers/songQuery.js';
 
 /**
  * Normalize artist and title for database matching
@@ -409,7 +410,6 @@ export class SongService {
       return { data, page, limit, total, totalPages: Math.ceil(total / limit), shuffleSeed };
     }
 
-    const FALLBACK_SORT_CHAIN = ['artist', 'year', 'title', 'rating', 'key', 'bpm'];
     const sortObj: Record<string, 1 | -1> = {};
     const primaryField = sort || FALLBACK_SORT_CHAIN[0];
     const primaryDir: 1 | -1 = sort ? (sortDirection === 'desc' ? -1 : 1) : 1;
