@@ -46,7 +46,7 @@ If the checkout is unusual (no git repo, not on `main`, detached HEAD, or has un
 
 ## Runtime version
 
-`cratecaddy status` shows status. If the API is running, it queries `GET /api/version` on the running app and includes the version string (e.g. `0.1.0+3cfbcab (branch)-dirty`). `cratecaddy version` is an alias of `status` with identical output. Version is determined from the running app only (no file fallback) — if the app is not running, no version is shown.
+`cratecaddy status` shows status. If the API is running, it queries `GET /api/version` on the running app and includes the version string (e.g. `0.1.0+3cfbcab (branch)-dirty`). `cratecaddy version` is an alias of `status` with identical output. Version is determined from the running app only (no file fallback) — if the app is not running, no version is shown. The installed copy has no git metadata, so `build-prod.sh` bakes the commit and branch into the build; when no commit is known at all, the version is just the app version (`0.1.0`), never `0.1.0+unknown`.
 
 
 ## Auto-start on boot
