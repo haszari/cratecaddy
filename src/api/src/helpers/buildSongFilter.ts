@@ -1,3 +1,9 @@
+/**
+ * Translates browse params into a MongoDB query. This is the API's filter
+ * implementation; `songQuery.matchesFilters` is the in-memory equivalent used
+ * by the static site. They are kept deliberately parallel (ADR-0014):
+ * add new filters to both and to `npm run check:static-site-matches-app`.
+ */
 import { FilterQuery } from 'mongoose';
 import { ISong } from '../models/Song.js';
 import { KEY, ApiFilterParams } from './apiParams.js';
@@ -40,6 +46,38 @@ function buildNotCondition(field: 'genres' | 'artist', values: string[]): Filter
     [field]: { $regex: v, $options: 'i' },
   }));
   return { $nor: regexes };
+}
+
+/**
+ * A Song is owned when at least one source is a local file. Any format that is
+ * not the streaming marker counts (codecs can appear that we never enumerate);
+ * a file:// path covers older imports with no format. Songs with only
+ * applemusicstream sources are streaming-only.
+ */
+function ownedSourceCondition(): FilterQuery<ISong> {
+  return {
+    sources: {
+      $elemMatch: {
+        $or: [
+          { format: { $exists: true, $ne: 'applemusicstream' } },
+          { format: { $exists: false }, filePath: { $regex: '^file://' } },
+        ],
+      },
+    },
+  };
+}
+
+function buildOwnershipCondition(ownership: string): FilterQuery<ISong> | null {
+  if (ownership === 'owned') return ownedSourceCondition();
+  if (ownership === 'streaming') {
+    return {
+      $and: [
+        { $nor: [ownedSourceCondition()] },
+        { 'sources.format': 'applemusicstream' },
+      ],
+    };
+  }
+  return null;
 }
 
 function buildSearchCondition(term: string): FilterQuery<ISong> {
@@ -154,6 +192,12 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     } else if (favorite === 'disliked') {
       conditions.push({ favorite: 'disliked' });
     }
+  }
+
+  const ownership = params[KEY.ownership];
+  if (ownership) {
+    const condition = buildOwnershipCondition(ownership);
+    if (condition) conditions.push(condition);
   }
 
   const searchTerm = params[KEY.search];

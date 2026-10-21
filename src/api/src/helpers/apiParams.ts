@@ -10,6 +10,7 @@ export const KEY = {
   ratingGte: 'rating.gte',
   ratingLte: 'rating.lte',
   favorite: 'favorite',
+  ownership: 'ownership',
   search: 'search',
 } as const;
 
@@ -25,6 +26,8 @@ export interface ApiFilterParams {
   [KEY.ratingGte]?: string;
   [KEY.ratingLte]?: string;
   [KEY.favorite]?: string;
+  /** `owned` = has a local file source; `streaming` = cloud only. */
+  [KEY.ownership]?: string;
   [KEY.search]?: string;
 }
 

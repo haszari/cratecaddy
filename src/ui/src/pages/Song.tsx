@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSongById, fetchGenreStats } from '../api/client';
+import { fetchSongById, fetchGenreStats } from '@data';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';

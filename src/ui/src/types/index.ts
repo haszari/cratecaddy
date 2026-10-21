@@ -1,17 +1,20 @@
 export type SourceFormat = 'aiff' | 'wav' | 'alac' | 'aac' | 'mp3' | 'applemusicstream';
 
 export interface ISource {
-  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
+  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local' | 'manual';
   format?: SourceFormat;
   filePath?: string;
+  /** Derived at Snapshot time: a local file, as opposed to a streaming source. */
+  isLocal?: boolean;
   fileSize?: number;
   bitRate?: number;
   fileType?: string;
   sourceMetadata?: {
     isAppleMusic?: boolean;
+    fileType?: string;
     [key: string]: unknown;
   };
-  lastImportDate: Date;
+  lastImportDate?: Date;
 }
 
 export interface Song {

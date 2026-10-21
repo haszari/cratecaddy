@@ -1,5 +1,9 @@
 # Crate Caddy — Domain Language
 
+## Library
+
+The complete set of Songs CrateCaddy manages. The Library is CrateCaddy's own data, not a mirror of a music player: Apple Music, Rekordbox and djay Pro are external systems that exchange Songs with it via Import and Export. A Snapshot is a filtered copy of the Library. See [ADR-0015](./docs/adr/0015-library-is-own-model-not-player-mirror.md).
+
 ## Song
 
 A single track in the library. Source of truth: the `Song` MongoDB document.
@@ -28,6 +32,12 @@ Heavy import provenance (bit rate, file size, dates, track type, protection stat
 
 Data on Song.sources is refreshed each import. Historical source data is recoverable from History.
 
+### Ownership
+
+- **Owned**: at least one source is a local file (a codec other than the streaming marker, or a `file://` path).
+- **Streaming-only**: has a streaming source and no local file.
+- Query param: `ownership=owned|streaming`. A Snapshot defaults to `owned`, so published sites contain no cloud-only Songs.
+
 ### Starred
 
 Three-state triage marker: `'starred'` (Apple Music loved), `'normal'` (default), `'disliked'`. Imported from Apple Music's Loved/Disliked booleans. Displayed in CompactSongTable as a star icon.
@@ -54,6 +64,8 @@ A user edits Song metadata through the in-app UI. Produces a History entry with 
 ## Export (Apple Music)
 
 The UI writes current Song fields back to the Apple Music app via AppleScript. Per-song operation (v1).
+
+Export is interop with another system. Copying the Library for CrateCaddy's own read-only deployment is a **Snapshot**, not an Export.
 
 ### Field mapping
 
@@ -83,6 +95,20 @@ appleMusicId?: string  // Apple Music persistent ID
 ```
 
 Multiple IDs for the same source type (e.g. one streaming + one local Apple Music track) are deferred.
+
+## Snapshot
+
+A point-in-time, filtered copy of the Library, emitted as static data for the static site. A Snapshot is Library data, not a site: the static site is a read-only build that displays one.
+
+- Taken from CrateCaddy's own database — it does not cross a system boundary, so it is not an Export.
+- **Filtered**: a Snapshot contains a chosen subset of the Library (default: songs grouped `DJing`), not necessarily all Songs.
+- **Read-only use**: a Snapshot is displayed, never written. The static site that shows it has no edit, write-back or history capability.
+- **Provenance**: a Snapshot records when it was taken and the app version that produced it, so staleness is visible.
+- **Identity**: Songs keep their `_id`, so Song links are stable across Snapshots.
+
+## Static site
+
+The read-only, offline-capable build of CrateCaddy that displays a Snapshot. It is published to GitHub Pages and contains no write surface. It is not itself a Snapshot — it shows one, and its footer names which.
 
 ## Edit mode UI
 

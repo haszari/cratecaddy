@@ -1,9 +1,14 @@
+/**
+ * The browse pages' shared query pipeline: filter state from the URL, related
+ * tag stats, sorting and shuffle. Pages supply only what makes them different
+ * (genre in the path, artist, favourites, or nothing for Home).
+ */
 import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSongs } from './useSongs';
-import { fetchGenreStats } from '../api/client';
+import { fetchGenreStats } from '@data';
 import { useFilters } from './useFilters';
 import { useSortShuffle } from './useSortShuffle';
 import { withSearch } from '../utils/url';
@@ -34,8 +39,8 @@ interface UseSongPageOptions {
   excludedGenres?: string[];
   /** Extra FilterBar props (favouriteMode, doneHref, etc.) */
   filterBarExtras?: Partial<FilterBarProps>;
-  /** Pre-computed editHref (page provides this) */
-  editHref: string;
+  /** Pre-computed editHref, when the shell offers editing (API build only) */
+  editHref?: string;
 }
 
 export function useSongPage({

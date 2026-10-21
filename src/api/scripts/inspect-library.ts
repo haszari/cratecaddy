@@ -5,13 +5,13 @@
  * Run MongoDB queries interactively or via command line.
  * 
  * Usage:
- *   npm run query:db                    # Interactive mode
- *   npm run query:db "db.songs.countDocuments()"  # Run a query
+ *   npm run inspect:library                    # Interactive mode
+ *   npm run inspect:library "db.songs.countDocuments()"  # Run a query
  * 
  * Examples:
- *   npm run query:db "db.songs.find().limit(5).pretty()"
- *   npm run query:db "db.songs.find({key: {$exists: true}}).count()"
- *   npm run query:db "db.songs.aggregate([{$unwind: '$sources'}, {$group: {_id: '$sources.sourceType', count: {$sum: 1}}}])"
+ *   npm run inspect:library "db.songs.find().limit(5).pretty()"
+ *   npm run inspect:library "db.songs.find({key: {$exists: true}}).count()"
+ *   npm run inspect:library "db.songs.aggregate([{$unwind: '$sources'}, {$group: {_id: '$sources.sourceType', count: {$sum: 1}}}])"
  */
 
 import mongoose from 'mongoose';
@@ -33,7 +33,7 @@ const runQuery = async (query: string) => {
   if (query.toLowerCase().startsWith('search:')) {
     const searchTerm = query.substring(7).trim();
     if (!searchTerm) {
-      console.log('Usage: npm run query:db "search:word"');
+      console.log('Usage: npm run inspect:library "search:word"');
       await mongoose.disconnect();
       return;
     }

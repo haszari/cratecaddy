@@ -28,25 +28,32 @@ npm install --prefix src/ui
 # 4. Install the appliance — copies the built runtime to ~/.cratecaddy and
 #    adds ~/.cratecaddy/bin to your PATH (in ~/.zshrc)
 ./scripts/prod/cratecaddy install
+# The installed `cratecaddy` cannot install itself. Run install from the
+# checkout, or pass --source <checkout> (SOURCE_DIR is recorded at install).
 
 # 5. Start (open a new terminal first, or run: source ~/.zshrc)
 cratecaddy start
+
+# After the first install, a code update is one command:
+#   cratecaddy rebuild-prod        # build from the checkout, install, restart
 ```
 
 Open <http://localhost:5225>.
 
-The appliance is a **copy** — after install you can move or delete the checkout and CrateCaddy keeps working.
+The ordered dev → prod → publish sequence, with checks, is the [release run-through](./docs/smoke-tests.md).
+
+The appliance is a **copy** — CrateCaddy keeps running if you move or delete the checkout. Publishing the static site is the exception: it builds from source, so **keep the checkout** (or point at one with `--source`). Making publishing self-contained in the appliance is a future improvement.
 ## About the install
 
-This is a **source install**: `cratecaddy install` copies the **built production runtime from the current checkout** (branch/commit/state at install time). It does **not** pull a release or tag. Re-running `install` updates in place from the current checkout and preserves data volumes.
+This is a **source install**: `cratecaddy install` copies the **built production runtime from a checkout** (branch/commit/state at build time). It does **not** pull a release or tag. Re-running `install` updates in place and preserves data volumes. The checkout is resolved from `--source`, `CRATECADDY_SOURCE`, the current checkout, or the `SOURCE_DIR` recorded by a previous install.
 
-You must run `./scripts/build-prod.sh` before `cratecaddy install`. The install script checks for `src/api/dist/server.js` and will fail if it's missing.
+For the **first** install, run `./scripts/build-prod.sh` from the checkout, then `./scripts/prod/cratecaddy install`. After that, use `cratecaddy rebuild-prod` for every update: build → install → start in one step.
 
 If the checkout is unusual (no git repo, not on `main`, detached HEAD, or has uncommitted changes), `cratecaddy install` prints full source details and prompts with: `Installing unusual source version - proceed?` — type `yes` or `y` to continue; any other input aborts.
 
 ## Runtime version
 
-`cratecaddy status` shows status. If the API is running, it queries `GET /api/version` on the running app and includes the version string (e.g. `0.1.0+3cfbcab (branch)-dirty`). `cratecaddy version` is an alias of `status` with identical output. Version is determined from the running app only (no file fallback) — if the app is not running, no version is shown.
+The build identity ships in `src/api/dist/VERSION` and is served by `GET /api/version`. `cratecaddy status` shows status. If the API is running, it queries `GET /api/version` on the running app and includes the version string (e.g. `0.1.0+3cfbcab (branch)-dirty`). `cratecaddy version` is an alias of `status` with identical output. Version is determined from the running app only (no file fallback) — if the app is not running, no version is shown. The installed copy has no git metadata, so `build-prod.sh` bakes the commit and branch into the build; when no commit is known at all, the version is just the app version (`0.1.0`), never `0.1.0+unknown`.
 
 
 ## Auto-start on boot
@@ -61,12 +68,18 @@ cratecaddy uninstall    # remove auto-start + PATH line, stop services
 
 | Command | What it does |
 |---|---|
+| `cratecaddy rebuild-prod` | Build from the checkout, install the runtime and restart. Uses the recorded `SOURCE_DIR`; pass `--source <dir>` to override |
 | `cratecaddy start` | Start MongoDB container + API daemon |
 | `cratecaddy stop` | Stop the API and take MongoDB down |
-| `cratecaddy status` | Is it running? |
+| `cratecaddy status` | Is it running? Version, Library song count and last change (end-to-end health, not just a live process) |
 | `cratecaddy logs` | Tail the API log |
 | `cratecaddy import <file>` | Import music metadata (Apple Music XML by default) |
 | `cratecaddy import djay <file>` | Import from djay Pro CSV export |
+| `cratecaddy publish` | Snapshot the prod Library, build the static site, then ask before publishing. Needs the checkout; add `--publish-to-github` to skip the prompt. First-time GitHub Pages setup: [smoke tests](./docs/smoke-tests.md) |
+
+## Smoke testing
+
+After install or update, run the [smoke tests](./docs/smoke-tests.md) against the appliance and the running app.
 
 ## Importing your music library
 
@@ -82,6 +95,7 @@ All values are optional — defaults work as-is. Override by creating `~/.cratec
 API_PORT=5225
 MONGO_PORT=5227
 CRATECADDY_LOG=/path/to/cratecaddy.log
+SOURCE_DIR=/path/to/cratecaddy-checkout   # recorded by install; used by rebuild-prod, install and publish
 ```
 
 After changing config, restart: `cratecaddy restart`.
@@ -98,7 +112,7 @@ The dev workflow is unaffected — separate ports, container, volume, and compos
 
 Installing the appliance creates these things on your machine:
 
-- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file. Source lives at `scripts/prod/cratecaddy` in the repo.
+- `~/.cratecaddy/` — the installed runtime: the CLI (`bin/cratecaddy`), compose files, the launchd plist template, and the built API (`src/api/` with `dist/`, `dist/VERSION`, `node_modules/`, and import scripts) — plus config (`config.env`), the API log, and the PID file. Source lives at `scripts/prod/cratecaddy` in the repo.
 - a PATH line in `~/.zshrc` pointing at `~/.cratecaddy/bin`, so the `cratecaddy` command works from any terminal
 - `cratecaddy-mongodb-prod` — a Docker container running MongoDB 7.0
 - `cratecaddy-prod_cratecaddy-mongo-data-prod` — a named Docker volume holding all prod data (deleting the container does not delete your data)

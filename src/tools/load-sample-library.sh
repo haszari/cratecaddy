@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Seed database with sample songs
-# Usage: ./seed-db.sh
+# Load the sample Library into a dev API that is already running.
+# Usage: ./load-sample-library.sh
 
 API_URL="http://localhost:3000/api/songs"
 DATA_FILE="sample-songs.json"

@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:static": "vite --config vite.static.config.ts",
+    "build:static": "tsc -b && vite build --config vite.static.config.ts",
+    "preview:static": "vite preview --config vite.static.config.ts --port 5328"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -35,6 +38,7 @@
     "sass-embedded": "^1.97.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vite-plugin-pwa": "^2.0.0"
   }
 }

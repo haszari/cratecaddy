@@ -1,3 +1,7 @@
+/**
+ * API data source. The static static site build swaps this module for `snapshotClient`
+ * via the `@data` alias, so hooks and pages never know which one is running.
+ */
 import type { Song, PaginatedResponse } from '../types';
 import { KEY } from '@cratecaddy-api/apiParams';
 import type { ApiSongParams, ApiGenreStatsParams } from '@cratecaddy-api/apiParams';

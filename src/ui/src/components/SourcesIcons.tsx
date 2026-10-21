@@ -1,19 +1,5 @@
 import { Cloud, Gem } from 'lucide-react';
-
-interface ISource {
-  sourceType: 'applemusic' | 'rekordbox' | 'djaypro' | 'local';
-  format?: 'aiff' | 'wav' | 'alac' | 'aac' | 'mp3' | 'applemusicstream';
-  filePath?: string;
-  fileSize?: number;
-  bitRate?: number;
-  fileType?: string;
-  sourceMetadata?: {
-    isAppleMusic?: boolean;
-    fileType?: string;
-    [key: string]: unknown;
-  };
-  lastImportDate: Date;
-}
+import type { ISource } from '../types';
 
 interface SourcesIconsProps {
   sources: ISource[];
@@ -21,8 +7,10 @@ interface SourcesIconsProps {
 
 export function SourcesIcons({ sources }: SourcesIconsProps) {
   const isLocalFile = sources.length > 0 && sources.some(s => {
+    // Snapshots carry a derived flag; API responses are detected from format/path.
+    if (s.isLocal === true) return true;
     if (s.format && s.format !== 'applemusicstream') return true;
-    if (s.filePath && /^file:\/\/(localhost\/|\/)\/Users\//.test(s.filePath)) return true;
+    if (s.filePath?.startsWith('file://')) return true;
     return false;
   });
 

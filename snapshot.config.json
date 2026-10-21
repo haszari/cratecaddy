@@ -1,0 +1,6 @@
+{
+  "grouping": ["DJing"],
+  "filters": {
+    "ownership": "owned"
+  }
+}

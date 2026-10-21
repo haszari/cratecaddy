@@ -12,6 +12,37 @@ CrateCaddy can run as a self-contained service on macOS. MongoDB in Docker, buil
 
 See [PRODUCTION.md](./PRODUCTION.md) for step-by-step install, commands, and what it does to your system.
 
+## Static site
+
+A read-only, offline-capable version of the browse UI can be published from the same library and codebase.
+
+```bash
+# Publish: snapshot the prod Library → check → build → confirm → push
+cratecaddy publish
+cratecaddy publish --publish-to-github     # skip the prompt
+
+# Build locally without publishing, then preview
+cratecaddy publish --dry-run
+cd src/ui && npm run preview:static        # http://localhost:5328/cratecaddy/
+
+# Develop against the static build with the dev Library
+cd src/api && npm run snapshot
+cd ../ui && npm run dev:static
+```
+
+Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-pages` branch. First-time Pages and custom-domain setup, plus per-publish deploy checks, are in [smoke tests](./docs/smoke-tests.md).
+
+- **Snapshot**: point-in-time, filtered copy of the library, defaulting to songs whose grouping contains `DJing` **and that are owned** (a local file, not cloud-only). Filter lives in `snapshot.config.json`, overridable with `--grouping` / filter flags.
+- **Offline**: the app shell and Snapshot are precached; after a first visit it works with no connection. A new Snapshot is fetched and activated automatically, with a "Getting fresh tune data…" signal — no stuck cached version.
+- **Read-only by construction**: the site has no edit route, no write-to-Apple Music and no history. Local file paths and import provenance are stripped from the Snapshot.
+- **Rollback**: each publish archives its build to `src/data/static-deploys/<sha8>/` (gitignored, last 3 kept). Roll back with `cratecaddy publish --publish-archive=<sha8>`.
+- Publishing is manual and local — CI cannot reach the library database.
+- The Snapshot is taken from the **prod** appliance database by default (`--use-dev-library` only for wiring checks).
+
+Run the [smoke tests](./docs/smoke-tests.md) before trusting a build or a publish; the ordered dev → prod → publish sequence is the [release run-through](./docs/smoke-tests.md).
+
+See [plans/20261018-static-site-build.md](./plans/20261018-static-site-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
+
 ## Development
 
 ### First time setup

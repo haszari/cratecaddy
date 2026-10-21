@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { updateSongsBatch, fetchGenreStats, writeToAppleMusicBatch } from '../api/client';
+import { updateSongsBatch, fetchGenreStats, writeToAppleMusicBatch } from '@data';
 import { decomposeGenres } from '../hooks/useGenreDecomposition';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';

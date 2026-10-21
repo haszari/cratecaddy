@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,26 @@ function isGitRepo(): boolean {
   }
 }
 
+/**
+ * A version is `appVersion+commitShort`. When the commit is not known (an
+ * installed copy has no git repo), say just the app version: `0.1.0`, never
+ * `0.1.0+unknown`.
+ */
+function buildVersionString(
+  appVersion: string,
+  gitCommitShort: string,
+  gitBranch: string,
+  gitDirty: boolean,
+): string {
+  const hasCommit = Boolean(gitCommitShort) && gitCommitShort !== 'unknown';
+  let version = hasCommit ? `${appVersion}+${gitCommitShort}` : appVersion;
+  if (hasCommit && gitBranch && gitBranch !== 'main' && gitBranch !== 'master') {
+    version = `${version} (${gitBranch})`;
+  }
+  if (gitDirty) version = `${version}-dirty`;
+  return version;
+}
+
 function computeVersion(): VersionInfo {
   // Read app version from package.json
   let appVersion = '0.1.0';
@@ -47,7 +67,6 @@ function computeVersion(): VersionInfo {
 
   const hasGit = isGitRepo();
   if (!hasGit) {
-    const vUnknown = `${appVersion}+unknown`;
     return {
       appVersion,
       gitCommit: 'unknown',
@@ -55,7 +74,7 @@ function computeVersion(): VersionInfo {
       gitBranch: '',
       gitDirty: false,
       buildTime: new Date().toISOString(),
-      version: vUnknown,
+      version: buildVersionString(appVersion, '', '', false),
     };
   }
 
@@ -77,13 +96,7 @@ function computeVersion(): VersionInfo {
     }
   })();
 
-  let version = `${appVersion}+${gitCommitShort === 'unknown' ? 'unknown' : gitCommitShort}`;
-  if (gitBranch && gitBranch !== 'main') {
-    version = `${version} (${gitBranch})`;
-  }
-  if (gitDirty) {
-    version = `${version}-dirty`;
-  }
+  const version = buildVersionString(appVersion, gitCommitShort, gitBranch, gitDirty);
 
   return {
     appVersion,
@@ -96,39 +109,65 @@ function computeVersion(): VersionInfo {
   };
 }
 
-router.get('/', (req: Request, res: Response) => {
-  try {
-    // Try baked dist first
-    const distPath = path.resolve(__dirname, '../generated/version.js');
-    if (fs.existsSync(distPath)) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const baked = require(distPath) as Partial<VersionInfo> & Record<string, unknown>;
-      const info: VersionInfo = {
-        appVersion: String(baked.APP_VERSION ?? baked.appVersion ?? '0.1.0'),
-        gitCommit: String(baked.GIT_COMMIT ?? baked.gitCommit ?? 'unknown'),
-        gitCommitShort: String(baked.GIT_COMMIT_SHORT ?? baked.gitCommitShort ?? 'unknown'),
-        gitBranch: String(baked.GIT_BRANCH ?? baked.gitBranch ?? ''),
-        gitDirty: Boolean(baked.GIT_DIRTY ?? baked.gitDirty ?? false),
-        buildTime: String(baked.BUILD_TIME ?? baked.buildTime ?? new Date().toISOString()),
-        version: String(baked.VERSION ?? baked.version ?? ''),
-      };
-      // Reconstruct version if missing
-      if (!info.version) {
-        let v = `${info.appVersion}+${info.gitCommitShort === 'unknown' ? 'unknown' : info.gitCommitShort}`;
-        if (info.gitBranch && info.gitBranch !== 'main' && info.gitBranch !== 'master') {
-          v = `${v} (${info.gitBranch})`;
-        }
-        if (info.gitDirty) v = `${v}-dirty`;
-        info.version = v;
-      }
-      return res.json(info);
-    }
-  } catch {
-    // fall through to live compute
-  }
+interface BakedVersionModule {
+  APP_VERSION?: unknown;
+  GIT_COMMIT?: unknown;
+  GIT_COMMIT_SHORT?: unknown;
+  GIT_BRANCH?: unknown;
+  GIT_DIRTY?: unknown;
+  BUILD_TIME?: unknown;
+  VERSION?: unknown;
+}
 
-  const info = computeVersion();
-  return res.json(info);
+let bakedVersion: Promise<VersionInfo | null> | null = null;
+
+/**
+ * The production build writes src/api/src/generated/version.ts, compiled into
+ * dist/generated/version.js. The API is ESM, so it must be imported, not
+ * required: a synchronous require() silently failed in the installed copy and
+ * fell back to live git detection, which reports "unknown" when there is no
+ * repository. Load it once and cache the result.
+ */
+function loadBakedVersion(): Promise<VersionInfo | null> {
+  if (bakedVersion) return bakedVersion;
+
+  bakedVersion = (async () => {
+    const distPath = path.resolve(__dirname, '../generated/version.js');
+    if (!fs.existsSync(distPath)) return null;
+    try {
+      const baked = (await import(pathToFileURL(distPath).href)) as BakedVersionModule;
+      const appVersion = String(baked.APP_VERSION ?? '0.1.0');
+      const gitCommit = String(baked.GIT_COMMIT ?? 'unknown');
+      const gitCommitShort = String(baked.GIT_COMMIT_SHORT ?? 'unknown');
+      const gitBranch = String(baked.GIT_BRANCH ?? '');
+      const gitDirty = Boolean(baked.GIT_DIRTY ?? false);
+      return {
+        appVersion,
+        gitCommit,
+        gitCommitShort,
+        gitBranch,
+        gitDirty,
+        buildTime: String(baked.BUILD_TIME ?? new Date().toISOString()),
+        version: String(
+          baked.VERSION || buildVersionString(appVersion, gitCommitShort, gitBranch, gitDirty),
+        ),
+      };
+    } catch (error) {
+      console.error('Failed to load the baked version:', error);
+      return null;
+    }
+  })();
+
+  return bakedVersion;
+}
+
+router.get('/', async (_req: Request, res: Response) => {
+  const baked = await loadBakedVersion();
+  if (baked) {
+    res.json(baked);
+    return;
+  }
+  res.json(computeVersion());
 });
 
 export default router;
