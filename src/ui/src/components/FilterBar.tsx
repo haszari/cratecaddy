@@ -25,6 +25,8 @@ export interface FilterBarProps {
   doneHref?: string;
   readOnly?: boolean;
   favouriteMode?: 'filter' | 'nav' | 'indicator';
+  /** Where the filled heart leads to switch favourites off (indicator mode). */
+  favouriteHref?: string;
   search?: string;
   onSearchChange?: (val: string) => void;
 }
@@ -34,7 +36,7 @@ export default function FilterBar({
   onRemoveExclude, onBpmChange, onRatingChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
-  favouriteMode = 'filter',
+  favouriteMode = 'filter', favouriteHref,
   search, onSearchChange,
 }: FilterBarProps) {
   const { filters, toggleFavorite } = useFilters();
@@ -66,10 +68,21 @@ export default function FilterBar({
       );
     }
     if (favouriteMode === 'indicator') {
+      if (!favouriteHref || readOnly) {
+        return (
+          <span className="iconButton iconButton--favourite" title="Showing favourited songs">
+            <Heart size={20} fill="currentColor" />
+          </span>
+        );
+      }
       return (
-        <span className="iconButton iconButton--favourite" title="Showing favourited songs">
+        <Link
+          to={favouriteHref}
+          className="iconButton iconButton--favourite"
+          title="Show all songs"
+        >
           <Heart size={20} fill="currentColor" />
-        </span>
+        </Link>
       );
     }
     const active = filters.favoriteActive;

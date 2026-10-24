@@ -5,7 +5,7 @@ import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
-import { buildEditUrl } from '../utils/urlBuilder';
+import { buildEditUrl, buildWithoutFavouritesUrl } from '../utils/urlBuilder';
 import { useEditLinks } from '../shell/EditLinksContext';
 import { splitCSV } from '../utils/urlParams';
 import { Heart } from 'lucide-react';
@@ -37,7 +37,10 @@ export default function Favourited() {
     genreParamKey: KEY.genreAll,
     genreStatsKey: ['genreStats', 'favourite', requiredGenres.join(',') || undefined, filters],
     excludedGenres: requiredGenres,
-    filterBarExtras: { favouriteMode: 'indicator' },
+    filterBarExtras: {
+      favouriteMode: 'indicator',
+      favouriteHref: buildWithoutFavouritesUrl(location.search),
+    },
     editHref,
   });
 

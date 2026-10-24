@@ -31,6 +31,25 @@ export function buildEditUrl(
   return `/edit-metadata?${params.toString()}`;
 }
 
+/**
+ * The same list with the favourites filter switched off. Favourites is a route
+ * (`/favourited`) rather than a param, so turning it off means leaving for the
+ * equivalent browse view — keeping the genre context and every other filter.
+ */
+export function buildWithoutFavouritesUrl(currentSearch: string): string {
+  const params = new URLSearchParams(currentSearch);
+  const genreAll = params.get('genre.all');
+  params.delete('genre.all');
+  params.delete('favorite');
+
+  const path = genreAll
+    ? `/genre/${genreAll.split(',').filter(Boolean).map(encodeURIComponent).join('+')}`
+    : '/';
+
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 export function buildViewUrl(editSearch: string): string {
   const params = new URLSearchParams(editSearch);
   let viewType = params.get('fromViewType');
