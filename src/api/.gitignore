@@ -8,5 +8,5 @@ dist/
 # Generated at build time
 src/generated/
 
-# Captured stdout of `npm run artists:export`
+# Stray artist roster exports (workflow removed; guard against accidental commits)
 artists.csv

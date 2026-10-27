@@ -14,9 +14,6 @@
     "import:djaypro": "tsx scripts/import-djaypro.ts",
     "snapshot": "tsx scripts/snapshot.ts",
     "inspect:library": "tsx scripts/inspect-library.ts",
-    "artists:export": "tsx scripts/artists-export.ts",
-    "artists:enrich": "tsx scripts/artists-enrich.ts",
-    "artists:enrich-nz": "tsx scripts/artists-enrich-nz.ts",
     "check:static-site-matches-app": "tsx scripts/check-static-site-matches-app.ts"
   },
   "dependencies": {
