@@ -21,6 +21,7 @@ The doc is maintained in the repo and serves several purposes over time:
 - Import + Apple Music sync = part of **Curate**, not fenced off. It is custom for one user today, prototype of a more general import/tag-rules/sync feature later.
 - Static build = Explore only, read-only. Perform + setlists/playlists out of Explore for now; may relax as Perform develops.
 - Working rules (design/audit principles) stay in this plan doc, not the user-facing doc.
+- A fourth bucket, **Platform**, covers dev, architecture and major shifts. It supports the three user activities but competes with them for effort planning. Not a user activity — stays out of `docs/activities.md`.
 
 ## 3) Naming history
 

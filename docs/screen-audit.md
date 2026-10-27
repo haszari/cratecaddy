@@ -92,7 +92,7 @@ Maps every entry point (UI screen + CLI command) to its user actions, then to on
 ### Perform (assemble ordered music)
 - none yet — playlists, setlists, shows, live tracking (future)
 
-### No user activity — system/developer fence (not UX, not in `docs/activities.md`)
+### Platform (dev / architecture / major shifts — supports the three, not a user activity)
 - Appliance: start / stop / restart / status / version / logs / install / uninstall / rebuild-prod
 - Publish + maintenance: `cratecaddy publish`, `snapshot`, `inspect:library`, `check:static-site-matches-app`
 
