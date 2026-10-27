@@ -40,22 +40,9 @@ Note: `browse == explore` — same thing, synonym only. `discover` is outside th
 - Any screen with a write surface must map to exactly one of Curate or Perform.
 - A feature that serves no activity is cruft: fence it or trim it.
 
-## 5) Screen audit — reference
+## 5) Screen audit
 
-Screens and flows to audit against the three activities, listed under their primary activity:
-
-- Home / tag cloud
-- Genre detail
-- Artist page
-- Song detail
-- Edit mode / edit form
-- Favourited page
-- Search
-- Import flows (apple, djay, rekordbox)
-- Export / sync to Apple Music
-- Static site build
-
-Status / misfits noted per screen. Result feeds back into `docs/activities.md` only if it changes the activities themselves.
+Durable map lives in `docs/screen-audit.md` — entry points (screens + CLI) → user actions → activity.
 
 ## 6) Todo / progress
 
@@ -63,9 +50,9 @@ Status / misfits noted per screen. Result feeds back into `docs/activities.md` o
 - [x] Grill to refine broad categories (timebox ~5 questions, stable categories)
 - [x] Brainstorm names; save single-word names + alternatives for history
 - [x] Produce placeholder doc: ~3 categories, single-word names, synonyms + 1-sentence explanation
-- [ ] Audit existing functionality screen by screen
-- [ ] Each screen serves one category only (or as primary)
-- [ ] List each flow / user pathway under the appropriate header
+- [x] Audit existing functionality screen by screen
+- [x] Each screen serves one category only (or as primary)
+- [x] List each flow / user pathway under the appropriate header
 - [ ] Confirm categories stable enough to build out more functionality
 - [ ] Evaluate general-purpose vs developer-customised; fence off idiosyncratic stuff
 - [ ] Document full version vs static version differences simply
