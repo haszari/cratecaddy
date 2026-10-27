@@ -7,3 +7,6 @@ dist/
 
 # Generated at build time
 src/generated/
+
+# Stray artist roster exports (workflow removed; guard against accidental commits)
+artists.csv
