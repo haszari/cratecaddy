@@ -81,12 +81,13 @@ Maps every entry point (UI screen + CLI command) to its user actions, then to on
 ## Carve — entry point → activity
 
 ### Explore (read-only browse/filter)
-- Home, Genre, Artist, Favourited, Song
+- Home, Genre, Artist, Song
 
 ### Curate (manage collection: edit, bring in, sync out)
 - Edit `/edit-metadata` screen (single + bulk edit, history)
 - `cratecaddy import [dev|prod] [apple|djay] <file>` / `npm run import:rekordbox`
 - Save to Apple Music (single + batch)
+- Favourited `/favourited` — process / review list while curating
 
 ### Perform (assemble ordered music)
 - none yet — playlists, setlists, shows, live tracking (future)
