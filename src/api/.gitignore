@@ -7,3 +7,6 @@ dist/
 
 # Generated at build time
 src/generated/
+
+# Captured stdout of `npm run artists:export`
+artists.csv
