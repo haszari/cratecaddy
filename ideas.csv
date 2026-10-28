@@ -50,3 +50,4 @@ Edit/detail should show all versions of a song,Curate,feature,,
 "Normalise musical key: convert flats to sharps, and support Camelot notation",Curate,improvement,,
 "Scope storing database in cloud (e.g. Dynamo) with replication and events, user auth, feeding site similar to static + local client",Platform,feature,,
 "Favourites should work like other filters — toggling off keeps filter context, no rebuild penalty",Curate,improvement,,#27
+Pull cover art from Apple Music so songs are visually identifiable while browsing,Explore,feature,,
