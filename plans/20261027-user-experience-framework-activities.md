@@ -40,6 +40,7 @@ Note: `browse == explore` — same thing, synonym only. `discover` is outside th
 - Static build implements Explore only — read-only, no write surface.
 - Any screen with a write surface must map to exactly one of Curate or Perform.
 - A feature that serves no activity is cruft: fence it or trim it.
+- UI stays lean and focuses on content, not chrome, help or walkthroughs.
 
 ## 5) Screen audit
 
