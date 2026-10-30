@@ -49,7 +49,6 @@ Edit/detail should show all versions of a song,Curate,feature,,,
 "Keep only one version of a song, e.g. the purchased version",Curate,feature,,,
 "Normalise musical key: convert flats to sharps, and support Camelot notation",Curate,improvement,,,
 "Scope storing database in cloud (e.g. Dynamo) with replication and events, user auth, feeding site similar to static + local client",Platform,feature,,,
-"Favourites should work like other filters — toggling off keeps filter context, no rebuild penalty",Curate,improvement,,,https://github.com/haszari/cratecaddy/pull/27
 Pull cover art from Apple Music so songs are visually identifiable while browsing,Explore,feature,,,
 "Grouping should always render as `DJing, Listening`, prioritising DJing when saving to Apple Music/tags",Curate,improvement,,https://github.com/haszari/cratecaddy/issues/22,
 Sync favourite / starred / heart state quickly and easily from Apple Music,Curate,feature,,https://github.com/haszari/cratecaddy/issues/18,
