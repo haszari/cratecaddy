@@ -19,7 +19,7 @@ export interface FilterBarProps {
   bpmLte?: number;
   ratingGte?: number;
   ratingLte?: number;
-  key?: string;
+  musicalKey?: string;
   keyTolerance?: number;
   yearGte?: number;
   yearLte?: number;
@@ -45,7 +45,7 @@ export interface FilterBarProps {
 
 export default function FilterBar({
   genreNot, bpmGte, bpmLte, ratingGte, ratingLte,
-  key, keyTolerance, yearGte, yearLte, ownership,
+  musicalKey, keyTolerance, yearGte, yearLte, ownership,
   onRemoveExclude, onBpmChange, onRatingChange,
   onKeyChange, onYearChange, onOwnershipChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
@@ -73,7 +73,7 @@ export default function FilterBar({
   const showSearch = search !== undefined || onSearchChange;
   const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
   const showRating = onRatingChange !== undefined || (readOnly && hasRating);
-  const showKey = onKeyChange !== undefined || (readOnly && key !== undefined);
+  const showKey = onKeyChange !== undefined || (readOnly && musicalKey !== undefined);
   const showYear = onYearChange !== undefined || (readOnly && (yearGte !== undefined || yearLte !== undefined));
 
   const renderHeart = () => {
@@ -180,7 +180,7 @@ export default function FilterBar({
 
         {showKey && (
           <KeyFilter
-            musicalKey={key}
+            musicalKey={musicalKey}
             keyTolerance={keyTolerance}
             onChange={readOnly ? undefined : onKeyChange}
             readOnly={readOnly}

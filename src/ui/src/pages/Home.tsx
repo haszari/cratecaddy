@@ -71,7 +71,7 @@ export default function Home() {
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
         onRatingChange={setRatingRange}
-        key={filters.key}
+        musicalKey={filters.key}
         keyTolerance={filters.keyTolerance}
         onKeyChange={setKeyRange}
         yearGte={filters.yearGte}
