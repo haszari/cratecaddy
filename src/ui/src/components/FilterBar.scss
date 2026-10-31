@@ -22,6 +22,10 @@
     flex-shrink: 0;
   }
 
+  .FilterBar-toggle {
+    display: none;
+  }
+
   .FilterBar-excludeGroup {
     display: flex;
     flex-wrap: wrap;
@@ -111,6 +115,10 @@
     justify-content: center;
   }
 
+  .FilterBar .FilterBar-toggle {
+    display: inline-flex;
+  }
+
   .FilterBar .FilterBar-navGroup,
   .FilterBar .FilterBar-excludeGroup,
   .FilterBar .FilterBar-filterGroup {
@@ -120,5 +128,10 @@
 
   .FilterBar .FilterBar-navGroup {
     flex-wrap: wrap;
+  }
+
+  .FilterBar.FilterBar--collapsed .FilterBar-excludeGroup,
+  .FilterBar.FilterBar--collapsed .FilterBar-filterGroup {
+    display: none;
   }
 }

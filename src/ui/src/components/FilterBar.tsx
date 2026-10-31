@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDebouncedValue } from '@mantine/hooks';
 import { TextInput } from '@mantine/core';
 import './FilterBar.scss';
-import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
+import { X, House, Pencil, ArrowLeft, Heart, Search, SlidersHorizontal } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 import TempoRangeControl from './TempoRangeControl';
 import StarRatingFilter from './StarRatingFilter';
@@ -58,6 +58,7 @@ export default function FilterBar({
 }: FilterBarProps) {
   const { filters, toggleFavorite } = useFilters();
   const isApiBuild = useEditLinks();
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
   const [prevSearch, setPrevSearch] = useState(search);
@@ -118,8 +119,15 @@ export default function FilterBar({
   };
 
   return (
-    <div className="FilterBar">
+    <div className={`FilterBar${filtersOpen ? '' : ' FilterBar--collapsed'}`}>
       <div className="FilterBar-navGroup">
+        <button
+          className="iconButton FilterBar-toggle"
+          onClick={() => setFiltersOpen((open) => !open)}
+          title={filtersOpen ? 'Hide filters' : 'Show filters'}
+        >
+          {filtersOpen ? <X size={20} /> : <SlidersHorizontal size={20} />}
+        </button>
         <Link to="/" className="iconButton" title="Home">
           <House size={20} />
         </Link>
