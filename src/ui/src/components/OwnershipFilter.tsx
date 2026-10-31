@@ -42,10 +42,10 @@ export default function OwnershipFilter({ value, onChange }: OwnershipFilterProp
             : 'Cloud only'
       }
     >
-      <Cloud size="1.1em" className="OwnershipFilter-cloud OwnershipFilter-cloud-fill" />
-      <Cloud size="1.1em" className="OwnershipFilter-cloud OwnershipFilter-cloud-outline" />
-      <Handbag size="1.1em" className="OwnershipFilter-handbag OwnershipFilter-handbag-fill" />
-      <Handbag size="1.1em" className="OwnershipFilter-handbag OwnershipFilter-handbag-outline" />
+      <Cloud size="1.1em" strokeWidth={1.5} className="OwnershipFilter-cloud OwnershipFilter-cloud-fill" />
+      <Cloud size="1.1em" strokeWidth={1.5} className="OwnershipFilter-cloud OwnershipFilter-cloud-outline" />
+      <Handbag size="1.1em" strokeWidth={1.5} className="OwnershipFilter-handbag OwnershipFilter-handbag-fill" />
+      <Handbag size="1.1em" strokeWidth={1.5} className="OwnershipFilter-handbag OwnershipFilter-handbag-outline" />
     </span>
   );
 }
