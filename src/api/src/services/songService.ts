@@ -411,12 +411,14 @@ export class SongService {
     }
 
     const sortObj: Record<string, 1 | -1> = {};
+    // Key sorts by canonical Camelot index, not the note-name string.
+    const mongoField = (field: string) => (field === 'key' ? 'keyCamelot' : field);
     const primaryField = sort || FALLBACK_SORT_CHAIN[0];
     const primaryDir: 1 | -1 = sort ? (sortDirection === 'desc' ? -1 : 1) : 1;
-    sortObj[primaryField] = primaryDir;
+    sortObj[mongoField(primaryField)] = primaryDir;
     for (const field of FALLBACK_SORT_CHAIN) {
       if (field !== primaryField) {
-        sortObj[field] = 1;
+        sortObj[mongoField(field)] = 1;
       }
     }
 

@@ -9,6 +9,10 @@ export const KEY = {
   bpmLte: 'bpm.lte',
   ratingGte: 'rating.gte',
   ratingLte: 'rating.lte',
+  key: 'key',
+  keyTolerance: 'key.tolerance',
+  yearGte: 'year.gte',
+  yearLte: 'year.lte',
   favorite: 'favorite',
   ownership: 'ownership',
   search: 'search',
@@ -25,6 +29,12 @@ export interface ApiFilterParams {
   [KEY.bpmLte]?: string;
   [KEY.ratingGte]?: string;
   [KEY.ratingLte]?: string;
+  /** Target key (note name or Camelot index/label). */
+  [KEY.key]?: string;
+  /** ±N Camelot wheel steps around the target key. */
+  [KEY.keyTolerance]?: string;
+  [KEY.yearGte]?: string;
+  [KEY.yearLte]?: string;
   [KEY.favorite]?: string;
   /** `owned` = has a local file source; `streaming` = cloud only. */
   [KEY.ownership]?: string;
@@ -54,7 +64,12 @@ export function buildApiParams(filters: {
   bpmLte?: number;
   ratingGte?: number;
   ratingLte?: number;
+  key?: string;
+  keyTolerance?: number;
+  yearGte?: number;
+  yearLte?: number;
   favoriteActive?: boolean;
+  ownership?: string;
   search?: string;
 }): ApiFilterParams {
   const params: ApiFilterParams = {};
@@ -73,8 +88,23 @@ export function buildApiParams(filters: {
   if (filters.ratingLte !== undefined) {
     params[KEY.ratingLte] = String(filters.ratingLte);
   }
+  if (filters.key) {
+    params[KEY.key] = filters.key;
+  }
+  if (filters.keyTolerance !== undefined) {
+    params[KEY.keyTolerance] = String(filters.keyTolerance);
+  }
+  if (filters.yearGte !== undefined) {
+    params[KEY.yearGte] = String(filters.yearGte);
+  }
+  if (filters.yearLte !== undefined) {
+    params[KEY.yearLte] = String(filters.yearLte);
+  }
   if (filters.favoriteActive) {
     params[KEY.favorite] = 'true';
+  }
+  if (filters.ownership) {
+    params[KEY.ownership] = filters.ownership;
   }
   if (filters.search) {
     params[KEY.search] = filters.search;

@@ -9,6 +9,11 @@ export interface FilterState {
   bpmLte?: number;
   ratingGte?: number;
   ratingLte?: number;
+  key?: string;
+  keyTolerance?: number;
+  yearGte?: number;
+  yearLte?: number;
+  ownership?: string;
   favoriteActive: boolean;
   search: string;
 }
@@ -34,6 +39,20 @@ export function useFilters() {
       const v = searchParams.get(KEY.ratingLte);
       return v ? parseFloat(v) : undefined;
     })(),
+    key: searchParams.get(KEY.key) ?? undefined,
+    keyTolerance: (() => {
+      const v = searchParams.get(KEY.keyTolerance);
+      return v ? parseInt(v, 10) : undefined;
+    })(),
+    yearGte: (() => {
+      const v = searchParams.get(KEY.yearGte);
+      return v ? parseInt(v, 10) : undefined;
+    })(),
+    yearLte: (() => {
+      const v = searchParams.get(KEY.yearLte);
+      return v ? parseInt(v, 10) : undefined;
+    })(),
+    ownership: searchParams.get(KEY.ownership) ?? undefined,
     favoriteActive: searchParams.get(KEY.favorite) === 'true',
     search: searchParams.get(KEY.search) ?? '',
   };
@@ -81,6 +100,35 @@ export function useFilters() {
     [setSearchParams],
   );
 
+  const setKeyRange = useCallback(
+    (key?: string, tolerance?: number) => {
+      setSearchParams((prev) => {
+        let next = setParam(prev, KEY.key, key || null);
+        next = setParam(next, KEY.keyTolerance, tolerance !== undefined ? String(tolerance) : null);
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
+
+  const setYearRange = useCallback(
+    (gte?: number, lte?: number) => {
+      setSearchParams((prev) => {
+        let next = setParam(prev, KEY.yearGte, gte !== undefined ? String(gte) : null);
+        next = setParam(next, KEY.yearLte, lte !== undefined ? String(lte) : null);
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
+
+  const setOwnership = useCallback(
+    (value?: string) => {
+      setSearchParams((prev) => setParam(prev, KEY.ownership, value || null));
+    },
+    [setSearchParams],
+  );
+
   const toggleFavorite = useCallback(() => {
     setSearchParams((prev) => {
       const current = prev.get(KEY.favorite);
@@ -96,10 +144,7 @@ export function useFilters() {
 
   const setSearch = useCallback(
     (value: string) => {
-      setSearchParams((prev) =>
-        setParam(prev, KEY.search, value || null),
-
-      );
+      setSearchParams((prev) => setParam(prev, KEY.search, value || null));
     },
     [setSearchParams],
   );
@@ -111,6 +156,11 @@ export function useFilters() {
       next = setParam(next, KEY.bpmLte, null);
       next = setParam(next, KEY.ratingGte, null);
       next = setParam(next, KEY.ratingLte, null);
+      next = setParam(next, KEY.key, null);
+      next = setParam(next, KEY.keyTolerance, null);
+      next = setParam(next, KEY.yearGte, null);
+      next = setParam(next, KEY.yearLte, null);
+      next = setParam(next, KEY.ownership, null);
       next = setParam(next, KEY.favorite, null);
       next = setParam(next, KEY.search, null);
       return next;
@@ -123,6 +173,10 @@ export function useFilters() {
     filters.bpmLte !== undefined ||
     filters.ratingGte !== undefined ||
     filters.ratingLte !== undefined ||
+    filters.key !== undefined ||
+    filters.yearGte !== undefined ||
+    filters.yearLte !== undefined ||
+    filters.ownership !== undefined ||
     filters.favoriteActive ||
     filters.search !== '';
 
@@ -132,6 +186,9 @@ export function useFilters() {
     removeExclude,
     setBpmRange,
     setRatingRange,
+    setKeyRange,
+    setYearRange,
+    setOwnership,
     toggleFavorite,
     setSearch,
     clearFilters,

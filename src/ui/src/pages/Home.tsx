@@ -20,6 +20,7 @@ export default function Home() {
     addExclude,
     removeExclude,
     setBpmRange, setRatingRange, setSearch,
+    setKeyRange, setYearRange, setOwnership,
   } = useFilters();
 
   const extraParams = buildApiParams(filters);
@@ -70,6 +71,14 @@ export default function Home() {
         onRemoveExclude={removeExclude}
         onBpmChange={setBpmRange}
         onRatingChange={setRatingRange}
+        key={filters.key}
+        keyTolerance={filters.keyTolerance}
+        onKeyChange={setKeyRange}
+        yearGte={filters.yearGte}
+        yearLte={filters.yearLte}
+        onYearChange={setYearRange}
+        ownership={filters.ownership}
+        onOwnershipChange={setOwnership}
         shuffleActive={shuffleMode}
         onShuffleToggle={toggleShuffle}
         onShuffleReseed={reshuffle}

@@ -7,7 +7,11 @@ import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 import TempoRangeControl from './TempoRangeControl';
 import StarRatingFilter from './StarRatingFilter';
+import KeyFilter from './KeyFilter';
+import YearRangeControl from './YearRangeControl';
+import OwnershipFilter from './OwnershipFilter';
 import { useFilters } from '../hooks/useFilters';
+import { useEditLinks } from '../shell/EditLinksContext';
 
 export interface FilterBarProps {
   genreNot: string[];
@@ -15,9 +19,17 @@ export interface FilterBarProps {
   bpmLte?: number;
   ratingGte?: number;
   ratingLte?: number;
+  key?: string;
+  keyTolerance?: number;
+  yearGte?: number;
+  yearLte?: number;
+  ownership?: string;
   onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
   onRatingChange?: (gte?: number, lte?: number) => void;
+  onKeyChange?: (key?: string, tolerance?: number) => void;
+  onYearChange?: (gte?: number, lte?: number) => void;
+  onOwnershipChange?: (value?: string) => void;
   shuffleActive?: boolean;
   onShuffleToggle?: (active: boolean) => void;
   onShuffleReseed?: () => void;
@@ -33,13 +45,16 @@ export interface FilterBarProps {
 
 export default function FilterBar({
   genreNot, bpmGte, bpmLte, ratingGte, ratingLte,
+  key, keyTolerance, yearGte, yearLte, ownership,
   onRemoveExclude, onBpmChange, onRatingChange,
+  onKeyChange, onYearChange, onOwnershipChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
   favouriteMode = 'filter', favouriteHref,
   search, onSearchChange,
 }: FilterBarProps) {
   const { filters, toggleFavorite } = useFilters();
+  const isApiBuild = useEditLinks();
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
   const [prevSearch, setPrevSearch] = useState(search);
@@ -58,6 +73,8 @@ export default function FilterBar({
   const showSearch = search !== undefined || onSearchChange;
   const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
   const showRating = onRatingChange !== undefined || (readOnly && hasRating);
+  const showKey = onKeyChange !== undefined || (readOnly && key !== undefined);
+  const showYear = onYearChange !== undefined || (readOnly && (yearGte !== undefined || yearLte !== undefined));
 
   const renderHeart = () => {
     if (favouriteMode === 'nav') {
@@ -159,6 +176,28 @@ export default function FilterBar({
             onChange={readOnly ? undefined : onBpmChange}
             readOnly={readOnly}
           />
+        )}
+
+        {showKey && (
+          <KeyFilter
+            key={key}
+            keyTolerance={keyTolerance}
+            onChange={readOnly ? undefined : onKeyChange}
+            readOnly={readOnly}
+          />
+        )}
+
+        {showYear && (
+          <YearRangeControl
+            yearGte={yearGte}
+            yearLte={yearLte}
+            onChange={readOnly ? undefined : onYearChange}
+            readOnly={readOnly}
+          />
+        )}
+
+        {isApiBuild && onOwnershipChange && (
+          <OwnershipFilter value={ownership} onChange={onOwnershipChange} />
         )}
 
         {showSearch && (

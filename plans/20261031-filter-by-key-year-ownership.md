@@ -22,34 +22,33 @@ Add three browse filters, built with Mantine UI. Issue: https://github.com/hasza
 
 ### Key filter
 
+- **Canonical key identity = Camelot index** (`keyCamelot` 0–23). `key` (note name) stays as a stored rendering; `keyCamelot` is the source of truth for filter + sort. Note name is derived/rendered from the index.
 - Add shared key module (reversible note↔Camelot + distance) under `src/api/src/helpers/`, consumed by both filter implementations and the UI via the `@cratecaddy-api` alias.
-- Params: `key` (target key) + `key.tolerance` (±N steps on the Camelot wheel).
-- Matching: compute the set of keys within N steps of the target (both A and B wheels), filter `key ∈ set`. No schema change.
+- Params: `key` (target key) + `key.tolerance` (±N steps on the Camelot wheel, 1–3).
+- Matching: compute the set of keys within N steps of the target (both A and B wheels), filter by canonical Camelot index.
 - UI: Mantine control (centre key + tolerance stepper), mirroring the tempo range pattern.
+- Note: Apple Music comment could also carry `camelotKey=` — code comment for future, not now.
 
 ### Key sort (Camelot/similarity)
 
-- Open: absolute Camelot order, or distance-from-selected-key when a key filter is active. Mongo sort needs a stored/computed value — see open questions.
+- Absolute Camelot order (not distance-from-filter).
+- Store derived `keyCamelot` (0–23, null when missing) via pre-save hook + one-off backfill. Mongo sorts on it; static site derives the same value from `key` in JS.
 
 ### Year filter
 
 - Params: `year.gte` / `year.lte` (numeric range, same shape as bpm/rating).
-- UI: Mantine range control (centre + spread, or explicit min/max slider).
+- UI: centre + spread (like tempo), with easy decade jumping (±10 / decade pick).
 
 ### Ownership filter
 
 - UI: Mantine `SegmentedControl` — All / Owned / Streaming.
 - Wire `ownership` into `FilterState`, `buildApiParams`, `clearFilters`, `hasActiveFilters`, `FilterBar`.
-- Static build: snapshot is owned-only by default — decide whether to show the control there.
+- Hidden in the static build (snapshot is owned-only by default).
 
-## 4) Open questions (to grill)
+### Control placement
 
-1. Key tolerance semantics — Camelot steps (max ±6), or semitone distance?
-2. Key sort — absolute Camelot order, or distance from the filtered key?
-3. Key sort implementation — store derived Camelot field (backfill), or compute in-memory / aggregation?
-4. Year tolerance UX — centre+spread (like tempo) or explicit min/max range?
-5. Ownership in static build — hide (snapshot is owned-only) or show?
-6. Control placement — extend the FilterBar row, or move filters into a popover?
+- Add the three controls inline in the FilterBar filter group.
+- Modern CSS (flex-wrap) with grouping so the bar wraps cleanly and keeps hierarchy.
 
 ## 5) Files touched (expected)
 

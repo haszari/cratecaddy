@@ -78,6 +78,16 @@ const CASES: ParityCase[] = [
   { name: 'ownership owned + genre.all', params: { [KEY.ownership]: 'owned', [KEY.genreAll]: 'House' } },
   { name: 'ownership ignored value', params: { [KEY.ownership]: 'borrowed' } },
 
+  { name: 'key note name', params: { [KEY.key]: 'Am' } },
+  { name: 'key camelot label', params: { [KEY.key]: '8A', [KEY.keyTolerance]: '0' } },
+  { name: 'key tolerance', params: { [KEY.key]: '8A', [KEY.keyTolerance]: '2' } },
+  { name: 'key invalid', params: { [KEY.key]: 'Hm' } },
+
+  { name: 'year.gte only', params: { [KEY.yearGte]: '1995' } },
+  { name: 'year.lte only', params: { [KEY.yearLte]: '2000' } },
+  { name: 'year range', params: { [KEY.yearGte]: '1990', [KEY.yearLte]: '2000' } },
+  { name: 'year inverted range', params: { [KEY.yearGte]: '2000', [KEY.yearLte]: '1990' } },
+
   { name: 'search artist', params: { [KEY.search]: 'bailey' } },
   { name: 'search title', params: { [KEY.search]: 'love' } },
   { name: 'search genre', params: { [KEY.search]: 'house' } },

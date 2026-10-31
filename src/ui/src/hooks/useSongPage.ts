@@ -67,6 +67,7 @@ export function useSongPage({
   const {
     filters, addExclude,
     removeExclude, setBpmRange, setRatingRange, setSearch,
+    setKeyRange, setYearRange, setOwnership,
   } = useFilters();
 
   const handleSort = useCallback((field: SortField, direction: SortDirection) => {
@@ -212,6 +213,14 @@ export function useSongPage({
     onRemoveExclude: removeExclude,
     onBpmChange: setBpmRange,
     onRatingChange: setRatingRange,
+    key: filters.key,
+    keyTolerance: filters.keyTolerance,
+    onKeyChange: setKeyRange,
+    yearGte: filters.yearGte,
+    yearLte: filters.yearLte,
+    onYearChange: setYearRange,
+    ownership: filters.ownership,
+    onOwnershipChange: setOwnership,
     shuffleActive: shuffleMode,
     onShuffleToggle: handleShuffleToggle,
     onShuffleReseed: reshuffle,
@@ -229,6 +238,9 @@ export function useSongPage({
     removeExclude,
     setBpmRange,
     setRatingRange,
+    setKeyRange,
+    setYearRange,
+    setOwnership,
     setSearch,
     sortField,
     sortDirection,

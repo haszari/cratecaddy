@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { normalizeArtistTitle, normalizeGenres } from '../services/songService.js';
+import { keyToIndex } from '../helpers/musicalKey.js';
 
 export type SourceFormat = 'aiff' | 'wav' | 'alac' | 'aac' | 'mp3' | 'applemusicstream';
 
@@ -25,7 +26,8 @@ export interface ISong extends Document {
   grouping: string[];
   bpm?: number;
   year?: number;
-  key?: string; // Musical key (e.g., "Am", "G", "F#m")
+  key?: string; // Musical key (e.g., "Am", "G", "F#m") — rendered from keyCamelot
+  keyCamelot?: number; // Canonical Camelot index 0..23 (standard wheel); source of truth
   rating?: number; // 0-5 scale (can be fractional)
   favorite?: 'starred' | 'normal' | 'disliked'; // Triage marker
   artistTitleNormalized: string; // Normalized artist + title for fast matching
@@ -122,6 +124,10 @@ const songSchema = new Schema<ISong>(
       trim: true,
       index: true,
     },
+    keyCamelot: {
+      type: Number,
+      index: true,
+    },
     rating: {
       type: Number, // 0-5 scale (can be fractional)
     },
@@ -166,6 +172,11 @@ songSchema.pre('validate', function(next) {
   // Normalize genres: trim whitespace and remove duplicates (case-sensitive)
   if (this.isModified('genres') || this.isNew) {
     this.genres = normalizeGenres(this.genres);
+  }
+
+  // Derive canonical Camelot index from the key note name.
+  if (this.isModified('key') || this.isNew) {
+    this.keyCamelot = keyToIndex(this.key) ?? undefined;
   }
 
   next();
