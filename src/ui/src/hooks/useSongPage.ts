@@ -213,7 +213,7 @@ export function useSongPage({
     onRemoveExclude: removeExclude,
     onBpmChange: setBpmRange,
     onRatingChange: setRatingRange,
-    musicalKey: filters.key,
+    musicalKey: filters.musicalKey,
     keyTolerance: filters.keyTolerance,
     onKeyChange: setKeyRange,
     yearGte: filters.yearGte,

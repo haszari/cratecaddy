@@ -64,7 +64,7 @@ export function buildApiParams(filters: {
   bpmLte?: number;
   ratingGte?: number;
   ratingLte?: number;
-  key?: string;
+  musicalKey?: string;
   keyTolerance?: number;
   yearGte?: number;
   yearLte?: number;
@@ -88,8 +88,8 @@ export function buildApiParams(filters: {
   if (filters.ratingLte !== undefined) {
     params[KEY.ratingLte] = String(filters.ratingLte);
   }
-  if (filters.key) {
-    params[KEY.key] = filters.key;
+  if (filters.musicalKey) {
+    params[KEY.key] = filters.musicalKey;
   }
   if (filters.keyTolerance !== undefined) {
     params[KEY.keyTolerance] = String(filters.keyTolerance);

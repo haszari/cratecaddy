@@ -9,7 +9,7 @@ export interface FilterState {
   bpmLte?: number;
   ratingGte?: number;
   ratingLte?: number;
-  key?: string;
+  musicalKey?: string;
   keyTolerance?: number;
   yearGte?: number;
   yearLte?: number;
@@ -39,7 +39,7 @@ export function useFilters() {
       const v = searchParams.get(KEY.ratingLte);
       return v ? parseFloat(v) : undefined;
     })(),
-    key: searchParams.get(KEY.key) ?? undefined,
+    musicalKey: searchParams.get(KEY.key) ?? undefined,
     keyTolerance: (() => {
       const v = searchParams.get(KEY.keyTolerance);
       return v ? parseInt(v, 10) : undefined;
@@ -173,7 +173,7 @@ export function useFilters() {
     filters.bpmLte !== undefined ||
     filters.ratingGte !== undefined ||
     filters.ratingLte !== undefined ||
-    filters.key !== undefined ||
+    filters.musicalKey !== undefined ||
     filters.yearGte !== undefined ||
     filters.yearLte !== undefined ||
     filters.ownership !== undefined ||
