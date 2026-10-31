@@ -226,7 +226,7 @@ export default function FilterBar({
       </div>
 
       <button
-        className="FilterBar-collapse iconButton"
+        className="FilterBar-collapse"
         onClick={() => setCollapsed((c) => !c)}
         title={collapsed ? 'Expand bar' : 'Collapse bar'}
       >
