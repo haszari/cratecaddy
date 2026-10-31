@@ -230,7 +230,7 @@ export default function FilterBar({
         onClick={() => setCollapsed((c) => !c)}
         title={collapsed ? 'Expand bar' : 'Collapse bar'}
       >
-        {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
     </div>
   );
