@@ -221,7 +221,6 @@ thead th:last-child {
     column-gap: 0.5em;
     row-gap: 0.15em;
     padding: 0.3em 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   tbody td {
@@ -234,7 +233,7 @@ thead th:last-child {
     flex-wrap: wrap;
     justify-content: flex-start;
     gap: 0.3em;
-    padding-top: 0.2em;
+    padding: 0.2em 0 0 1.5em;
   }
 }
 
