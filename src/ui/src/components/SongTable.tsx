@@ -3,6 +3,7 @@ import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
+import { indexToNote } from '@cratecaddy-api/musicalKey';
 
 export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
 export type SortDirection = 'asc' | 'desc';
@@ -90,7 +91,11 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
                 <Link to={`/song/${song._id}`} className="Song-link">{song.title}</Link>
               </td>
               <td className="col-bpm">{song.bpm != null ? Math.round(song.bpm) : ''}</td>
-              <td className="col-key">{song.key}</td>
+              <td className="col-key">
+                {song.keyCamelot !== undefined && song.keyCamelot !== null
+                  ? indexToNote(song.keyCamelot)
+                  : ''}
+              </td>
               <td className="col-rating">{formatRating(song.rating)}</td>
               <td className="col-genres">
                 <div className="genres-cell">

@@ -22,7 +22,7 @@ Add three browse filters, built with Mantine UI. Issue: https://github.com/hasza
 
 ### Key filter
 
-- **Canonical key identity = Camelot index** (`keyCamelot` 0–23). `key` (note name) stays as a stored rendering; `keyCamelot` is the source of truth for filter + sort. Note name is derived/rendered from the index.
+- **Canonical key identity = Camelot index** (`keyCamelot` 0–23). The old note-name `key` string field is removed; note name is rendered on demand via `indexToNote`.
 - Add shared key module (reversible note↔Camelot + distance) under `src/api/src/helpers/`, consumed by both filter implementations and the UI via the `@cratecaddy-api` alias.
 - Params: `key` (target key) + `key.tolerance` (±N steps on the Camelot wheel, 1–3).
 - Matching: compute the set of keys within N steps of the target (both A and B wheels), filter by canonical Camelot index.

@@ -27,14 +27,21 @@ async function main() {
   for await (const doc of cursor) {
     scanned++;
     const index = keyToIndex(doc.key);
+    const update: Record<string, unknown> = {};
     if (index === null) {
       if (doc.keyCamelot !== undefined && doc.keyCamelot !== null) {
-        await collection.updateOne({ _id: doc._id }, { $unset: { keyCamelot: '' } });
+        update.$unset = { keyCamelot: '' };
         cleared++;
       }
     } else if (doc.keyCamelot !== index) {
-      await collection.updateOne({ _id: doc._id }, { $set: { keyCamelot: index } });
+      update.$set = { keyCamelot: index };
       updated++;
+    }
+    if (doc.key !== undefined) {
+      update.$unset = { ...(update.$unset ?? {}), key: '' };
+    }
+    if (Object.keys(update).length > 0) {
+      await collection.updateOne({ _id: doc._id }, update);
     }
   }
 

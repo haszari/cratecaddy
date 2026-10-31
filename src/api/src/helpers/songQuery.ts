@@ -31,7 +31,7 @@
  */
 import { KEY } from './apiParams.js';
 import type { ApiFilterParams } from './apiParams.js';
-import { keyToIndex, parseKey, keysWithin } from './musicalKey.js';
+import { parseKey, keysWithin } from './musicalKey.js';
 
 /** Fields the query layer needs. Structurally satisfied by ISong and the UI Song type. */
 export interface QueryableSource {
@@ -48,7 +48,6 @@ export interface QueryableSong {
   bpm?: number;
   rating?: number;
   year?: number;
-  key?: string;
   keyCamelot?: number;
   favorite?: 'starred' | 'normal' | 'disliked';
   sources?: QueryableSource[];
@@ -174,8 +173,8 @@ export function matchesFilters(song: QueryableSong, params: ApiFilterParams): bo
       const rawTolerance = parseInt(params[KEY.keyTolerance] ?? '0', 10);
       const tolerance = isNaN(rawTolerance) ? 0 : Math.max(0, Math.min(6, rawTolerance));
       const allowed = new Set(keysWithin(target, tolerance));
-      const index = song.keyCamelot ?? keyToIndex(song.key);
-      if (index === null || !allowed.has(index)) return false;
+      const index = song.keyCamelot;
+      if (index === undefined || index === null || !allowed.has(index)) return false;
     }
   }
 
@@ -243,8 +242,7 @@ function compareValues(a: unknown, b: unknown): number {
 
 /** Key sorts by Camelot order, not the note-name string. */
 function keySortValue(song: QueryableSong): number | undefined {
-  const index = song.keyCamelot ?? keyToIndex(song.key);
-  return index ?? undefined;
+  return song.keyCamelot ?? undefined;
 }
 
 function sortValue(

@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { updateSongsBatch, fetchGenreStats, writeToAppleMusicBatch } from '@data';
 import { decomposeGenres } from '../hooks/useGenreDecomposition';
+import { keyToIndex, indexToNote } from '@cratecaddy-api/musicalKey';
 import type { Song } from '../types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -64,7 +65,12 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
     const f = songs[0];
     const allSame = <T,>(get: (s: Song) => T): T | undefined =>
       songs.every(s => get(s) === get(f)) ? get(f) : undefined;
-    const commonKey = parseKeyField(allSame(s => s.key) ?? '');
+    const commonKeyCamelot = allSame(s => s.keyCamelot);
+    const commonKey = parseKeyField(
+      commonKeyCamelot !== undefined && commonKeyCamelot !== null
+        ? indexToNote(commonKeyCamelot)
+        : '',
+    );
     return {
       artist: allSame(s => s.artist) ?? '',
       bpm: (() => {
@@ -128,7 +134,7 @@ export default function MultiSongMetadataEditForm({ songs, onDirtyChange }: Mult
         if (dirtyFields.has('artist')) data.artist = artist;
         if (dirtyFields.has('bpm') && bpm !== '') data.bpm = parseFloat(bpm);
         if (dirtyFields.has('year') && year !== '') data.year = parseInt(year, 10);
-        if (dirtyFields.has('key')) data.key = formatKeyField(keyRoot, keyMinor);
+        if (dirtyFields.has('key')) data.keyCamelot = keyToIndex(formatKeyField(keyRoot, keyMinor)) ?? undefined;
         if (dirtyFields.has('rating') && rating > 0) data.rating = rating;
         return { id: s._id!, data };
       });

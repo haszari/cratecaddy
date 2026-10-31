@@ -25,6 +25,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../src/config/env.js';
 import { songService } from '../src/services/songService.js';
+import { parseKey } from '../src/helpers/musicalKey.js';
 
 interface RekordboxTrack {
   Name?: string;
@@ -71,19 +72,10 @@ const rekordboxRatingToScore = (rating?: string): number | undefined => {
   return num / 51;
 };
 
-const camelotToKey: Record<string, string> = {
-  '1A': 'Gm', '2A': 'Dm', '3A': 'Am', '4A': 'Em', '5A': 'Bm', '6A': 'F#m',
-  '7A': 'C#m', '8A': 'G#m', '9A': 'D#m', '10A': 'A#m', '11A': 'Fm', '12A': 'Cm',
-  '1B': 'C', '2B': 'G', '3B': 'D', '4B': 'A', '5B': 'E', '6B': 'B',
-  '7B': 'F#', '8B': 'C#', '9B': 'G#', '10B': 'D#', '11B': 'A#', '12B': 'F',
-};
-
-const convertKey = (tonality?: string): string | undefined => {
+const convertKey = (tonality?: string): number | undefined => {
   if (!tonality || tonality.trim() === '') return undefined;
-  const trimmed = tonality.trim();
-  const camelotMatch = trimmed.match(/^(\d{1,2})([AB])$/);
-  if (camelotMatch) return camelotToKey[trimmed];
-  return trimmed;
+  const index = parseKey(tonality.trim());
+  return index ?? undefined;
 };
 
 const importSongs = async (xmlPath: string) => {
@@ -148,7 +140,7 @@ const importSongs = async (xmlPath: string) => {
             year,
             rating,
             album,
-            key: convertKey(track.Tonality),
+            keyCamelot: convertKey(track.Tonality),
           },
           {
             sourceType: 'rekordbox',

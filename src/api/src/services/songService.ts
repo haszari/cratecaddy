@@ -146,7 +146,7 @@ export class SongService {
       genres?: string[];
       grouping?: string[];
       bpm?: number;
-      key?: string;
+      keyCamelot?: number;
       rating?: number;
       year?: number;
       album?: string;
@@ -226,7 +226,7 @@ export class SongService {
       }
 
       mergeField(song.bpm, songData.bpm, (v) => { song.bpm = v; });
-      mergeField(song.key, songData.key, (v) => { song.key = v; });
+      mergeField(song.keyCamelot, songData.keyCamelot, (v) => { song.keyCamelot = v; });
       mergeField(song.rating, songData.rating, (v) => { song.rating = v; });
       mergeField(song.year, songData.year, (v) => { song.year = v; });
       mergeField(song.album, songData.album, (v) => { song.album = v; });
@@ -271,7 +271,7 @@ export class SongService {
       genres: songData.genres || [],
       grouping: songData.grouping || [],
       bpm: songData.bpm,
-      key: songData.key,
+      keyCamelot: songData.keyCamelot,
       rating: songData.rating,
       year: songData.year,
       album: songData.album,
@@ -304,7 +304,7 @@ export class SongService {
       genres?: string[];
       grouping?: string[];
       bpm?: number;
-      key?: string;
+      keyCamelot?: number;
       rating?: number;
       year?: number;
       favorite?: 'starred' | 'normal' | 'disliked';
@@ -319,7 +319,7 @@ export class SongService {
     if (songData.genres !== undefined) song.genres = songData.genres;
     if (songData.grouping !== undefined) song.grouping = songData.grouping;
     if (songData.bpm !== undefined) song.bpm = songData.bpm;
-    if (songData.key !== undefined) song.key = songData.key;
+    if (songData.keyCamelot !== undefined) song.keyCamelot = songData.keyCamelot;
     if (songData.rating !== undefined) song.rating = songData.rating;
     if (songData.year !== undefined) song.year = songData.year;
     if (songData.favorite !== undefined) song.favorite = songData.favorite;
@@ -468,7 +468,7 @@ export class SongService {
       genres: song.genres,
       grouping: song.grouping,
       bpm: song.bpm,
-      key: song.key,
+      keyCamelot: song.keyCamelot,
       rating: song.rating,
       year: song.year,
       favorite: song.favorite,
@@ -480,7 +480,7 @@ export class SongService {
     if (lastEntry) {
       const snapFields: (keyof IHistorySnapshot)[] = [
         'title', 'artist', 'genres', 'grouping',
-        'bpm', 'key', 'rating', 'year', 'favorite',
+        'bpm', 'keyCamelot', 'rating', 'year', 'favorite',
       ];
       const same = snapFields.every(
         f => JSON.stringify(lastEntry.snapshot[f]) === JSON.stringify(snapshot[f]),

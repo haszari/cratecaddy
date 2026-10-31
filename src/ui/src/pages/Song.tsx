@@ -4,6 +4,7 @@ import { fetchSongById, fetchGenreStats } from '@data';
 import FilterBar from '../components/FilterBar';
 import { GenreTagCloud } from '../components/GenreTagCloud';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { indexToNote } from '@cratecaddy-api/musicalKey';
 
 export default function Song() {
   const { id } = useParams<{ id: string }>();
@@ -54,7 +55,7 @@ export default function Song() {
         <Link to={`/artist/${encodeURIComponent(song.artist)}`} className="PageCriteria-artist">{song.artist}</Link>
         <span className="SongInfo-title">{song.title}</span>
         <span className="SongInfo-meta">
-          {song.bpm != null ? Math.round(song.bpm) : ''}<span className="SongInfo-meta-bpm">bpm</span> {song.key}
+          {song.bpm != null ? Math.round(song.bpm) : ''}<span className="SongInfo-meta-bpm">bpm</span> {song.keyCamelot != null ? indexToNote(song.keyCamelot) : ''}
         </span>
       </div>
       {song.genres.length > 0 && <GenreTagCloud tags={tags} />}

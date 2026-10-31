@@ -117,7 +117,7 @@ export class SongController {
   }
 
   private readonly ALLOWED_BATCH_FIELDS = new Set([
-    'artist', 'genres', 'grouping', 'bpm', 'key', 'year', 'rating',
+    'artist', 'genres', 'grouping', 'bpm', 'keyCamelot', 'year', 'rating',
   ]);
 
   private sanitiseBatchData(data: Record<string, unknown>): Record<string, unknown> {
@@ -205,7 +205,7 @@ export class SongController {
 
       const diffFields: (keyof IHistorySnapshot)[] = [
         'title', 'artist', 'genres', 'grouping',
-        'bpm', 'key', 'rating', 'year', 'favorite',
+        'bpm', 'keyCamelot', 'rating', 'year', 'favorite',
       ];
 
       type SnapshotDiff = { field: string; value: string | string[] };

@@ -26,6 +26,7 @@ import { fileURLToPath } from 'url';
 import { config } from '../src/config/env.js';
 import { SourceFormat, Song } from '../src/models/Song.js';
 import { songService } from '../src/services/songService.js';
+import { keyToIndex } from '../src/helpers/musicalKey.js';
 
 const connectDB = async () => {
   await mongoose.connect(config.mongoUri);
@@ -47,10 +48,12 @@ const convertRating = (rating?: string | number): number | undefined => {
   return num / 20;
 };
 
-const parseKeyFromComment = (comment?: string): string | undefined => {
+const parseKeyFromComment = (comment?: string): number | undefined => {
   if (!comment) return undefined;
   const match = comment.match(/musicalKey=([A-G][b#]?(?:m|dim|aug|sus)?)/);
-  return match ? match[1] : undefined;
+  if (!match) return undefined;
+  const index = keyToIndex(match[1]);
+  return index ?? undefined;
 };
 
 const detectFormat = (trackType?: string, kind?: string): SourceFormat | undefined => {
@@ -165,7 +168,7 @@ const importSongs = async (xmlPath: string) => {
             year,
             album,
             appleMusicId: persistentId,
-            key: parseKeyFromComment(comment),
+            keyCamelot: parseKeyFromComment(comment),
             favorite,
           },
           {

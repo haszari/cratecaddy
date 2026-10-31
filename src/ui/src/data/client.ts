@@ -119,7 +119,7 @@ export interface HistoryEntry {
     genres: string[];
     grouping: string[];
     bpm?: number;
-    key?: string;
+    keyCamelot?: number;
     rating?: number;
     year?: number;
     favorite?: 'starred' | 'normal' | 'disliked';
