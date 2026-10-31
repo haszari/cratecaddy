@@ -1,6 +1,5 @@
-$lit-fill: #f5a623;         // existing orange (rating filter on)
-$lit-stroke: #ffffff;        // existing UI white
-$disabled: #b3b3b3;          // existing solid grey (table icon grey)
+$fill: #f5a623;              // existing orange
+$grey: #b3b3b3;              // existing solid grey (table icon grey)
 
 .OwnershipFilter {
   position: relative;
@@ -13,7 +12,8 @@ $disabled: #b3b3b3;          // existing solid grey (table icon grey)
 
   svg {
     position: absolute;
-    color: $disabled;
+    color: $grey;            // always grey stroke
+    fill: none;
   }
 
   .OwnershipFilter-cloud {
@@ -26,13 +26,25 @@ $disabled: #b3b3b3;          // existing solid grey (table icon grey)
     left: 0;
   }
 
-  &--owned .OwnershipFilter-handbag {
-    color: $lit-stroke;
-    fill: $lit-fill;
+  // Outline copy sits on top; fill copy hides behind until selected.
+  .OwnershipFilter-cloud-outline,
+  .OwnershipFilter-handbag-outline {
+    z-index: 2;
   }
 
-  &--streaming .OwnershipFilter-cloud {
-    color: $lit-stroke;
-    fill: $lit-fill;
+  .OwnershipFilter-cloud-fill,
+  .OwnershipFilter-handbag-fill {
+    z-index: 1;
+    color: $fill;
+    fill: $fill;
+    opacity: 0;
+  }
+
+  &--streaming .OwnershipFilter-cloud-fill {
+    opacity: 1;
+  }
+
+  &--owned .OwnershipFilter-handbag-fill {
+    opacity: 1;
   }
 }
