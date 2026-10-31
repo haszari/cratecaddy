@@ -59,12 +59,12 @@ export default function GenreDetail() {
 
   return (
     <div className="GenreDetail">
+      <FilterBar {...filterBarProps} />
+
       <BasePageCriteria
         genres={decodedGenres.map((g) => ({ name: g, mode: isOrMode ? 'or' : 'and' }))}
         onRemoveGenre={handleRemoveInclude}
       />
-
-      <FilterBar {...filterBarProps} />
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p className="error-message">Failed to load songs</p>}

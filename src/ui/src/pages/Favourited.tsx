@@ -46,6 +46,8 @@ export default function Favourited() {
 
   return (
     <div className="GenreDetail">
+      <FilterBar {...filterBarProps} />
+
       <div className="PageCriteria">
         <span className="GenreTag GenreTag-heading PageCriteria-artist">
           <Heart size={28} fill="#e03131" color="#e03131" style={{ verticalAlign: -6 }} />
@@ -61,8 +63,6 @@ export default function Favourited() {
           </span>
         ))}
       </div>
-
-      <FilterBar {...filterBarProps} />
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p className="error-message">Failed to load songs</p>}
