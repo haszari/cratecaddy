@@ -105,3 +105,15 @@
     color: #999;
   }
 }
+
+@media (max-width: 768px) {
+  .FilterBar {
+    justify-content: center;
+  }
+
+  .FilterBar-navGroup,
+  .FilterBar-excludeGroup,
+  .FilterBar-filterGroup {
+    justify-content: center;
+  }
+}
