@@ -152,24 +152,15 @@ export default function YearRangeControl({ yearGte, yearLte, empty, onChange, re
     );
   }
 
-  if (showEmpty) {
-    return (
-      <span className="FilterPill">
-        <span className="FilterPill-placeholder">empty</span>
-        <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear year filter">
-          <X size={14} />
-        </button>
-      </span>
-    );
-  }
-
   return (
     <span className="FilterPill">
-      <button className="FilterPill-btn" onClick={decRange} disabled={range <= 0} title="Narrow year range">
-        <Minus size={14} />
-      </button>
+      {!showEmpty && (
+        <button className="FilterPill-btn" onClick={decRange} disabled={range <= 0} title="Narrow year range">
+          <Minus size={14} />
+        </button>
+      )}
 
-      {minHint !== undefined && !isNaN(minHint) && (
+      {!showEmpty && minHint !== undefined && !isNaN(minHint) && (
         <span className="FilterPill-hint FilterPill-hint--min">{minHint}</span>
       )}
 
@@ -186,22 +177,26 @@ export default function YearRangeControl({ yearGte, yearLte, empty, onChange, re
         placeholder="year"
       />
 
-      <span className="FilterPill-stepper">
-        <button className="FilterPill-stepper-btn" onClick={incCentre} title="Increase year">
-          <ChevronUp size={14} />
-        </button>
-        <button className="FilterPill-stepper-btn" onClick={decCentre} title="Decrease year">
-          <ChevronDown size={14} />
-        </button>
-      </span>
+      {!showEmpty && (
+        <span className="FilterPill-stepper">
+          <button className="FilterPill-stepper-btn" onClick={incCentre} title="Increase year">
+            <ChevronUp size={14} />
+          </button>
+          <button className="FilterPill-stepper-btn" onClick={decCentre} title="Decrease year">
+            <ChevronDown size={14} />
+          </button>
+        </span>
+      )}
 
-      {maxHint !== undefined && !isNaN(maxHint) && (
+      {!showEmpty && maxHint !== undefined && !isNaN(maxHint) && (
         <span className="FilterPill-hint FilterPill-hint--max">{maxHint}</span>
       )}
 
-      <button className="FilterPill-btn" onClick={incRange} title="Widen year range">
-        <Plus size={14} />
-      </button>
+      {!showEmpty && (
+        <button className="FilterPill-btn" onClick={incRange} title="Widen year range">
+          <Plus size={14} />
+        </button>
+      )}
     </span>
   );
 }
