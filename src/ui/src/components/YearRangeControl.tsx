@@ -170,7 +170,7 @@ export default function YearRangeControl({ yearGte, yearLte, empty, onChange, re
 
       <input
         type="number"
-        className="FilterPill-input"
+        className={showEmpty ? 'FilterPill-input FilterPill-input--empty' : 'FilterPill-input'}
         value={inputBuf}
         onChange={(e) => applyCentre(e.target.value)}
         step={1}

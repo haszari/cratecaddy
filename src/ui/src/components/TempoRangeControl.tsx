@@ -171,7 +171,7 @@ export default function TempoRangeControl({ bpmGte, bpmLte, empty, onChange, rea
       <input
         ref={inputRef}
         type="number"
-        className="FilterPill-input"
+        className={showEmpty ? 'FilterPill-input FilterPill-input--empty' : 'FilterPill-input'}
         value={inputBuf}
         onChange={(e) => {
           if (!active && onChange) { setActive(true); setRange(5); }

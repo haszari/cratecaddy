@@ -77,6 +77,11 @@ $pill-height: 2.5em;
     outline: none;
     -moz-appearance: textfield;
 
+    &.FilterPill-input--empty {
+      text-align: left;
+      width: 3em;
+    }
+
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
       -webkit-appearance: none;
