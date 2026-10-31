@@ -122,16 +122,17 @@ export default function KeyFilter({ musicalKey, keyTolerance, empty, onChange, r
 
   return (
     <span className="FilterPill">
-      {isEmpty ? (
-        <span className="FilterPill-placeholder">empty</span>
-      ) : (
-        <>
-          <button className="FilterPill-btn" onClick={() => adjustTolerance(-1)} disabled={tolerance <= 0} title="Narrow key range">
-            <Minus size={14} />
-          </button>
-          {rangeLabels && <span className="FilterPill-hint FilterPill-hint--min">{rangeLabels.min}</span>}
-        </>
+      {!isEmpty && (
+        <button className="FilterPill-btn" onClick={() => adjustTolerance(-1)} disabled={tolerance <= 0} title="Narrow key range">
+          <Minus size={14} />
+        </button>
       )}
+
+      {!isEmpty && rangeLabels && <span className="FilterPill-hint FilterPill-hint--min">{rangeLabels.min}</span>}
+
+      <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear key filter">
+        <X size={14} />
+      </button>
 
       <select
         className="FilterPill-select"
@@ -147,18 +148,13 @@ export default function KeyFilter({ musicalKey, keyTolerance, empty, onChange, r
         ))}
       </select>
 
-      {!isEmpty && (
-        <>
-          {rangeLabels && <span className="FilterPill-hint FilterPill-hint--max">{rangeLabels.max}</span>}
-          <button className="FilterPill-btn" onClick={() => adjustTolerance(1)} title="Widen key range">
-            <Plus size={14} />
-          </button>
-        </>
-      )}
+      {!isEmpty && rangeLabels && <span className="FilterPill-hint FilterPill-hint--max">{rangeLabels.max}</span>}
 
-      <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear key filter">
-        <X size={14} />
-      </button>
+      {!isEmpty && (
+        <button className="FilterPill-btn" onClick={() => adjustTolerance(1)} title="Widen key range">
+          <Plus size={14} />
+        </button>
+      )}
     </span>
   );
 }
