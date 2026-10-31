@@ -69,3 +69,32 @@ Add three browse filters, built with Mantine UI. Issue: https://github.com/hasza
 - Each filter works in dev app + static site, returns identical results (parity check).
 - Filter state is URL-driven and survives reload/navigation.
 - Existing filters (tempo, rating, heart, genres, search) unaffected.
+
+## 7) Bugfix phase
+
+### Song table columns
+
+Order: **artist | title | rating | bpm | key | year | genres** (genres last). All headings use filled icons in the existing grey:
+
+- artist → `user-round`, title → `disc-3`, rating → `star`, bpm → `drum`, key → `tag`, year → `calendar`
+- Year column added (sortable, always visible).
+
+### Tempo control (Mantine rebuild)
+
+Rebuild `TempoRangeControl` on Mantine primitives, matching the current look as closely as possible (number centre, min/max hints, minus/plus range, up/down centre, clear x, `tempo` placeholder).
+
+### Year control
+
+Direct-manipulation, same shape as tempo: `[− spread] [min] [X] [year input] [↑↓] [max] [+ spread]`. Inactive shows `year` placeholder. No show/hide.
+
+### Key control
+
+Direct-manipulation, no show/hide, no "AM" badge: `[− tol] [key select] [+ tol] [X]`. Key option label `Am (8A)` (note first, Camelot in brackets, no dash). Select fixes the unset-on-click bug; dropdown opens on selected item, checkmark in left margin (macOS conventions). Inactive shows `key` placeholder.
+
+### Ownership control
+
+Two icons — `cloud` (streaming) + `handbag` (owned) — both always filled, overlapped at 45°, active icon bottom-left on top (dimmed behind). Three-state cycle, click anywhere: **All → Owned → Cloud → All**. Both dimmed = all.
+
+### FilterBar
+
+Flex-wrap, no clipping; controls grouped. Filter group order: **heart | rating | tempo | key | year | ownership | search**.
