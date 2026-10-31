@@ -75,9 +75,9 @@
     width: 10em;
 
     .mantine-Input-input {
-      background: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.87);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      border: none;
       border-radius: 0.5em;
       height: 2.5em;
       min-height: 2.5em;
@@ -85,14 +85,18 @@
       padding-right: 0;
       font-size: 0.8em;
 
+      &:placeholder-shown {
+        opacity: 0.55;
+      }
+
       &::placeholder {
-        color: rgba(255, 255, 255, 0.7);
+        color: #999;
       }
     }
 
     .mantine-Input-section {
       padding-right: 0.35em;
-      color: rgba(255, 255, 255, 0.7);
+      color: #666;
     }
   }
 
