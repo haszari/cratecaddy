@@ -6,7 +6,8 @@ import './FilterPill.scss';
 interface TempoRangeControlProps {
   bpmGte?: number;
   bpmLte?: number;
-  onChange?: (gte?: number, lte?: number) => void;
+  empty?: boolean;
+  onChange?: (gte?: number, lte?: number, empty?: boolean) => void;
   readOnly?: boolean;
 }
 
@@ -24,23 +25,29 @@ function computeRange(bpmGte?: number, bpmLte?: number): number {
   return 0;
 }
 
-export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }: TempoRangeControlProps) {
-  const hasFilter = bpmGte !== undefined || bpmLte !== undefined;
+export default function TempoRangeControl({ bpmGte, bpmLte, empty, onChange, readOnly }: TempoRangeControlProps) {
+  const hasFilter = bpmGte !== undefined || bpmLte !== undefined || empty;
 
   const [active, setActive] = useState(hasFilter);
   const [inputBuf, setInputBuf] = useState(
-    hasFilter ? String(computeCentre(bpmGte, bpmLte) ?? '') : '',
+    empty ? '-1' : hasFilter ? String(computeCentre(bpmGte, bpmLte) ?? '') : '',
   );
   const [range, setRange] = useState(computeRange(bpmGte, bpmLte));
   const [debouncedCentre] = useDebouncedValue(inputBuf, 300);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [prevBpmGte, setPrevBpmGte] = useState(bpmGte);
-  const [prevBpmLte, setPrevBpmLte] = useState(bpmLte);
 
-  if (prevBpmGte !== bpmGte || prevBpmLte !== bpmLte) {
-    setPrevBpmGte(bpmGte);
-    setPrevBpmLte(bpmLte);
-    if (!hasFilter) {
+  // Sync with URL-driven props (e.g. cleared elsewhere or switched to empty).
+  const [prevGte, setPrevGte] = useState(bpmGte);
+  const [prevLte, setPrevLte] = useState(bpmLte);
+  const [prevEmpty, setPrevEmpty] = useState(empty);
+  if (prevGte !== bpmGte || prevLte !== bpmLte || prevEmpty !== empty) {
+    setPrevGte(bpmGte);
+    setPrevLte(bpmLte);
+    setPrevEmpty(empty);
+    if (empty) {
+      setInputBuf('-1');
+      setActive(true);
+    } else if (!hasFilter) {
       setInputBuf('');
       setRange(0);
       setActive(false);
@@ -48,13 +55,12 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
       const centre = computeCentre(bpmGte, bpmLte);
       setInputBuf(centre !== undefined ? String(centre) : '');
       setRange(computeRange(bpmGte, bpmLte));
+      setActive(true);
     }
   }
 
   useEffect(() => {
-    if (active && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (active && inputRef.current) inputRef.current.focus();
   }, [active]);
 
   const commit = useCallback(
@@ -67,6 +73,10 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
 
   useEffect(() => {
     if (!active || !onChange) return;
+    if (debouncedCentre === '-1') {
+      onChange(undefined, undefined, true);
+      return;
+    }
     const c = debouncedCentre === '' ? undefined : parseInt(debouncedCentre, 10);
     if (c !== undefined && !isNaN(c)) {
       commit(c, range);
@@ -81,13 +91,13 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
 
   const incCentre = useCallback(() => {
     if (!active && onChange) { activateWithDefault(); return; }
-    const cur = inputBuf === '' ? 120 : (parseInt(inputBuf, 10) || 120);
+    const cur = inputBuf === '' || inputBuf === '-1' ? 120 : (parseInt(inputBuf, 10) || 120);
     setInputBuf(String(Math.min(cur + 1, 999)));
   }, [active, onChange, inputBuf, activateWithDefault]);
 
   const decCentre = useCallback(() => {
     if (!active && onChange) { activateWithDefault(); return; }
-    const cur = inputBuf === '' ? 120 : (parseInt(inputBuf, 10) || 120);
+    const cur = inputBuf === '' || inputBuf === '-1' ? 120 : (parseInt(inputBuf, 10) || 120);
     setInputBuf(String(Math.max(cur - 1, 0)));
   }, [active, onChange, inputBuf, activateWithDefault]);
 
@@ -105,21 +115,22 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
     setActive(false);
     setInputBuf('');
     setRange(0);
-    if (onChange) onChange(undefined, undefined);
+    if (onChange) onChange(undefined, undefined, false);
   }, [onChange]);
-
-  const centreNum = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
-  const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
-  const maxHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum + range : undefined;
 
   if (readOnly) {
     if (!hasFilter) return null;
     return (
       <span className="FilterPill FilterPill--inactive">
-        <span className="FilterPill-placeholder">{bpmGte ?? '?'}–{bpmLte ?? '?'}</span>
+        <span className="FilterPill-placeholder">{empty ? 'empty' : `${bpmGte ?? '?'}–${bpmLte ?? '?'}`}</span>
       </span>
     );
   }
+
+  const centreNum = inputBuf === '' || inputBuf === '-1' ? undefined : parseInt(inputBuf, 10);
+  const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
+  const maxHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum + range : undefined;
+  const showEmpty = inputBuf === '-1';
 
   if (!active) {
     return (
@@ -137,6 +148,17 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
         }}
       >
         <span className="FilterPill-placeholder">tempo</span>
+      </span>
+    );
+  }
+
+  if (showEmpty) {
+    return (
+      <span className="FilterPill">
+        <span className="FilterPill-placeholder">empty</span>
+        <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear tempo filter">
+          <X size={14} />
+        </button>
       </span>
     );
   }
@@ -161,14 +183,9 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
         className="FilterPill-input"
         value={inputBuf}
         onChange={(e) => {
-          if (!active && onChange) {
-            setActive(true);
-            setRange(5);
-          }
+          if (!active && onChange) { setActive(true); setRange(5); }
           setInputBuf(e.target.value);
         }}
-        min={0}
-        max={999}
         step={1}
         placeholder="bpm"
       />

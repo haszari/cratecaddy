@@ -178,10 +178,19 @@ export function matchesFilters(song: QueryableSong, params: ApiFilterParams): bo
     }
   }
 
+  if (params[KEY.keyEmpty] === 'true') {
+    if (song.keyCamelot !== undefined && song.keyCamelot !== null) return false;
+  }
+
   const yearRange = parseRange(params[KEY.yearGte], params[KEY.yearLte]);
   if (yearRange) {
-    if (song.year === undefined || song.year === null) return false;
-    if (!inRange(song.year, yearRange)) return false;
+    // Songs with no year are always included, matching the MongoDB $or.
+    if (song.year !== undefined && song.year !== null && !inRange(song.year, yearRange)) {
+      return false;
+    }
+  }
+  if (params[KEY.yearEmpty] === 'true') {
+    if (song.year !== undefined && song.year !== null) return false;
   }
 
   const bpmRange = parseRange(params[KEY.bpmGte], params[KEY.bpmLte]);
@@ -190,6 +199,9 @@ export function matchesFilters(song: QueryableSong, params: ApiFilterParams): bo
     if (song.bpm !== undefined && song.bpm !== null && !inRange(song.bpm, bpmRange)) {
       return false;
     }
+  }
+  if (params[KEY.bpmEmpty] === 'true') {
+    if (song.bpm !== undefined && song.bpm !== null) return false;
   }
 
   const ratingRange = parseRange(params[KEY.ratingGte], params[KEY.ratingLte]);

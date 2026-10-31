@@ -17,12 +17,15 @@ export interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  bpmEmpty?: boolean;
   ratingGte?: number;
   ratingLte?: number;
   musicalKey?: string;
   keyTolerance?: number;
+  keyEmpty?: boolean;
   yearGte?: number;
   yearLte?: number;
+  yearEmpty?: boolean;
   ownership?: string;
   onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
@@ -44,8 +47,8 @@ export interface FilterBarProps {
 }
 
 export default function FilterBar({
-  genreNot, bpmGte, bpmLte, ratingGte, ratingLte,
-  musicalKey, keyTolerance, yearGte, yearLte, ownership,
+  genreNot, bpmGte, bpmLte, bpmEmpty, ratingGte, ratingLte,
+  musicalKey, keyTolerance, keyEmpty, yearGte, yearLte, yearEmpty, ownership,
   onRemoveExclude, onBpmChange, onRatingChange,
   onMusicalKeyChange, onYearChange, onOwnershipChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
@@ -173,6 +176,7 @@ export default function FilterBar({
           <TempoRangeControl
             bpmGte={bpmGte}
             bpmLte={bpmLte}
+            empty={bpmEmpty}
             onChange={readOnly ? undefined : onBpmChange}
             readOnly={readOnly}
           />
@@ -182,6 +186,7 @@ export default function FilterBar({
           <KeyFilter
             musicalKey={musicalKey}
             keyTolerance={keyTolerance}
+            empty={keyEmpty}
             onChange={readOnly ? undefined : onMusicalKeyChange}
             readOnly={readOnly}
           />
@@ -191,6 +196,7 @@ export default function FilterBar({
           <YearRangeControl
             yearGte={yearGte}
             yearLte={yearLte}
+            empty={yearEmpty}
             onChange={readOnly ? undefined : onYearChange}
             readOnly={readOnly}
           />

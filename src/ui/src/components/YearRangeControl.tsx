@@ -5,7 +5,8 @@ import './FilterPill.scss';
 interface YearRangeControlProps {
   yearGte?: number;
   yearLte?: number;
-  onChange?: (gte?: number, lte?: number) => void;
+  empty?: boolean;
+  onChange?: (gte?: number, lte?: number, empty?: boolean) => void;
   readOnly?: boolean;
 }
 
@@ -19,11 +20,33 @@ function spread(gte?: number, lte?: number): number {
   return 0;
 }
 
-export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly }: YearRangeControlProps) {
-  const hasFilter = yearGte !== undefined || yearLte !== undefined;
+export default function YearRangeControl({ yearGte, yearLte, empty, onChange, readOnly }: YearRangeControlProps) {
+  const hasFilter = yearGte !== undefined || yearLte !== undefined || empty;
   const [active, setActive] = useState(hasFilter);
-  const [inputBuf, setInputBuf] = useState<string>(hasFilter ? String(centre(yearGte, yearLte) ?? '') : '');
+  const [inputBuf, setInputBuf] = useState<string>(empty ? '-1' : hasFilter ? String(centre(yearGte, yearLte) ?? '') : '');
   const [range, setRange] = useState(spread(yearGte, yearLte));
+
+  // Sync with URL-driven props.
+  const [prevGte, setPrevGte] = useState(yearGte);
+  const [prevLte, setPrevLte] = useState(yearLte);
+  const [prevEmpty, setPrevEmpty] = useState(empty);
+  if (prevGte !== yearGte || prevLte !== yearLte || prevEmpty !== empty) {
+    setPrevGte(yearGte);
+    setPrevLte(yearLte);
+    setPrevEmpty(empty);
+    if (empty) {
+      setInputBuf('-1');
+      setActive(true);
+    } else if (!hasFilter) {
+      setInputBuf('');
+      setRange(0);
+      setActive(false);
+    } else {
+      setInputBuf(String(centre(yearGte, yearLte) ?? ''));
+      setRange(spread(yearGte, yearLte));
+      setActive(true);
+    }
+  }
 
   const commit = useCallback(
     (c: number | undefined, r: number) => {
@@ -43,6 +66,10 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     (text: string) => {
       if (!active && onChange) activateWithDefault();
       setInputBuf(text);
+      if (text === '-1') {
+        onChange?.(undefined, undefined, true);
+        return;
+      }
       const c = text === '' ? undefined : parseInt(text, 10);
       if (c !== undefined && !isNaN(c)) commit(c, range);
     },
@@ -51,7 +78,7 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
 
   const incCentre = useCallback(() => {
     if (!active && onChange) { activateWithDefault(); return; }
-    const cur = inputBuf === '' ? 2000 : (parseInt(inputBuf, 10) || 2000);
+    const cur = inputBuf === '' || inputBuf === '-1' ? 2000 : (parseInt(inputBuf, 10) || 2000);
     const next = Math.min(cur + 1, 2099);
     setInputBuf(String(next));
     commit(next, range);
@@ -59,7 +86,7 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
 
   const decCentre = useCallback(() => {
     if (!active && onChange) { activateWithDefault(); return; }
-    const cur = inputBuf === '' ? 2000 : (parseInt(inputBuf, 10) || 2000);
+    const cur = inputBuf === '' || inputBuf === '-1' ? 2000 : (parseInt(inputBuf, 10) || 2000);
     const next = Math.max(cur - 1, 1900);
     setInputBuf(String(next));
     commit(next, range);
@@ -69,7 +96,7 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     if (!active && onChange) { activateWithDefault(); return; }
     setRange((prev) => {
       const next = prev + 1;
-      const c = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
+      const c = inputBuf === '' || inputBuf === '-1' ? undefined : parseInt(inputBuf, 10);
       if (c !== undefined && !isNaN(c)) commit(c, next);
       return next;
     });
@@ -79,7 +106,7 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     if (!active && onChange) { activateWithDefault(); return; }
     setRange((prev) => {
       const next = Math.max(prev - 1, 0);
-      const c = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
+      const c = inputBuf === '' || inputBuf === '-1' ? undefined : parseInt(inputBuf, 10);
       if (c !== undefined && !isNaN(c)) commit(c, next);
       return next;
     });
@@ -89,17 +116,22 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     setActive(false);
     setInputBuf('');
     setRange(0);
-    onChange?.(undefined, undefined);
+    onChange?.(undefined, undefined, false);
   }, [onChange]);
 
   if (readOnly) {
     if (!hasFilter) return null;
     return (
       <span className="FilterPill FilterPill--inactive">
-        <span className="FilterPill-placeholder">{yearGte ?? '?'}–{yearLte ?? '?'}</span>
+        <span className="FilterPill-placeholder">{empty ? 'empty' : `${yearGte ?? '?'}–${yearLte ?? '?'}`}</span>
       </span>
     );
   }
+
+  const centreNum = inputBuf === '' || inputBuf === '-1' ? undefined : parseInt(inputBuf, 10);
+  const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
+  const maxHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum + range : undefined;
+  const showEmpty = inputBuf === '-1';
 
   if (!active) {
     return (
@@ -120,9 +152,16 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     );
   }
 
-  const centreNum = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
-  const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
-  const maxHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum + range : undefined;
+  if (showEmpty) {
+    return (
+      <span className="FilterPill">
+        <span className="FilterPill-placeholder">empty</span>
+        <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear year filter">
+          <X size={14} />
+        </button>
+      </span>
+    );
+  }
 
   return (
     <span className="FilterPill">
@@ -143,8 +182,6 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
         className="FilterPill-input"
         value={inputBuf}
         onChange={(e) => applyCentre(e.target.value)}
-        min={1900}
-        max={2099}
         step={1}
         placeholder="year"
       />

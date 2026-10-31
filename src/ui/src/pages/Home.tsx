@@ -66,6 +66,7 @@ export default function Home() {
         genreNot={filters.genreNot}
         bpmGte={filters.bpmGte}
         bpmLte={filters.bpmLte}
+        bpmEmpty={filters.bpmEmpty}
         ratingGte={filters.ratingGte}
         ratingLte={filters.ratingLte}
         onRemoveExclude={removeExclude}
@@ -73,9 +74,11 @@ export default function Home() {
         onRatingChange={setRatingRange}
         musicalKey={filters.musicalKey}
         keyTolerance={filters.keyTolerance}
+        keyEmpty={filters.keyEmpty}
         onMusicalKeyChange={setMusicalKeyFilter}
         yearGte={filters.yearGte}
         yearLte={filters.yearLte}
+        yearEmpty={filters.yearEmpty}
         onYearChange={setYearRange}
         ownership={filters.ownership}
         onOwnershipChange={setOwnership}

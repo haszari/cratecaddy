@@ -164,6 +164,10 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
+  if (params[KEY.bpmEmpty] === 'true') {
+    conditions.push({ $or: [{ bpm: { $exists: false } }, { bpm: null }] });
+  }
+
   const ratingGte = params[KEY.ratingGte];
   const ratingLte = params[KEY.ratingLte];
   if (ratingGte != null || ratingLte != null) {
@@ -197,6 +201,10 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
+  if (params[KEY.keyEmpty] === 'true') {
+    conditions.push({ $or: [{ keyCamelot: { $exists: false } }, { keyCamelot: null }] });
+  }
+
   const yearGte = params[KEY.yearGte];
   const yearLte = params[KEY.yearLte];
   if (yearGte != null || yearLte != null) {
@@ -215,8 +223,17 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
       yearRange.$lte = tmp;
     }
     if (Object.keys(yearRange).length > 0) {
-      conditions.push({ year: yearRange });
+      conditions.push({
+        $or: [
+          { year: yearRange },
+          { year: { $exists: false } },
+          { year: null },
+        ],
+      });
     }
+  }
+  if (params[KEY.yearEmpty] === 'true') {
+    conditions.push({ $or: [{ year: { $exists: false } }, { year: null }] });
   }
 
   const favorite = params[KEY.favorite];

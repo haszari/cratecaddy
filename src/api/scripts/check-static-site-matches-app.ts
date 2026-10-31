@@ -62,6 +62,7 @@ const CASES: ParityCase[] = [
   { name: 'bpm range', params: { [KEY.bpmGte]: '120', [KEY.bpmLte]: '140' } },
   { name: 'bpm inverted range', params: { [KEY.bpmGte]: '140', [KEY.bpmLte]: '120' } },
   { name: 'bpm invalid bounds', params: { [KEY.bpmGte]: 'abc', [KEY.bpmLte]: '' } },
+  { name: 'bpm empty', params: { [KEY.bpmEmpty]: 'true' } },
 
   { name: 'rating.gte only', params: { [KEY.ratingGte]: '3' } },
   { name: 'rating.lte only', params: { [KEY.ratingLte]: '2' } },
@@ -82,11 +83,13 @@ const CASES: ParityCase[] = [
   { name: 'key camelot label', params: { [KEY.key]: '8A', [KEY.keyTolerance]: '0' } },
   { name: 'key tolerance', params: { [KEY.key]: '8A', [KEY.keyTolerance]: '2' } },
   { name: 'key invalid', params: { [KEY.key]: 'Hm' } },
+  { name: 'key empty', params: { [KEY.keyEmpty]: 'true' } },
 
   { name: 'year.gte only', params: { [KEY.yearGte]: '1995' } },
   { name: 'year.lte only', params: { [KEY.yearLte]: '2000' } },
   { name: 'year range', params: { [KEY.yearGte]: '1990', [KEY.yearLte]: '2000' } },
   { name: 'year inverted range', params: { [KEY.yearGte]: '2000', [KEY.yearLte]: '1990' } },
+  { name: 'year empty', params: { [KEY.yearEmpty]: 'true' } },
 
   { name: 'search artist', params: { [KEY.search]: 'bailey' } },
   { name: 'search title', params: { [KEY.search]: 'love' } },
