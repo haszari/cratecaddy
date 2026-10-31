@@ -27,10 +27,11 @@ function SortIcon({ sortDirection }: { field: SortField; sortField?: SortField; 
   );
 }
 
-function SortableHeader({ field, title, icon, sortField, sortDirection, onSortChange }: {
+function SortableHeader({ field, title, icon, align = 'left', sortField, sortDirection, onSortChange }: {
   field: SortField;
   title: string;
   icon: React.ReactNode;
+  align?: 'left' | 'right';
   sortField?: SortField;
   sortDirection?: SortDirection;
   onSortChange?: (field: SortField, direction: SortDirection) => void;
@@ -45,8 +46,11 @@ function SortableHeader({ field, title, icon, sortField, sortDirection, onSortCh
       }}
       title={title}
     >
-      {icon}
-      {sortButton}
+      <span className="SongTable-sortable-inner">
+        {align === 'right' && sortButton}
+        {icon}
+        {align === 'left' && sortButton}
+      </span>
     </th>
   );
 }
@@ -66,13 +70,13 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
           <tr>
             <th className="col-heart" />
             <th className="col-sources">Sources</th>
-            <SortableHeader field="artist" title="Artist" icon={<UserRound size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="title" title="Title" icon={<Disc3 size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="rating" title="Rating" icon={<Star size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="bpm" title="Tempo (BPM)" icon={<Drum size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="key" title="Key" icon={<Piano size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="year" title="Year" icon={<Calendar size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <th className="col-genres"><Tag size={16} fill="currentColor" stroke="none" /></th>
+            <SortableHeader field="artist" title="Artist" align="left" icon={<UserRound size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="title" title="Title" align="left" icon={<Disc3 size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="rating" title="Rating" align="left" icon={<Star size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="bpm" title="Tempo (BPM)" align="right" icon={<Drum size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="key" title="Key" align="left" icon={<Piano size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="year" title="Year" align="right" icon={<Calendar size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <th className="col-genres"><Tag size={16} /></th>
           </tr>
         </thead>
         <tbody>

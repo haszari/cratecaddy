@@ -139,8 +139,14 @@ thead th {
   opacity: 1;
 }
 
+.SongTable-sortable-inner {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  gap: 0.2em;
+}
+
 .SongTable-sort-icon {
-  margin-left: 0.25em;
   font-size: 0.7em;
   vertical-align: middle;
   line-height: 1;
@@ -182,16 +188,18 @@ thead th:last-child {
 .col-artist,
 .col-title,
 .col-genres,
-.col-rating {
+.col-rating,
+.col-key {
   text-align: left;
 }
 
-.col-rating {
+.col-rating,
+.col-key {
   padding: 0 0.3em;
 }
 
 .col-bpm,
-.col-key {
+.col-year {
   text-align: right;
   padding: 0 0.3em;
 }

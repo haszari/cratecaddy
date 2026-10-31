@@ -5,7 +5,7 @@ $disabled: rgba(255, 255, 255, 0.7); // existing grey (rating filter off)
   position: relative;
   display: inline-flex;
   width: 2em;
-  height: 1.5em;
+  height: 1.6em;
   cursor: pointer;
   align-items: center;
   justify-content: center;
@@ -17,19 +17,21 @@ $disabled: rgba(255, 255, 255, 0.7); // existing grey (rating filter off)
 
   .OwnershipFilter-cloud {
     top: 0;
-    left: 0;
+    right: 0;
   }
 
   .OwnershipFilter-handbag {
     bottom: 0;
-    right: 0;
+    left: 0;
   }
 
   &--owned .OwnershipFilter-handbag {
     color: $selected;
+    fill: $selected;
   }
 
   &--streaming .OwnershipFilter-cloud {
     color: $selected;
+    fill: $selected;
   }
 }

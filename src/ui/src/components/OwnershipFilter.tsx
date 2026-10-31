@@ -41,8 +41,8 @@ export default function OwnershipFilter({ value, onChange }: OwnershipFilterProp
             : 'Cloud only'
       }
     >
-      <Cloud size={16} fill="currentColor" stroke="none" className="OwnershipFilter-cloud" />
-      <Handbag size={16} fill="currentColor" stroke="none" className="OwnershipFilter-handbag" />
+      <Cloud size="1.1em" className="OwnershipFilter-cloud" />
+      <Handbag size="1.1em" className="OwnershipFilter-handbag" />
     </span>
   );
 }
