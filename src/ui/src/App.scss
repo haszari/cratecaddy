@@ -1,6 +1,6 @@
 .App {
   text-align: center;
-  padding: 0 1em 1em;
+  padding: 4.5em 1em 1em;
 }
 
 .error-message {
@@ -142,6 +142,12 @@ thead th {
 .SongTable-sort-icon {
   margin-left: 0.25em;
   font-size: 0.7em;
+  vertical-align: middle;
+  line-height: 1;
+  display: inline-block;
+}
+
+th.SongTable-sortable svg {
   vertical-align: middle;
 }
 

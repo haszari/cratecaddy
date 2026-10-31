@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
-import { ActionIcon, Badge, Group, Select } from '@mantine/core';
+import { useCallback, useMemo, useState } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import { camelotLabel, camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
+import './FilterPill.scss';
 
 interface KeyFilterProps {
   musicalKey?: string;
@@ -44,51 +44,70 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
     onChange?.(undefined, undefined);
   }, [onChange]);
 
+  const note = useMemo(() => {
+    const idx = KEY_OPTIONS.findIndex((o) => o.value === target);
+    return idx >= 0 ? camelotToMusicalKey(idx) : '';
+  }, [target]);
+
   if (readOnly) {
     if (!hasFilter) return null;
-    return <Badge variant="light">{target} ±{tolerance}</Badge>;
+    return (
+      <span className="FilterPill FilterPill--inactive">
+        <span className="FilterPill-placeholder">{note} ({target}) ±{tolerance}</span>
+      </span>
+    );
   }
 
   if (!active) {
     return (
-      <Badge
-        variant="light"
+      <span
+        className="FilterPill FilterPill--inactive"
         onClick={() => {
           setActive(true);
           commit(target, tolerance);
         }}
-        style={{ cursor: 'pointer' }}
-        title="Filter by key"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setActive(true);
+            commit(target, tolerance);
+          }
+        }}
       >
-        key
-      </Badge>
+        <span className="FilterPill-placeholder">key</span>
+      </span>
     );
   }
 
   return (
-    <Group gap={4} wrap="nowrap">
-      <ActionIcon variant="subtle" size="sm" onClick={() => adjustTolerance(-1)} title="Narrow key range" disabled={tolerance <= 0}>
+    <span className="FilterPill">
+      <button className="FilterPill-btn" onClick={() => adjustTolerance(-1)} disabled={tolerance <= 0} title="Narrow key range">
         <Minus size={14} />
-      </ActionIcon>
-      <Select
-        size="xs"
-        w={130}
+      </button>
+
+      <select
+        className="FilterPill-select"
         value={target}
-        onChange={(v) => {
-          if (v) {
-            setTarget(v);
-            commit(v, tolerance);
-          }
+        onChange={(e) => {
+          const v = e.target.value;
+          setTarget(v);
+          commit(v, tolerance);
         }}
-        data={KEY_OPTIONS}
-        searchable
-      />
-      <ActionIcon variant="subtle" size="sm" onClick={() => adjustTolerance(1)} title="Widen key range">
+      >
+        {KEY_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+
+      <button className="FilterPill-btn" onClick={() => adjustTolerance(1)} title="Widen key range">
         <Plus size={14} />
-      </ActionIcon>
-      <ActionIcon variant="subtle" size="sm" onClick={clear} title="Clear key filter">
+      </button>
+
+      <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear key filter">
         <X size={14} />
-      </ActionIcon>
-    </Group>
+      </button>
+    </span>
   );
 }

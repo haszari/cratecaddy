@@ -2,7 +2,7 @@ import { SourcesIcons } from './SourcesIcons';
 import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
-import { Heart, UserRound, Disc3, Star, Drum, Tag, Calendar } from 'lucide-react';
+import { Heart, UserRound, Disc3, Star, Drum, Piano, Tag, Calendar } from 'lucide-react';
 import { camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
 
 export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
@@ -70,9 +70,9 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
             <SortableHeader field="title" title="Title" icon={<Disc3 size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
             <SortableHeader field="rating" title="Rating" icon={<Star size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
             <SortableHeader field="bpm" title="Tempo (BPM)" icon={<Drum size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="key" title="Key" icon={<Tag size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="key" title="Key" icon={<Piano size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
             <SortableHeader field="year" title="Year" icon={<Calendar size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <th className="col-genres">Genres</th>
+            <th className="col-genres"><Tag size={16} fill="currentColor" /></th>
           </tr>
         </thead>
         <tbody>

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { ActionIcon, Badge, Group, NumberInput } from '@mantine/core';
 import { ChevronUp, ChevronDown, Plus, Minus, X } from 'lucide-react';
-import './TempoRangeControl.scss';
+import './FilterPill.scss';
 
 interface TempoRangeControlProps {
   bpmGte?: number;
@@ -109,72 +108,87 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
     if (onChange) onChange(undefined, undefined);
   }, [onChange]);
 
-  const handleInputChange = useCallback(
-    (value: string | number) => {
-      const text = String(value);
-      if (!active && onChange) {
-        setActive(true);
-        setRange(5);
-      }
-      setInputBuf(text);
-    },
-    [active, onChange],
-  );
-
   const centreNum = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
   const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
   const maxHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum + range : undefined;
 
   if (readOnly) {
     if (!hasFilter) return null;
-    return <Badge variant="light">{bpmGte ?? '?'}–{bpmLte ?? '?'}</Badge>;
+    return (
+      <span className="FilterPill FilterPill--inactive">
+        <span className="FilterPill-placeholder">{bpmGte ?? '?'}–{bpmLte ?? '?'}</span>
+      </span>
+    );
   }
 
   if (!active) {
     return (
-      <Badge
-        variant="light"
+      <span
+        className="FilterPill FilterPill--inactive"
         onClick={() => { setActive(true); setRange(5); }}
-        style={{ cursor: 'pointer' }}
-        title="Filter by tempo"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setActive(true);
+            setRange(5);
+          }
+        }}
       >
-        tempo
-      </Badge>
+        <span className="FilterPill-placeholder">tempo</span>
+      </span>
     );
   }
 
   return (
-    <Group gap={4} wrap="nowrap">
-      <ActionIcon variant="subtle" size="sm" onClick={decRange} disabled={range <= 0} title="Narrow range">
+    <span className="FilterPill">
+      <button className="FilterPill-btn" onClick={decRange} disabled={range <= 0} title="Narrow range">
         <Minus size={14} />
-      </ActionIcon>
-      {minHint !== undefined && <Badge variant="light">{minHint}</Badge>}
-      <ActionIcon variant="subtle" size="sm" onClick={clear} title="Clear tempo filter">
+      </button>
+
+      {minHint !== undefined && !isNaN(minHint) && (
+        <span className="FilterPill-hint FilterPill-hint--min">{minHint}</span>
+      )}
+
+      <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear tempo filter">
         <X size={14} />
-      </ActionIcon>
-      <NumberInput
+      </button>
+
+      <input
         ref={inputRef}
-        size="xs"
-        w={56}
+        type="number"
+        className="FilterPill-input"
         value={inputBuf}
-        onChange={handleInputChange}
+        onChange={(e) => {
+          if (!active && onChange) {
+            setActive(true);
+            setRange(5);
+          }
+          setInputBuf(e.target.value);
+        }}
         min={0}
         max={999}
-        hideControls
+        step={1}
         placeholder="bpm"
       />
-      <Group gap={0} wrap="nowrap">
-        <ActionIcon variant="subtle" size="sm" onClick={incCentre} title="Increase tempo">
+
+      <span className="FilterPill-stepper">
+        <button className="FilterPill-stepper-btn" onClick={incCentre} title="Increase tempo">
           <ChevronUp size={14} />
-        </ActionIcon>
-        <ActionIcon variant="subtle" size="sm" onClick={decCentre} title="Decrease tempo">
+        </button>
+        <button className="FilterPill-stepper-btn" onClick={decCentre} title="Decrease tempo">
           <ChevronDown size={14} />
-        </ActionIcon>
-      </Group>
-      {maxHint !== undefined && <Badge variant="light">{maxHint}</Badge>}
-      <ActionIcon variant="subtle" size="sm" onClick={incRange} title="Widen range">
+        </button>
+      </span>
+
+      {maxHint !== undefined && !isNaN(maxHint) && (
+        <span className="FilterPill-hint FilterPill-hint--max">{maxHint}</span>
+      )}
+
+      <button className="FilterPill-btn" onClick={incRange} title="Widen range">
         <Plus size={14} />
-      </ActionIcon>
-    </Group>
+      </button>
+    </span>
   );
 }

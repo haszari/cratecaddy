@@ -4,7 +4,7 @@ $pill-hint: #999;
 $pill-radius: 0.5em;
 $pill-height: 2.5em;
 
-.TempoRangeControl {
+.FilterPill {
   display: inline-flex;
   align-items: stretch;
   background: $pill-bg;
@@ -15,37 +15,7 @@ $pill-height: 2.5em;
   font-size: 0.8em;
   user-select: none;
 
-  &.TempoRangeControl-inactive {
-    cursor: pointer;
-    opacity: 0.55;
-
-    &:hover {
-      opacity: 0.85;
-    }
-
-    .TempoRangeControl-placeholder {
-      display: inline-flex;
-      align-items: center;
-      padding: 0 0.6em;
-      white-space: nowrap;
-      font-weight: 500;
-    }
-  }
-
-  &.TempoRangeControl-readOnly {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    align-items: center;
-    padding: 0 0.4em;
-    gap: 0.15em;
-
-    .TempoRangeControl-centre {
-      font-weight: 600;
-      padding: 0 0.2em;
-    }
-  }
-
-  .TempoRangeControl-btn {
+  .FilterPill-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -71,31 +41,33 @@ $pill-height: 2.5em;
       }
     }
 
-    &.TempoRangeControl-btn--clear:hover {
+    &.FilterPill-btn--clear:hover {
       background: rgba(220, 38, 38, 0.15);
       color: #c62828;
     }
   }
 
-  .TempoRangeControl-hint {
+  .FilterPill-hint {
     display: inline-flex;
+    align-items: center;
     padding: 0 0.15em;
     color: $pill-hint;
     font-weight: 500;
     min-width: 2.25em;
     font-size: 0.85em;
     opacity: 0.6;
-    align-items: center;
   }
-  .TempoRangeControl-hint-min {
+
+  .FilterPill-hint--min {
     justify-content: left;
   }
-  .TempoRangeControl-hint-max {
+
+  .FilterPill-hint--max {
     justify-content: right;
   }
 
-  .TempoRangeControl-input {
-    width: 2.5em;
+  .FilterPill-input {
+    width: 2.8em;
     padding: 0 0 0 0.2em;
     border: none;
     background: none;
@@ -116,25 +88,29 @@ $pill-height: 2.5em;
     }
   }
 
-  .TempoRangeControl-stepper {
+  .FilterPill-select {
+    border: none;
+    background: none;
+    color: $pill-fg;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    padding: 0 0.2em;
+    font-size: 0.95em;
+    height: 100%;
+  }
+
+  .FilterPill-stepper {
     display: inline-flex;
     flex-direction: column;
     align-self: stretch;
 
-    .TempoRangeControl-stepper-btn {
+    .FilterPill-stepper-btn {
       flex: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       padding: 0 0.25em;
-
-      &:first-child {
-        padding-top: 0.25em;
-      }
-
-      &:last-child {
-        padding-bottom: 0.25em;
-      }
       border: none;
       border-radius: 0;
       background: none;
@@ -145,14 +121,35 @@ $pill-height: 2.5em;
       transition: background 0.1s ease;
       min-height: 0;
 
+      &:first-child {
+        padding-top: 0.25em;
+      }
+
+      &:last-child {
+        padding-bottom: 0.25em;
+      }
+
       &:hover {
         background: rgba(0, 0, 0, 0.08);
       }
-
-      &.TempoRangeControl-stepper-btn--spacer {
-        pointer-events: none;
-        opacity: 0;
-      }
     }
+  }
+}
+
+.FilterPill--inactive {
+  cursor: pointer;
+  opacity: 0.55;
+  align-items: center;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  .FilterPill-placeholder {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.6em;
+    white-space: nowrap;
+    font-weight: 500;
   }
 }

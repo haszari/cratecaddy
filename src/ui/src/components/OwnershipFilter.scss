@@ -9,57 +9,46 @@
 
   svg {
     position: absolute;
-    transition: opacity 0.12s ease, transform 0.12s ease, left 0.12s ease, top 0.12s ease;
+    transition: left 0.12s ease, top 0.12s ease;
   }
 
   .OwnershipFilter-cloud {
     top: 0;
     left: 0.55em;
-    transform: rotate(0deg);
+    z-index: 1;
   }
 
   .OwnershipFilter-handbag {
     top: 0.35em;
     left: 0;
+    z-index: 2;
   }
 
-  // Default (all): both dimmed, nothing filtered out.
-  &--all svg {
-    opacity: 0.4;
-  }
-
-  // Owned only: handbag lit, bottom-left and on top; cloud dimmed behind.
+  // Owned only: handbag brought to front, bottom-left.
   &--owned {
     .OwnershipFilter-handbag {
-      opacity: 1;
       z-index: 2;
-      top: 0.2em;
+      top: 0.1em;
       left: 0;
     }
     .OwnershipFilter-cloud {
-      opacity: 0.35;
       z-index: 1;
       top: -0.1em;
       left: 0.7em;
-      transform: rotate(45deg);
     }
   }
 
-  // Cloud only: cloud lit, bottom-left and on top; handbag dimmed behind.
+  // Cloud only: cloud brought to front, bottom-left.
   &--streaming {
     .OwnershipFilter-cloud {
-      opacity: 1;
       z-index: 2;
-      top: 0.2em;
+      top: 0.1em;
       left: 0;
-      transform: rotate(0deg);
     }
     .OwnershipFilter-handbag {
-      opacity: 0.35;
       z-index: 1;
       top: -0.15em;
       left: 0.7em;
-      transform: rotate(45deg);
     }
   }
 }
