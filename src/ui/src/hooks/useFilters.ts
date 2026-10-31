@@ -100,10 +100,10 @@ export function useFilters() {
     [setSearchParams],
   );
 
-  const setKeyRange = useCallback(
-    (key?: string, tolerance?: number) => {
+  const setMusicalKeyFilter = useCallback(
+    (musicalKey?: string, tolerance?: number) => {
       setSearchParams((prev) => {
-        let next = setParam(prev, KEY.key, key || null);
+        let next = setParam(prev, KEY.key, musicalKey || null);
         next = setParam(next, KEY.keyTolerance, tolerance !== undefined ? String(tolerance) : null);
         return next;
       });
@@ -186,7 +186,7 @@ export function useFilters() {
     removeExclude,
     setBpmRange,
     setRatingRange,
-    setKeyRange,
+    setMusicalKeyFilter,
     setYearRange,
     setOwnership,
     toggleFavorite,

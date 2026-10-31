@@ -27,7 +27,7 @@ export interface FilterBarProps {
   onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
   onRatingChange?: (gte?: number, lte?: number) => void;
-  onKeyChange?: (key?: string, tolerance?: number) => void;
+  onMusicalKeyChange?: (musicalKey?: string, tolerance?: number) => void;
   onYearChange?: (gte?: number, lte?: number) => void;
   onOwnershipChange?: (value?: string) => void;
   shuffleActive?: boolean;
@@ -47,7 +47,7 @@ export default function FilterBar({
   genreNot, bpmGte, bpmLte, ratingGte, ratingLte,
   musicalKey, keyTolerance, yearGte, yearLte, ownership,
   onRemoveExclude, onBpmChange, onRatingChange,
-  onKeyChange, onYearChange, onOwnershipChange,
+  onMusicalKeyChange, onYearChange, onOwnershipChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
   favouriteMode = 'filter', favouriteHref,
@@ -73,7 +73,7 @@ export default function FilterBar({
   const showSearch = search !== undefined || onSearchChange;
   const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
   const showRating = onRatingChange !== undefined || (readOnly && hasRating);
-  const showKey = onKeyChange !== undefined || (readOnly && musicalKey !== undefined);
+  const showKey = onMusicalKeyChange !== undefined || (readOnly && musicalKey !== undefined);
   const showYear = onYearChange !== undefined || (readOnly && (yearGte !== undefined || yearLte !== undefined));
 
   const renderHeart = () => {
@@ -182,7 +182,7 @@ export default function FilterBar({
           <KeyFilter
             musicalKey={musicalKey}
             keyTolerance={keyTolerance}
-            onChange={readOnly ? undefined : onKeyChange}
+            onChange={readOnly ? undefined : onMusicalKeyChange}
             readOnly={readOnly}
           />
         )}

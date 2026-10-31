@@ -6,7 +6,7 @@ import './FilterPill.scss';
 interface KeyFilterProps {
   musicalKey?: string;
   keyTolerance?: number;
-  onChange?: (key?: string, tolerance?: number) => void;
+  onChange?: (musicalKey?: string, tolerance?: number) => void;
   readOnly?: boolean;
 }
 

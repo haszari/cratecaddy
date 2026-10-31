@@ -2,7 +2,7 @@ import { SourcesIcons } from './SourcesIcons';
 import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
-import { Heart, UserRound, Disc3, Star, Drum, Piano, Tag, Calendar } from 'lucide-react';
+import { Heart, UserRound, Disc3, Star, Drum, Piano, Tag, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
 import { camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
 
 export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
@@ -22,7 +22,7 @@ interface SongTableProps {
 function SortIcon({ sortDirection }: { field: SortField; sortField?: SortField; sortDirection?: SortDirection }) {
   return (
     <span className="SongTable-sort-icon SongTable-sort-icon--active">
-      {sortDirection === 'desc' ? '\u25B2' : '\u25BC'}
+      {sortDirection === 'desc' ? <ChevronDown size={12} strokeWidth={2.5} /> : <ChevronUp size={12} strokeWidth={2.5} />}
     </span>
   );
 }

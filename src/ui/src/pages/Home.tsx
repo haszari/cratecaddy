@@ -20,7 +20,7 @@ export default function Home() {
     addExclude,
     removeExclude,
     setBpmRange, setRatingRange, setSearch,
-    setKeyRange, setYearRange, setOwnership,
+    setMusicalKeyFilter, setYearRange, setOwnership,
   } = useFilters();
 
   const extraParams = buildApiParams(filters);
@@ -73,7 +73,7 @@ export default function Home() {
         onRatingChange={setRatingRange}
         musicalKey={filters.musicalKey}
         keyTolerance={filters.keyTolerance}
-        onKeyChange={setKeyRange}
+        onMusicalKeyChange={setMusicalKeyFilter}
         yearGte={filters.yearGte}
         yearLte={filters.yearLte}
         onYearChange={setYearRange}
