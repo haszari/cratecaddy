@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActionIcon, Badge, Group, Select } from '@mantine/core';
 import { Minus, Plus, X } from 'lucide-react';
 import { camelotLabel, camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
@@ -12,7 +12,7 @@ interface KeyFilterProps {
 
 const KEY_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
   value: camelotLabel(index),
-  label: `${camelotLabel(index)} — ${camelotToMusicalKey(index)}`,
+  label: `${camelotToMusicalKey(index)} (${camelotLabel(index)})`,
 }));
 
 export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly }: KeyFilterProps) {
@@ -43,11 +43,6 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
     setActive(false);
     onChange?.(undefined, undefined);
   }, [onChange]);
-
-  const note = useMemo(() => {
-    const idx = KEY_OPTIONS.findIndex((o) => o.value === target);
-    return idx >= 0 ? camelotToMusicalKey(idx) : '';
-  }, [target]);
 
   if (readOnly) {
     if (!hasFilter) return null;
@@ -88,14 +83,12 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
         data={KEY_OPTIONS}
         searchable
       />
-      <Badge variant="light">±{tolerance}</Badge>
       <ActionIcon variant="subtle" size="sm" onClick={() => adjustTolerance(1)} title="Widen key range">
         <Plus size={14} />
       </ActionIcon>
       <ActionIcon variant="subtle" size="sm" onClick={clear} title="Clear key filter">
         <X size={14} />
       </ActionIcon>
-      {note && <Badge variant="default" color="gray">{note}</Badge>}
     </Group>
   );
 }

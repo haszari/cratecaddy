@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ActionIcon, Badge, Group, NumberInput } from '@mantine/core';
-import { Minus, Plus, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, Plus, Minus, X } from 'lucide-react';
 
 interface YearRangeControlProps {
   yearGte?: number;
@@ -23,13 +23,13 @@ function spread(gte?: number, lte?: number): number {
 export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly }: YearRangeControlProps) {
   const hasFilter = yearGte !== undefined || yearLte !== undefined;
   const [active, setActive] = useState(hasFilter);
-  const [centreVal, setCentreVal] = useState<string>(hasFilter ? String(centre(yearGte, yearLte) ?? '') : '');
-  const [spreadVal, setSpreadVal] = useState(spread(yearGte, yearLte));
+  const [inputBuf, setInputBuf] = useState<string>(hasFilter ? String(centre(yearGte, yearLte) ?? '') : '');
+  const [range, setRange] = useState(spread(yearGte, yearLte));
 
   const commit = useCallback(
-    (c: number | undefined, s: number) => {
+    (c: number | undefined, r: number) => {
       if (!onChange || c === undefined || isNaN(c)) return;
-      onChange(Math.max(c - s, 0), c + s);
+      onChange(Math.max(c - r, 0), c + r);
     },
     [onChange],
   );
@@ -37,29 +37,54 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
   const applyCentre = useCallback(
     (value: string | number) => {
       const text = String(value);
-      setCentreVal(text);
+      if (!active && onChange) { setActive(true); setRange(5); }
+      setInputBuf(text);
       const c = text === '' ? undefined : parseInt(text, 10);
-      if (c !== undefined && !isNaN(c)) commit(c, spreadVal);
+      if (c !== undefined && !isNaN(c)) commit(c, range);
     },
-    [commit, spreadVal],
+    [active, onChange, range, commit],
   );
 
-  const adjustSpread = useCallback(
-    (delta: number) => {
-      setSpreadVal((prev) => {
-        const next = Math.max(0, prev + delta);
-        const c = centreVal === '' ? undefined : parseInt(centreVal, 10);
-        if (c !== undefined && !isNaN(c)) commit(c, next);
-        return next;
-      });
-    },
-    [centreVal, commit],
-  );
+  const incCentre = useCallback(() => {
+    if (!active && onChange) { setActive(true); setRange(5); return; }
+    const cur = inputBuf === '' ? 2000 : (parseInt(inputBuf, 10) || 2000);
+    const next = Math.min(cur + 1, 2099);
+    setInputBuf(String(next));
+    commit(next, range);
+  }, [active, onChange, inputBuf, range, commit]);
+
+  const decCentre = useCallback(() => {
+    if (!active && onChange) { setActive(true); setRange(5); return; }
+    const cur = inputBuf === '' ? 2000 : (parseInt(inputBuf, 10) || 2000);
+    const next = Math.max(cur - 1, 1900);
+    setInputBuf(String(next));
+    commit(next, range);
+  }, [active, onChange, inputBuf, range, commit]);
+
+  const incRange = useCallback(() => {
+    if (!active && onChange) { setActive(true); setRange(5); return; }
+    setRange((prev) => {
+      const next = prev + 1;
+      const c = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
+      if (c !== undefined && !isNaN(c)) commit(c, next);
+      return next;
+    });
+  }, [active, onChange, inputBuf, commit]);
+
+  const decRange = useCallback(() => {
+    if (!active && onChange) { setActive(true); setRange(5); return; }
+    setRange((prev) => {
+      const next = Math.max(prev - 1, 0);
+      const c = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
+      if (c !== undefined && !isNaN(c)) commit(c, next);
+      return next;
+    });
+  }, [active, onChange, inputBuf, commit]);
 
   const clear = useCallback(() => {
     setActive(false);
-    setCentreVal('');
-    setSpreadVal(0);
+    setInputBuf('');
+    setRange(0);
     onChange?.(undefined, undefined);
   }, [onChange]);
 
@@ -72,10 +97,7 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     return (
       <Badge
         variant="light"
-        onClick={() => {
-          setActive(true);
-          setSpreadVal(5);
-        }}
+        onClick={() => { setActive(true); setRange(5); }}
         style={{ cursor: 'pointer' }}
         title="Filter by year"
       >
@@ -84,32 +106,40 @@ export default function YearRangeControl({ yearGte, yearLte, onChange, readOnly 
     );
   }
 
-  const cNum = centreVal === '' ? undefined : parseInt(centreVal, 10);
-  const min = cNum !== undefined && !isNaN(cNum) ? cNum - spreadVal : undefined;
-  const max = cNum !== undefined && !isNaN(cNum) ? cNum + spreadVal : undefined;
+  const centreNum = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
+  const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
+  const maxHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum + range : undefined;
 
   return (
     <Group gap={4} wrap="nowrap">
-      <ActionIcon variant="subtle" size="sm" onClick={() => adjustSpread(-1)} title="Narrow year range" disabled={spreadVal <= 0}>
+      <ActionIcon variant="subtle" size="sm" onClick={decRange} disabled={range <= 0} title="Narrow year range">
         <Minus size={14} />
       </ActionIcon>
-      {min !== undefined && <Badge variant="light">{min}</Badge>}
+      {minHint !== undefined && <Badge variant="light">{minHint}</Badge>}
+      <ActionIcon variant="subtle" size="sm" onClick={clear} title="Clear year filter">
+        <X size={14} />
+      </ActionIcon>
       <NumberInput
         size="xs"
-        w={64}
-        value={centreVal}
+        w={60}
+        value={inputBuf}
         onChange={applyCentre}
         min={1900}
         max={2099}
         hideControls
         placeholder="year"
       />
-      {max !== undefined && <Badge variant="light">{max}</Badge>}
-      <ActionIcon variant="subtle" size="sm" onClick={() => adjustSpread(1)} title="Widen year range">
+      <Group gap={0} wrap="nowrap">
+        <ActionIcon variant="subtle" size="sm" onClick={incCentre} title="Increase year">
+          <ChevronUp size={14} />
+        </ActionIcon>
+        <ActionIcon variant="subtle" size="sm" onClick={decCentre} title="Decrease year">
+          <ChevronDown size={14} />
+        </ActionIcon>
+      </Group>
+      {maxHint !== undefined && <Badge variant="light">{maxHint}</Badge>}
+      <ActionIcon variant="subtle" size="sm" onClick={incRange} title="Widen year range">
         <Plus size={14} />
-      </ActionIcon>
-      <ActionIcon variant="subtle" size="sm" onClick={clear} title="Clear year filter">
-        <X size={14} />
       </ActionIcon>
     </Group>
   );

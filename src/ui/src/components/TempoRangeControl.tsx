@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
+import { ActionIcon, Badge, Group, NumberInput } from '@mantine/core';
 import { ChevronUp, ChevronDown, Plus, Minus, X } from 'lucide-react';
 import './TempoRangeControl.scss';
 
@@ -109,22 +110,16 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
   }, [onChange]);
 
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (value: string | number) => {
+      const text = String(value);
       if (!active && onChange) {
         setActive(true);
         setRange(5);
       }
-      setInputBuf(e.target.value);
+      setInputBuf(text);
     },
     [active, onChange],
   );
-
-  const handleFocus = useCallback(() => {
-    if (!active) {
-      setActive(true);
-      setRange(5);
-    }
-  }, [active]);
 
   const centreNum = inputBuf === '' ? undefined : parseInt(inputBuf, 10);
   const minHint = centreNum !== undefined && !isNaN(centreNum) ? centreNum - range : undefined;
@@ -132,103 +127,54 @@ export default function TempoRangeControl({ bpmGte, bpmLte, onChange, readOnly }
 
   if (readOnly) {
     if (!hasFilter) return null;
-    return (
-      <span className="TempoRangeControl TempoRangeControl-readOnly">
-        <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{bpmGte ?? '?'}</span>
-        <span className="TempoRangeControl-centre">{computeCentre(bpmGte, bpmLte) ?? '?'}</span>
-        <span className="TempoRangeControl-stepper">
-          <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
-          <span className="TempoRangeControl-stepper-btn TempoRangeControl-stepper-btn--spacer" />
-        </span>
-        <span className="TempoRangeControl-hint TempoRangeControl-hint-max">{bpmLte ?? '?'}</span>
-      </span>
-    );
+    return <Badge variant="light">{bpmGte ?? '?'}–{bpmLte ?? '?'}</Badge>;
   }
 
   if (!active) {
     return (
-      <span
-        className="TempoRangeControl TempoRangeControl-inactive"
+      <Badge
+        variant="light"
         onClick={() => { setActive(true); setRange(5); }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setActive(true);
-            setRange(5);
-          }
-        }}
+        style={{ cursor: 'pointer' }}
+        title="Filter by tempo"
       >
-        <span className="TempoRangeControl-placeholder">tempo</span>
-      </span>
+        tempo
+      </Badge>
     );
   }
 
   return (
-    <span className="TempoRangeControl">
-      <button
-        className="TempoRangeControl-btn"
-        onClick={decRange}
-        disabled={range <= 0}
-        title="Narrow range"
-      >
+    <Group gap={4} wrap="nowrap">
+      <ActionIcon variant="subtle" size="sm" onClick={decRange} disabled={range <= 0} title="Narrow range">
         <Minus size={14} />
-      </button>
-
-      {minHint !== undefined && !isNaN(minHint) && (
-        <span className="TempoRangeControl-hint TempoRangeControl-hint-min">{minHint}</span>
-      )}
-
-      <button
-        className="TempoRangeControl-btn TempoRangeControl-btn--clear"
-        onClick={clear}
-        title="Clear BPM filter"
-      >
+      </ActionIcon>
+      {minHint !== undefined && <Badge variant="light">{minHint}</Badge>}
+      <ActionIcon variant="subtle" size="sm" onClick={clear} title="Clear tempo filter">
         <X size={14} />
-      </button>
-
-      <input
+      </ActionIcon>
+      <NumberInput
         ref={inputRef}
-        type="number"
-        className="TempoRangeControl-input"
+        size="xs"
+        w={56}
         value={inputBuf}
         onChange={handleInputChange}
-        onFocus={handleFocus}
         min={0}
         max={999}
-        step={1}
+        hideControls
         placeholder="bpm"
       />
-
-      <span className="TempoRangeControl-stepper">
-        <button
-          className="TempoRangeControl-stepper-btn"
-          onClick={incCentre}
-          title="Increase tempo"
-        >
+      <Group gap={0} wrap="nowrap">
+        <ActionIcon variant="subtle" size="sm" onClick={incCentre} title="Increase tempo">
           <ChevronUp size={14} />
-        </button>
-        <button
-          className="TempoRangeControl-stepper-btn"
-          onClick={decCentre}
-          title="Decrease tempo"
-        >
+        </ActionIcon>
+        <ActionIcon variant="subtle" size="sm" onClick={decCentre} title="Decrease tempo">
           <ChevronDown size={14} />
-        </button>
-      </span>
-
-      {maxHint !== undefined && !isNaN(maxHint) && (
-        <span className="TempoRangeControl-hint TempoRangeControl-hint-max">{maxHint}</span>
-      )}
-
-      <button
-        className="TempoRangeControl-btn"
-        onClick={incRange}
-        title="Widen range"
-      >
+        </ActionIcon>
+      </Group>
+      {maxHint !== undefined && <Badge variant="light">{maxHint}</Badge>}
+      <ActionIcon variant="subtle" size="sm" onClick={incRange} title="Widen range">
         <Plus size={14} />
-      </button>
-    </span>
+      </ActionIcon>
+    </Group>
   );
 }
