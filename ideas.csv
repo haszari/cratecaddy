@@ -1,9 +1,6 @@
 Description,Category,Type,Size,link,PR
 "Find a song on external services — play, stream, search or buy (links to YouTube, Bandcamp, stores)",Explore,feature,M,,
 "Play the song in the linked Apple Music app (AppleScript bridge, local only)",Curate,feature,S,,
-Filter songs by year while browsing,Explore,feature,S,https://github.com/haszari/cratecaddy/issues/31,
-Filter by key,Explore,feature,S,https://github.com/haszari/cratecaddy/issues/31,
-Filter by owned vs streaming (cloud) files,Explore,feature,S,https://github.com/haszari/cratecaddy/issues/31,
 "Browse a DJ-specific subset of the library (e.g. owned files, DJ tags) that matches a rekordbox USB stick for playing on decks",Curate,feature,M,,
 "Define minimum metadata standards (required fields, required tags based on other tags) and surface songs that fall short, with easy ways to fix them",Curate,feature,L,,
 "Consistent metadata for tracks with multiple artists (split, detect, keep consistent when saved)",Curate,feature,M,,
