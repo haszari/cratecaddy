@@ -150,23 +150,25 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="FilterBar-excludeGroup">
-        {genreNot.map((genre) => (
-          <span
-            key={`ex:${genre}`}
-            className="FilterBar-chip FilterBar-chip-exclude"
-            onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
-            title={readOnly ? undefined : `Remove ${genre}`}
-          >
-            {genre}
-            {!readOnly && (
-              <span className="FilterBar-chip-x">
-                <X size={14} />
-              </span>
-            )}
-          </span>
-        ))}
-      </div>
+      {genreNot.length > 0 && (
+        <div className="FilterBar-excludeGroup">
+          {genreNot.map((genre) => (
+            <span
+              key={`ex:${genre}`}
+              className="FilterBar-chip FilterBar-chip-exclude"
+              onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
+              title={readOnly ? undefined : `Remove ${genre}`}
+            >
+              {genre}
+              {!readOnly && (
+                <span className="FilterBar-chip-x">
+                  <X size={14} />
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="FilterBar-filterGroup">
         {isApiBuild && (!readOnly || favouriteMode === 'indicator') && renderHeart()}
