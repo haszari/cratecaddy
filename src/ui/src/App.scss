@@ -204,6 +204,40 @@ thead th:last-child {
   padding: 0 0.3em;
 }
 
+@media (max-width: 768px) {
+  thead {
+    display: none;
+  }
+
+  table,
+  tbody {
+    display: block;
+  }
+
+  tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.5em;
+    row-gap: 0.15em;
+    padding: 0.3em 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  tbody td {
+    padding: 0.1em 0.2em;
+  }
+
+  tbody td.col-genres {
+    flex: 1 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.3em;
+    padding-top: 0.2em;
+  }
+}
+
 .Artist-link {
   font-weight: 700;
 }
