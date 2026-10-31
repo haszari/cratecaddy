@@ -1,4 +1,5 @@
-$lit: #ffffff;              // existing UI white
+$lit-fill: #f5a623;         // existing orange (rating filter on)
+$lit-stroke: #ffffff;        // existing UI white
 $disabled: #b3b3b3;          // existing solid grey (table icon grey)
 
 .OwnershipFilter {
@@ -26,10 +27,12 @@ $disabled: #b3b3b3;          // existing solid grey (table icon grey)
   }
 
   &--owned .OwnershipFilter-handbag {
-    color: $lit;
+    color: $lit-stroke;
+    fill: $lit-fill;
   }
 
   &--streaming .OwnershipFilter-cloud {
-    color: $lit;
+    color: $lit-stroke;
+    fill: $lit-fill;
   }
 }
