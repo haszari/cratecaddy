@@ -11,7 +11,7 @@ import KeyFilter from './KeyFilter';
 import YearRangeControl from './YearRangeControl';
 import OwnershipFilter from './OwnershipFilter';
 import { useFilters } from '../hooks/useFilters';
-import { useEditLinks } from '../shell/EditLinksContext';
+import { useEditLinks } from '../shell/useEditLinks';
 
 export interface FilterBarProps {
   genreNot: string[];

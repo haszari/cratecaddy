@@ -12,6 +12,7 @@ export interface ISource {
   bitRate?: number;
   fileType?: string;
   dateModified?: Date;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongoose Mixed (free-form per-source metadata)
   sourceMetadata?: Record<string, any>;
   lastImportDate: Date;
 }

@@ -7,7 +7,7 @@ import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import { buildEditUrl } from '../utils/urlBuilder';
-import { useEditLinks } from '../shell/EditLinksContext';
+import { useEditLinks } from '../shell/useEditLinks';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function GenreDetail() {

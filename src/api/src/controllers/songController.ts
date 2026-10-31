@@ -7,6 +7,7 @@ import {
   PAGINATION_PARAM_KEYS,
 } from '../helpers/apiParams.js';
 import { IHistorySnapshot } from '../models/History.js';
+import { ISong } from '../models/Song.js';
 
 function extractFilterParams(query: Record<string, unknown>): ApiFilterParams {
   const filters: ApiFilterParams = {};
@@ -36,7 +37,7 @@ export class SongController {
       const filters = extractFilterParams(req.query as Record<string, unknown>);
       const pagination = extractPaginationParams(req.query as Record<string, unknown>);
       const result = await songService.querySongs({ filters, pagination });
-      const data = result.data.map((song: any) => ({
+      const data = result.data.map((song: ISong) => ({
         ...(song.toObject ? song.toObject() : song),
         genres: normalizeGenres(song.genres || []),
       }));
@@ -212,7 +213,7 @@ export class SongController {
 
       const withDiffs = history.map((entry, i) => {
         const obj = entry.toObject();
-        let diffs: SnapshotDiff[] = [];
+        const diffs: SnapshotDiff[] = [];
         if (i > 0) {
           const prev = history[i - 1].snapshot;
           for (const field of diffFields) {

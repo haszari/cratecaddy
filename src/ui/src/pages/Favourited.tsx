@@ -6,7 +6,7 @@ import { GenreTagCloud } from '../components/GenreTagCloud';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import { buildEditUrl, buildWithoutFavouritesUrl } from '../utils/urlBuilder';
-import { useEditLinks } from '../shell/EditLinksContext';
+import { useEditLinks } from '../shell/useEditLinks';
 import { splitCSV } from '../utils/urlParams';
 import { Heart } from 'lucide-react';
 import { KEY } from '@cratecaddy-api/apiParams';

@@ -1,6 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import BrowseRoutes from './BrowseRoutes';
-import { EditLinksProvider } from './EditLinksContext';
+import { EditLinksProvider } from './editLinksContext';
 import VersionStatus from './VersionStatus';
 import EditMetadata from '../pages/EditMetadata';
 
