@@ -2,3 +2,5 @@
 src/data/
 /data/
 *.tsbuildinfo
+
+node_modules/
