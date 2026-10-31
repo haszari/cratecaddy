@@ -1,5 +1,6 @@
 $fill: var(--cc-accent);
 $grey: var(--cc-grey);
+$white: var(--cc-white);
 
 .OwnershipFilter {
   position: relative;
@@ -44,7 +45,15 @@ $grey: var(--cc-grey);
     opacity: 1;
   }
 
+  &--streaming .OwnershipFilter-cloud-outline {
+    color: $white;
+  }
+
   &--owned .OwnershipFilter-handbag-fill {
     opacity: 1;
+  }
+
+  &--owned .OwnershipFilter-handbag-outline {
+    color: $white;
   }
 }
