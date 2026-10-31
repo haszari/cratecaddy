@@ -1,6 +1,6 @@
-$pill-bg: rgba(255, 255, 255, 0.9);
-$pill-fg: #333;
-$pill-hint: #999;
+$pill-bg: var(--cc-pill-bg);
+$pill-fg: var(--cc-pill-fg);
+$pill-hint: var(--cc-pill-hint);
 $pill-radius: 0.5em;
 $pill-height: 2.5em;
 
@@ -43,7 +43,7 @@ $pill-height: 2.5em;
 
     &.FilterPill-btn--clear:hover {
       background: rgba(220, 38, 38, 0.15);
-      color: #c62828;
+      color: var(--cc-danger);
     }
   }
 

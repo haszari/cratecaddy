@@ -8,6 +8,15 @@
   --foreground: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  /* Design tokens — shared colours. Prefer these over hardcoded values. */
+  --cc-accent: #f5a623;
+  --cc-grey: #b3b3b3;
+  --cc-muted: #666;
+  --cc-pill-bg: rgba(255, 255, 255, 0.9);
+  --cc-pill-fg: #333;
+  --cc-pill-hint: #999;
+  --cc-danger: #c62828;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

@@ -25,11 +25,11 @@
     transition: color 0.1s ease;
 
     &.StarRatingFilter-star--on {
-      color: #f5a623;
+      color: var(--cc-accent);
     }
 
     &.StarRatingFilter-star--off {
-      color: #b3b3b3;
+      color: var(--cc-grey);
     }
   }
 }

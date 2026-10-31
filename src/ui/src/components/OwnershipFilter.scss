@@ -1,5 +1,5 @@
-$fill: #f5a623;              // existing orange
-$grey: #b3b3b3;              // existing solid grey (table icon grey)
+$fill: var(--cc-accent);
+$grey: var(--cc-grey);
 
 .OwnershipFilter {
   position: relative;

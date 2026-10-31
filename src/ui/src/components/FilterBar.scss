@@ -75,8 +75,8 @@
     width: 10em;
 
     .mantine-Input-input {
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
+      background: var(--cc-pill-bg);
+      color: var(--cc-pill-fg);
       border: none;
       border-radius: 0.5em;
       height: 2.5em;
@@ -90,13 +90,13 @@
       }
 
       &::placeholder {
-        color: #999;
+        color: var(--cc-pill-hint);
       }
     }
 
     .mantine-Input-section {
       padding-right: 0.35em;
-      color: #666;
+      color: var(--cc-muted);
     }
   }
 
