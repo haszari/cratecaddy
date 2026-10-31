@@ -111,14 +111,14 @@
     justify-content: center;
   }
 
-  .FilterBar-navGroup,
-  .FilterBar-excludeGroup,
-  .FilterBar-filterGroup {
+  .FilterBar .FilterBar-navGroup,
+  .FilterBar .FilterBar-excludeGroup,
+  .FilterBar .FilterBar-filterGroup {
     justify-content: center;
     flex: 1 0 100%;
   }
 
-  .FilterBar-navGroup {
+  .FilterBar .FilterBar-navGroup {
     flex-wrap: wrap;
   }
 }

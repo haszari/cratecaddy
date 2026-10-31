@@ -3,6 +3,12 @@
   padding: 4.5em 1em 1em;
 }
 
+@media (max-width: 768px) {
+  .App {
+    padding-top: 14em;
+  }
+}
+
 .error-message {
   color: red;
 }
