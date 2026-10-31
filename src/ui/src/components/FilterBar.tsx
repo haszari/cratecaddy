@@ -161,7 +161,7 @@ export default function FilterBar({
       </div>
 
       <div className="FilterBar-filterGroup">
-        {(!readOnly || favouriteMode === 'indicator') && renderHeart()}
+        {isApiBuild && (!readOnly || favouriteMode === 'indicator') && renderHeart()}
 
         {showRating && (
           <StarRatingFilter

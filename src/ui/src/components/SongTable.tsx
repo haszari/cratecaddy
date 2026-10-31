@@ -4,6 +4,7 @@ import type { Song } from '../types';
 import { Link } from 'react-router-dom';
 import { Heart, UserRound, Disc3, Star, Drum, Piano, Tag, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
 import { camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
+import { useEditLinks } from '../shell/useEditLinks';
 
 export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
 export type SortDirection = 'asc' | 'desc';
@@ -56,6 +57,7 @@ function SortableHeader({ field, title, icon, align = 'left', sortField, sortDir
 }
 
 export default function SongTable({ songs, page, totalPages, totalCount, onPageChange, sortField, sortDirection, onSortChange }: SongTableProps) {
+  const isApiBuild = useEditLinks();
   const showPagination = totalPages !== undefined && totalPages > 1;
 
   const formatRating = (rating: number | undefined) => {
@@ -68,7 +70,7 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
       <table>
         <thead>
           <tr>
-            <th className="col-heart" />
+            {isApiBuild && <th className="col-heart" />}
             <th className="col-sources">Sources</th>
             <SortableHeader field="artist" title="Artist" align="left" icon={<UserRound size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
             <SortableHeader field="title" title="Title" align="left" icon={<Disc3 size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
@@ -82,9 +84,11 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
         <tbody>
           {songs.map((song) => (
             <tr key={song._id}>
-              <td className="col-heart">
-                {song.favorite === 'starred' && <Heart size={12} />}
-              </td>
+              {isApiBuild && (
+                <td className="col-heart">
+                  {song.favorite === 'starred' && <Heart size={12} />}
+                </td>
+              )}
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />
               </td>

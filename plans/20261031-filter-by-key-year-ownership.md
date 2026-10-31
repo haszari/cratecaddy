@@ -70,6 +70,35 @@ Add three browse filters, built with Mantine UI. Issue: https://github.com/hasza
 - Filter state is URL-driven and survives reload/navigation.
 - Existing filters (tempo, rating, heart, genres, search) unaffected.
 
+## 8) Test plan
+
+### Automated
+
+1. `cd src/api && npx tsc --noEmit` + `npm run lint`
+2. `cd src/ui && npx tsc -b` + `npm run lint`
+3. Parity: `cd src/api && npm run check:static-site-matches-app` — proves API and static site agree on every filter (key/year/ownership/empty in the matrix). Needs MongoDB + data.
+
+### Dev manual smoke
+
+Run dev (Mongo + API + UI), then on a song-list page:
+
+- Key: pick a key, tolerance ±; verify list narrows to harmonic neighbours; sort by key (Camelot order); select "Empty (no key)"; clear.
+- Year: centre + spread; verify list narrows and includes no-year songs; type `-1` → empty; clear.
+- Tempo: unchanged; type `-1` → empty.
+- Ownership: cycle All → Owned → Cloud; verify list filters; both grey = all.
+- Year column shown; sort indicators sit on the correct side per column.
+- URL persists across reload; every control is URL-driven.
+
+### Static build
+
+1. `cd src/api && npm run snapshot` (dev Library)
+2. `cd src/ui && npm run build:static` then `npm run preview:static`
+3. Verify read-only: key/year filters + key sort work on the snapshot; ownership control hidden; no edit affordances.
+
+### Release (when shipping)
+
+Follow `docs/smoke-tests.md` dev → prod → publish run-through.
+
 ## 7) Bugfix phase
 
 ### Song table columns
