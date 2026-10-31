@@ -248,7 +248,7 @@ thead th:last-child {
 }
 
 .genre-pill--and {
-  background: orange;
+  background: var(--cc-orange);
 
   &:hover {
     background: #f44336;
@@ -297,7 +297,7 @@ thead th:last-child {
     background: rgba(0, 0, 0, 0.06);
 
     svg {
-      stroke: orange;
+      stroke: var(--cc-orange);
     }
   }
 }
@@ -352,14 +352,14 @@ thead th:last-child {
 }
 
 .StaticStatus-offline {
-  color: #ffd8a8;
+  color: var(--cc-orange-pale);
 }
 
 .StaticStatus-progress {
   margin-top: 6px;
   height: 3px;
   border-radius: 2px;
-  background: linear-gradient(90deg, #f08c00 0%, #f08c00 40%, #333 40%, #333 100%);
+  background: linear-gradient(90deg, var(--cc-orange-strong) 0%, var(--cc-orange-strong) 40%, #333 40%, #333 100%);
   background-size: 200% 100%;
   animation: snapshot-progress 1.2s linear infinite;
 }

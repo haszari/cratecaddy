@@ -10,7 +10,7 @@
 .GenreTag-pill {
   display: inline-flex;
   align-items: stretch;
-  background: orange;
+  background: var(--cc-orange);
   border-radius: 0.5em;
   overflow: hidden;
   padding: 0;
@@ -19,7 +19,7 @@
   transition: all 0.2s ease;
 
   &:hover {
-    background: darkorange;
+    background: var(--cc-orange-hover);
   }
 
   .GenreTag-pill-btn {

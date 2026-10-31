@@ -16,6 +16,12 @@
   --cc-pill-fg: #333;
   --cc-pill-hint: #999;
   --cc-danger: #c62828;
+  --cc-orange: #ffa500;
+  --cc-orange-hover: #ff8c00;
+  --cc-orange-strong: #f08c00;
+  --cc-orange-pale: #ffd8a8;
+  --cc-purple: #646cff;
+  --cc-purple-hover: #535bf2;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -25,12 +31,12 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--cc-purple);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--cc-purple-hover);
 }
 
 body {
