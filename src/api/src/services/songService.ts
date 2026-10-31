@@ -2,7 +2,7 @@ import { Song, ISong, ISource, SourceFormat } from '../models/Song.js';
 import { HistoryEntry, IHistoryEntry, IHistorySnapshot } from '../models/History.js';
 import { buildSongFilter } from '../helpers/buildSongFilter.js';
 import { ApiFilterParams, ApiPaginationParams } from '../helpers/apiParams.js';
-import { parsePagination, PaginationResult } from '../helpers/pagination.js';
+import { parsePagination } from '../helpers/pagination.js';
 import { buildShuffleHashFunction } from '../helpers/shuffleHash.js';
 import { FALLBACK_SORT_CHAIN } from '../helpers/songQuery.js';
 
@@ -49,10 +49,18 @@ function unionMerge(existing: string[], incoming: string[]): string[] {
   return [...existing, ...incoming.filter((x) => !seen.has(x))];
 }
 
-function favoriteRank(fav?: 'starred' | 'normal' | 'disliked'): number {
-  if (fav === 'starred') return 2;
-  if (fav === 'disliked') return 1;
-  return 0;
+function mergeField<T>(
+  current: T | undefined,
+  incoming: T | undefined,
+  set: (val: T) => void,
+  incomingDate: Date | undefined,
+  existingDate: Date | undefined,
+): void {
+  if (incoming === undefined) return;
+  if (current === undefined) { set(incoming); return; }
+  if (current !== incoming && incomingDate && existingDate) {
+    if (incomingDate > existingDate) set(incoming);
+  }
 }
 
 function formatRank(format?: SourceFormat): number {
@@ -111,7 +119,7 @@ export class SongService {
       return null;
     }
 
-    const query: any = {
+    const query: { artistTitleNormalized: string; duration?: { $gte: number; $lte: number } } = {
       artistTitleNormalized: normalizedArtistTitle,
     };
 
@@ -146,7 +154,7 @@ export class SongService {
       genres?: string[];
       grouping?: string[];
       bpm?: number;
-      key?: string;
+      keyCamelot?: number;
       rating?: number;
       year?: number;
       album?: string;
@@ -211,25 +219,11 @@ export class SongService {
       // if both non-null and differ, most-recent dateModified wins
       const existingDate = getMostRecentSourceDate(existingSources);
 
-      function mergeField<T>(
-        current: T | undefined,
-        incoming: T | undefined,
-        set: (val: T) => void,
-      ): void {
-        if (incoming === undefined) return;
-        if (current === undefined) { set(incoming); return; }
-        if (current !== incoming && incomingDate && existingDate) {
-          if (incomingDate > existingDate) {
-            set(incoming);
-          }
-        }
-      }
-
-      mergeField(song.bpm, songData.bpm, (v) => { song.bpm = v; });
-      mergeField(song.key, songData.key, (v) => { song.key = v; });
-      mergeField(song.rating, songData.rating, (v) => { song.rating = v; });
-      mergeField(song.year, songData.year, (v) => { song.year = v; });
-      mergeField(song.album, songData.album, (v) => { song.album = v; });
+      mergeField(song.bpm, songData.bpm, (v) => { song.bpm = v; }, incomingDate, existingDate);
+      mergeField(song.keyCamelot, songData.keyCamelot, (v) => { song.keyCamelot = v; }, incomingDate, existingDate);
+      mergeField(song.rating, songData.rating, (v) => { song.rating = v; }, incomingDate, existingDate);
+      mergeField(song.year, songData.year, (v) => { song.year = v; }, incomingDate, existingDate);
+      mergeField(song.album, songData.album, (v) => { song.album = v; }, incomingDate, existingDate);
 
       // appleMusicIds: accumulate
       if (source.appleMusicId) {
@@ -271,7 +265,7 @@ export class SongService {
       genres: songData.genres || [],
       grouping: songData.grouping || [],
       bpm: songData.bpm,
-      key: songData.key,
+      keyCamelot: songData.keyCamelot,
       rating: songData.rating,
       year: songData.year,
       album: songData.album,
@@ -304,7 +298,7 @@ export class SongService {
       genres?: string[];
       grouping?: string[];
       bpm?: number;
-      key?: string;
+      keyCamelot?: number;
       rating?: number;
       year?: number;
       favorite?: 'starred' | 'normal' | 'disliked';
@@ -319,7 +313,7 @@ export class SongService {
     if (songData.genres !== undefined) song.genres = songData.genres;
     if (songData.grouping !== undefined) song.grouping = songData.grouping;
     if (songData.bpm !== undefined) song.bpm = songData.bpm;
-    if (songData.key !== undefined) song.key = songData.key;
+    if (songData.keyCamelot !== undefined) song.keyCamelot = songData.keyCamelot;
     if (songData.rating !== undefined) song.rating = songData.rating;
     if (songData.year !== undefined) song.year = songData.year;
     if (songData.favorite !== undefined) song.favorite = songData.favorite;
@@ -388,6 +382,7 @@ export class SongService {
     const { page, limit, skip, shuffleSeed, sort, sortDirection } = parsePagination(params.pagination);
 
     if (shuffleSeed) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongo pipeline with $function
       const pipeline: any[] = [];
       if (Object.keys(filter).length > 0) pipeline.push({ $match: filter });
 
@@ -411,12 +406,14 @@ export class SongService {
     }
 
     const sortObj: Record<string, 1 | -1> = {};
+    // Key sorts by canonical Camelot index, not the note-name string.
+    const mongoField = (field: string) => (field === 'key' ? 'keyCamelot' : field);
     const primaryField = sort || FALLBACK_SORT_CHAIN[0];
     const primaryDir: 1 | -1 = sort ? (sortDirection === 'desc' ? -1 : 1) : 1;
-    sortObj[primaryField] = primaryDir;
+    sortObj[mongoField(primaryField)] = primaryDir;
     for (const field of FALLBACK_SORT_CHAIN) {
       if (field !== primaryField) {
-        sortObj[field] = 1;
+        sortObj[mongoField(field)] = 1;
       }
     }
 
@@ -438,6 +435,7 @@ export class SongService {
     Array<{ genre: string; count: number }>
   > {
     const filter = buildSongFilter(filters);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongo aggregation pipeline
     const pipeline: any[] = [];
 
     if (Object.keys(filter).length > 0) {
@@ -466,7 +464,7 @@ export class SongService {
       genres: song.genres,
       grouping: song.grouping,
       bpm: song.bpm,
-      key: song.key,
+      keyCamelot: song.keyCamelot,
       rating: song.rating,
       year: song.year,
       favorite: song.favorite,
@@ -478,7 +476,7 @@ export class SongService {
     if (lastEntry) {
       const snapFields: (keyof IHistorySnapshot)[] = [
         'title', 'artist', 'genres', 'grouping',
-        'bpm', 'key', 'rating', 'year', 'favorite',
+        'bpm', 'keyCamelot', 'rating', 'year', 'favorite',
       ];
       const same = snapFields.every(
         f => JSON.stringify(lastEntry.snapshot[f]) === JSON.stringify(snapshot[f]),

@@ -35,6 +35,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../src/config/env.js';
 import { songService } from '../src/services/songService.js';
+import { parseKey } from '../src/helpers/musicalKey.js';
 
 const connectDB = async () => {
   await mongoose.connect(config.mongoUri);
@@ -83,26 +84,20 @@ const parseCSVLine = (line: string): string[] => {
   return result;
 };
 
-// Camelot wheel → standard musical key
-const camelotToKey: Record<string, string> = {
-  '1A': 'Gm', '2A': 'Dm', '3A': 'Am', '4A': 'Em', '5A': 'Bm', '6A': 'F#m',
-  '7A': 'C#m', '8A': 'G#m', '9A': 'D#m', '10A': 'A#m', '11A': 'Fm', '12A': 'Cm',
-  '1B': 'C', '2B': 'G', '3B': 'D', '4B': 'A', '5B': 'E', '6B': 'B',
-  '7B': 'F#', '8B': 'C#', '9B': 'G#', '10B': 'D#', '11B': 'A#', '12B': 'F',
-};
-
-const standardKeyPattern = /^[A-G][b#]?(?:m|dim|aug|sus)?$/;
-
 const extractAppleMusicId = (url: string): string | undefined => {
   const match = url.match(/^apple-music:library:track:i\.([a-zA-Z0-9]+)$/);
   return match ? match[1] : undefined;
 };
 
-const convertKey = (value?: string): string | undefined => {
+/**
+ * Normalise a djay Pro key to a canonical Camelot index via the standard wheel
+ * (see musicalKey.ts). Accepts note names ("F#m") and Camelot labels ("8A").
+ */
+const convertKey = (value?: string): number | undefined => {
   if (!value) return undefined;
   const trimmed = value.trim();
-  if (standardKeyPattern.test(trimmed)) return trimmed;
-  if (camelotToKey[trimmed]) return camelotToKey[trimmed];
+  const index = parseKey(trimmed);
+  if (index !== null) return index;
   console.warn(`  Unrecognised key format: "${value}" — discarding`);
   return undefined;
 };
@@ -161,7 +156,7 @@ const importSongs = async (csvPath: string) => {
           duration,
           {
             bpm,
-            key: convertKey(keyRaw),
+            keyCamelot: convertKey(keyRaw),
             album,
           },
           {

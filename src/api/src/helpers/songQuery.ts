@@ -31,6 +31,7 @@
  */
 import { KEY } from './apiParams.js';
 import type { ApiFilterParams } from './apiParams.js';
+import { parseKey, keysWithin } from './musicalKey.js';
 
 /** Fields the query layer needs. Structurally satisfied by ISong and the UI Song type. */
 export interface QueryableSource {
@@ -47,7 +48,7 @@ export interface QueryableSong {
   bpm?: number;
   rating?: number;
   year?: number;
-  key?: string;
+  keyCamelot?: number;
   favorite?: 'starred' | 'normal' | 'disliked';
   sources?: QueryableSource[];
 }
@@ -165,12 +166,42 @@ export function matchesFilters(song: QueryableSong, params: ApiFilterParams): bo
   const notArtist = splitValues(params[KEY.artistNot]);
   if (notArtist.length > 0 && artistMatchesAny(song, notArtist)) return false;
 
+  const keyParam = params[KEY.key];
+  if (keyParam) {
+    const target = parseKey(keyParam);
+    if (target !== null) {
+      const rawTolerance = parseInt(params[KEY.keyTolerance] ?? '0', 10);
+      const tolerance = isNaN(rawTolerance) ? 0 : Math.max(0, Math.min(6, rawTolerance));
+      const allowed = new Set(keysWithin(target, tolerance));
+      const index = song.keyCamelot;
+      if (index === undefined || index === null || !allowed.has(index)) return false;
+    }
+  }
+
+  if (params[KEY.keyEmpty] === 'true') {
+    if (song.keyCamelot !== undefined && song.keyCamelot !== null) return false;
+  }
+
+  const yearRange = parseRange(params[KEY.yearGte], params[KEY.yearLte]);
+  if (yearRange) {
+    // Songs with no year are always included, matching the MongoDB $or.
+    if (song.year !== undefined && song.year !== null && !inRange(song.year, yearRange)) {
+      return false;
+    }
+  }
+  if (params[KEY.yearEmpty] === 'true') {
+    if (song.year !== undefined && song.year !== null) return false;
+  }
+
   const bpmRange = parseRange(params[KEY.bpmGte], params[KEY.bpmLte]);
   if (bpmRange) {
     // Songs with no BPM are always included, matching the MongoDB $or.
     if (song.bpm !== undefined && song.bpm !== null && !inRange(song.bpm, bpmRange)) {
       return false;
     }
+  }
+  if (params[KEY.bpmEmpty] === 'true') {
+    if (song.bpm !== undefined && song.bpm !== null) return false;
   }
 
   const ratingRange = parseRange(params[KEY.ratingGte], params[KEY.ratingLte]);
@@ -221,13 +252,26 @@ function compareValues(a: unknown, b: unknown): number {
   return 0;
 }
 
+/** Key sorts by Camelot order, not the note-name string. */
+function keySortValue(song: QueryableSong): number | undefined {
+  return song.keyCamelot ?? undefined;
+}
+
+function sortValue(
+  song: QueryableSong & Record<string, unknown>,
+  field: string,
+): unknown {
+  if (field === 'key') return keySortValue(song);
+  return song[field];
+}
+
 function compareByField(
   a: QueryableSong & Record<string, unknown>,
   b: QueryableSong & Record<string, unknown>,
   field: string,
   direction: 1 | -1,
 ): number {
-  return compareValues(a[field], b[field]) * direction;
+  return compareValues(sortValue(a, field), sortValue(b, field)) * direction;
 }
 
 /**

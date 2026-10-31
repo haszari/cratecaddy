@@ -54,7 +54,7 @@ interface SnapshotSong {
   grouping: string[];
   bpm?: number;
   year?: number;
-  key?: string;
+  keyCamelot?: number;
   rating?: number;
   favorite?: string;
   canonicalAppleMusicId?: string;
@@ -65,7 +65,7 @@ interface SnapshotSong {
 
 const ALLOWED_SONG_KEYS = new Set([
   '_id', 'title', 'artist', 'album', 'duration', 'genres', 'grouping',
-  'bpm', 'year', 'key', 'rating', 'favorite',
+  'bpm', 'year', 'keyCamelot', 'rating', 'favorite',
   'canonicalAppleMusicId', 'appleMusicIds', 'artistTitleNormalized', 'sources',
 ]);
 
@@ -180,7 +180,7 @@ function toSnapshotSong(song: ISong): SnapshotSong {
     grouping: song.grouping ?? [],
     bpm: song.bpm,
     year: song.year,
-    key: song.key,
+    keyCamelot: song.keyCamelot,
     rating: song.rating,
     favorite: song.favorite,
     canonicalAppleMusicId: song.canonicalAppleMusicId,

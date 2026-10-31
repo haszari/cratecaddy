@@ -1,0 +1,55 @@
+#!/usr/bin/env ts-node
+/**
+ * Backfill keyCamelot (canonical Camelot index) for all songs.
+ *
+ * Derives the index from the stored `key` note name using the standard wheel.
+ * Songs with no recognisable key get keyCamelot removed. Idempotent — safe to
+ * rerun. Bypasses the Mongoose pre-save hook via updateOne (schema migration,
+ * not a normal write path).
+ *
+ * Usage: npm run backfill:key-camelot
+ */
+import mongoose from 'mongoose';
+import { config } from '../src/config/env.js';
+import { musicalKeyToCamelot } from '../src/helpers/musicalKey.js';
+
+async function main() {
+  await mongoose.connect(config.mongoUri);
+  console.log(`Connected to MongoDB: ${config.mongoUri}`);
+
+  const collection = mongoose.connection.collection('songs');
+  const cursor = collection.find({}, { projection: { key: 1 } });
+
+  let updated = 0;
+  let cleared = 0;
+  let scanned = 0;
+
+  for await (const doc of cursor) {
+    scanned++;
+    const index = musicalKeyToCamelot(doc.key);
+    const update: Record<string, unknown> = {};
+    if (index === null) {
+      if (doc.keyCamelot !== undefined && doc.keyCamelot !== null) {
+        update.$unset = { keyCamelot: '' };
+        cleared++;
+      }
+    } else if (doc.keyCamelot !== index) {
+      update.$set = { keyCamelot: index };
+      updated++;
+    }
+    if (doc.key !== undefined) {
+      update.$unset = { ...(update.$unset ?? {}), key: '' };
+    }
+    if (Object.keys(update).length > 0) {
+      await collection.updateOne({ _id: doc._id }, update);
+    }
+  }
+
+  console.log(`Backfill complete: ${scanned} scanned, ${updated} updated, ${cleared} cleared.`);
+  await mongoose.disconnect();
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

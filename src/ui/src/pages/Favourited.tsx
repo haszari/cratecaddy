@@ -6,7 +6,7 @@ import { GenreTagCloud } from '../components/GenreTagCloud';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import { buildEditUrl, buildWithoutFavouritesUrl } from '../utils/urlBuilder';
-import { useEditLinks } from '../shell/EditLinksContext';
+import { useEditLinks } from '../shell/useEditLinks';
 import { splitCSV } from '../utils/urlParams';
 import { Heart } from 'lucide-react';
 import { KEY } from '@cratecaddy-api/apiParams';
@@ -46,6 +46,8 @@ export default function Favourited() {
 
   return (
     <div className="GenreDetail">
+      <FilterBar {...filterBarProps} />
+
       <div className="PageCriteria">
         <span className="GenreTag GenreTag-heading PageCriteria-artist">
           <Heart size={28} fill="#e03131" color="#e03131" style={{ verticalAlign: -6 }} />
@@ -61,8 +63,6 @@ export default function Favourited() {
           </span>
         ))}
       </div>
-
-      <FilterBar {...filterBarProps} />
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p className="error-message">Failed to load songs</p>}

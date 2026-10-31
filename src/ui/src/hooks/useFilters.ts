@@ -7,8 +7,16 @@ export interface FilterState {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  bpmEmpty?: boolean;
   ratingGte?: number;
   ratingLte?: number;
+  musicalKey?: string;
+  keyTolerance?: number;
+  keyEmpty?: boolean;
+  yearGte?: number;
+  yearLte?: number;
+  yearEmpty?: boolean;
+  ownership?: string;
   favoriteActive: boolean;
   search: string;
 }
@@ -26,6 +34,7 @@ export function useFilters() {
       const v = searchParams.get(KEY.bpmLte);
       return v ? parseFloat(v) : undefined;
     })(),
+    bpmEmpty: searchParams.get(KEY.bpmEmpty) === 'true',
     ratingGte: (() => {
       const v = searchParams.get(KEY.ratingGte);
       return v ? parseFloat(v) : undefined;
@@ -34,6 +43,22 @@ export function useFilters() {
       const v = searchParams.get(KEY.ratingLte);
       return v ? parseFloat(v) : undefined;
     })(),
+    musicalKey: searchParams.get(KEY.key) ?? undefined,
+    keyTolerance: (() => {
+      const v = searchParams.get(KEY.keyTolerance);
+      return v ? parseInt(v, 10) : undefined;
+    })(),
+    keyEmpty: searchParams.get(KEY.keyEmpty) === 'true',
+    yearGte: (() => {
+      const v = searchParams.get(KEY.yearGte);
+      return v ? parseInt(v, 10) : undefined;
+    })(),
+    yearLte: (() => {
+      const v = searchParams.get(KEY.yearLte);
+      return v ? parseInt(v, 10) : undefined;
+    })(),
+    yearEmpty: searchParams.get(KEY.yearEmpty) === 'true',
+    ownership: searchParams.get(KEY.ownership) ?? undefined,
     favoriteActive: searchParams.get(KEY.favorite) === 'true',
     search: searchParams.get(KEY.search) ?? '',
   };
@@ -60,11 +85,16 @@ export function useFilters() {
   );
 
   const setBpmRange = useCallback(
-    (gte?: number, lte?: number) => {
+    (gte?: number, lte?: number, empty?: boolean) => {
       setSearchParams((prev) => {
+        if (empty) {
+          let next = setParam(prev, KEY.bpmGte, null);
+          next = setParam(next, KEY.bpmLte, null);
+          return setParam(next, KEY.bpmEmpty, 'true');
+        }
         let next = setParam(prev, KEY.bpmGte, gte !== undefined ? String(gte) : null);
         next = setParam(next, KEY.bpmLte, lte !== undefined ? String(lte) : null);
-        return next;
+        return setParam(next, KEY.bpmEmpty, null);
       });
     },
     [setSearchParams],
@@ -77,6 +107,45 @@ export function useFilters() {
         next = setParam(next, KEY.ratingLte, lte !== undefined ? String(lte) : null);
         return next;
       });
+    },
+    [setSearchParams],
+  );
+
+  const setMusicalKeyFilter = useCallback(
+    (musicalKey?: string, tolerance?: number, empty?: boolean) => {
+      setSearchParams((prev) => {
+        if (empty) {
+          let next = setParam(prev, KEY.key, null);
+          next = setParam(next, KEY.keyTolerance, null);
+          return setParam(next, KEY.keyEmpty, 'true');
+        }
+        let next = setParam(prev, KEY.key, musicalKey || null);
+        next = setParam(next, KEY.keyTolerance, tolerance !== undefined ? String(tolerance) : null);
+        return setParam(next, KEY.keyEmpty, null);
+      });
+    },
+    [setSearchParams],
+  );
+
+  const setYearRange = useCallback(
+    (gte?: number, lte?: number, empty?: boolean) => {
+      setSearchParams((prev) => {
+        if (empty) {
+          let next = setParam(prev, KEY.yearGte, null);
+          next = setParam(next, KEY.yearLte, null);
+          return setParam(next, KEY.yearEmpty, 'true');
+        }
+        let next = setParam(prev, KEY.yearGte, gte !== undefined ? String(gte) : null);
+        next = setParam(next, KEY.yearLte, lte !== undefined ? String(lte) : null);
+        return setParam(next, KEY.yearEmpty, null);
+      });
+    },
+    [setSearchParams],
+  );
+
+  const setOwnership = useCallback(
+    (value?: string) => {
+      setSearchParams((prev) => setParam(prev, KEY.ownership, value || null));
     },
     [setSearchParams],
   );
@@ -96,10 +165,7 @@ export function useFilters() {
 
   const setSearch = useCallback(
     (value: string) => {
-      setSearchParams((prev) =>
-        setParam(prev, KEY.search, value || null),
-
-      );
+      setSearchParams((prev) => setParam(prev, KEY.search, value || null));
     },
     [setSearchParams],
   );
@@ -109,8 +175,16 @@ export function useFilters() {
       let next = setParam(prev, KEY.genreNot, null);
       next = setParam(next, KEY.bpmGte, null);
       next = setParam(next, KEY.bpmLte, null);
+      next = setParam(next, KEY.bpmEmpty, null);
       next = setParam(next, KEY.ratingGte, null);
       next = setParam(next, KEY.ratingLte, null);
+      next = setParam(next, KEY.key, null);
+      next = setParam(next, KEY.keyTolerance, null);
+      next = setParam(next, KEY.keyEmpty, null);
+      next = setParam(next, KEY.yearGte, null);
+      next = setParam(next, KEY.yearLte, null);
+      next = setParam(next, KEY.yearEmpty, null);
+      next = setParam(next, KEY.ownership, null);
       next = setParam(next, KEY.favorite, null);
       next = setParam(next, KEY.search, null);
       return next;
@@ -121,8 +195,15 @@ export function useFilters() {
     filters.genreNot.length > 0 ||
     filters.bpmGte !== undefined ||
     filters.bpmLte !== undefined ||
+    filters.bpmEmpty ||
     filters.ratingGte !== undefined ||
     filters.ratingLte !== undefined ||
+    filters.musicalKey !== undefined ||
+    filters.keyEmpty ||
+    filters.yearGte !== undefined ||
+    filters.yearLte !== undefined ||
+    filters.yearEmpty ||
+    filters.ownership !== undefined ||
     filters.favoriteActive ||
     filters.search !== '';
 
@@ -132,6 +213,9 @@ export function useFilters() {
     removeExclude,
     setBpmRange,
     setRatingRange,
+    setMusicalKeyFilter,
+    setYearRange,
+    setOwnership,
     toggleFavorite,
     setSearch,
     clearFilters,

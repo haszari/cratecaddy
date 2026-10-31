@@ -3,21 +3,36 @@ import { Link } from 'react-router-dom';
 import { useDebouncedValue } from '@mantine/hooks';
 import { TextInput } from '@mantine/core';
 import './FilterBar.scss';
-import { X, House, Pencil, ArrowLeft, Heart, Search } from 'lucide-react';
+import { X, House, Pencil, ArrowLeft, Heart, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import ShuffleControl from './ShuffleControl';
 import TempoRangeControl from './TempoRangeControl';
 import StarRatingFilter from './StarRatingFilter';
+import KeyFilter from './KeyFilter';
+import YearRangeControl from './YearRangeControl';
+import OwnershipFilter from './OwnershipFilter';
 import { useFilters } from '../hooks/useFilters';
+import { useEditLinks } from '../shell/useEditLinks';
 
 export interface FilterBarProps {
   genreNot: string[];
   bpmGte?: number;
   bpmLte?: number;
+  bpmEmpty?: boolean;
   ratingGte?: number;
   ratingLte?: number;
+  musicalKey?: string;
+  keyTolerance?: number;
+  keyEmpty?: boolean;
+  yearGte?: number;
+  yearLte?: number;
+  yearEmpty?: boolean;
+  ownership?: string;
   onRemoveExclude?: (genre: string) => void;
   onBpmChange?: (gte?: number, lte?: number) => void;
   onRatingChange?: (gte?: number, lte?: number) => void;
+  onMusicalKeyChange?: (musicalKey?: string, tolerance?: number) => void;
+  onYearChange?: (gte?: number, lte?: number) => void;
+  onOwnershipChange?: (value?: string) => void;
   shuffleActive?: boolean;
   onShuffleToggle?: (active: boolean) => void;
   onShuffleReseed?: () => void;
@@ -32,14 +47,18 @@ export interface FilterBarProps {
 }
 
 export default function FilterBar({
-  genreNot, bpmGte, bpmLte, ratingGte, ratingLte,
+  genreNot, bpmGte, bpmLte, bpmEmpty, ratingGte, ratingLte,
+  musicalKey, keyTolerance, keyEmpty, yearGte, yearLte, yearEmpty, ownership,
   onRemoveExclude, onBpmChange, onRatingChange,
+  onMusicalKeyChange, onYearChange, onOwnershipChange,
   shuffleActive, onShuffleToggle, onShuffleReseed,
   editHref, doneHref, readOnly,
   favouriteMode = 'filter', favouriteHref,
   search, onSearchChange,
 }: FilterBarProps) {
   const { filters, toggleFavorite } = useFilters();
+  const isApiBuild = useEditLinks();
+  const [collapsed, setCollapsed] = useState(true);
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
   const [prevSearch, setPrevSearch] = useState(search);
@@ -58,6 +77,8 @@ export default function FilterBar({
   const showSearch = search !== undefined || onSearchChange;
   const showTempo = onBpmChange !== undefined || (readOnly && hasBpm);
   const showRating = onRatingChange !== undefined || (readOnly && hasRating);
+  const showKey = onMusicalKeyChange !== undefined || (readOnly && musicalKey !== undefined);
+  const showYear = onYearChange !== undefined || (readOnly && (yearGte !== undefined || yearLte !== undefined));
 
   const renderHeart = () => {
     if (favouriteMode === 'nav') {
@@ -98,7 +119,14 @@ export default function FilterBar({
   };
 
   return (
-    <div className="FilterBar">
+    <div className={`FilterBar${collapsed ? ' FilterBar--collapsed' : ''}`}>
+      <button
+        className="FilterBar-collapse"
+        onClick={() => setCollapsed((c) => !c)}
+        title={collapsed ? 'Expand bar' : 'Collapse bar'}
+      >
+        {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
       <div className="FilterBar-navGroup">
         <Link to="/" className="iconButton" title="Home">
           <House size={20} />
@@ -122,26 +150,28 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="FilterBar-excludeGroup">
-        {genreNot.map((genre) => (
-          <span
-            key={`ex:${genre}`}
-            className="FilterBar-chip FilterBar-chip-exclude"
-            onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
-            title={readOnly ? undefined : `Remove ${genre}`}
-          >
-            {genre}
-            {!readOnly && (
-              <span className="FilterBar-chip-x">
-                <X size={14} />
-              </span>
-            )}
-          </span>
-        ))}
-      </div>
+      {genreNot.length > 0 && (
+        <div className="FilterBar-excludeGroup">
+          {genreNot.map((genre) => (
+            <span
+              key={`ex:${genre}`}
+              className="FilterBar-chip FilterBar-chip-exclude"
+              onClick={readOnly ? undefined : () => onRemoveExclude?.(genre)}
+              title={readOnly ? undefined : `Remove ${genre}`}
+            >
+              {genre}
+              {!readOnly && (
+                <span className="FilterBar-chip-x">
+                  <X size={14} />
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="FilterBar-filterGroup">
-        {(!readOnly || favouriteMode === 'indicator') && renderHeart()}
+        {isApiBuild && (!readOnly || favouriteMode === 'indicator') && renderHeart()}
 
         {showRating && (
           <StarRatingFilter
@@ -156,9 +186,34 @@ export default function FilterBar({
           <TempoRangeControl
             bpmGte={bpmGte}
             bpmLte={bpmLte}
+            empty={bpmEmpty}
             onChange={readOnly ? undefined : onBpmChange}
             readOnly={readOnly}
           />
+        )}
+
+        {showKey && (
+          <KeyFilter
+            musicalKey={musicalKey}
+            keyTolerance={keyTolerance}
+            empty={keyEmpty}
+            onChange={readOnly ? undefined : onMusicalKeyChange}
+            readOnly={readOnly}
+          />
+        )}
+
+        {showYear && (
+          <YearRangeControl
+            yearGte={yearGte}
+            yearLte={yearLte}
+            empty={yearEmpty}
+            onChange={readOnly ? undefined : onYearChange}
+            readOnly={readOnly}
+          />
+        )}
+
+        {isApiBuild && onOwnershipChange && (
+          <OwnershipFilter value={ownership} onChange={onOwnershipChange} />
         )}
 
         {showSearch && (
