@@ -4,7 +4,7 @@ import { Minus, Plus, X } from 'lucide-react';
 import { camelotLabel, indexToNote } from '@cratecaddy-api/musicalKey';
 
 interface KeyFilterProps {
-  key?: string;
+  value?: string;
   keyTolerance?: number;
   onChange?: (key?: string, tolerance?: number) => void;
   readOnly?: boolean;
@@ -15,10 +15,10 @@ const KEY_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
   label: `${camelotLabel(index)} — ${indexToNote(index)}`,
 }));
 
-export default function KeyFilter({ key, keyTolerance, onChange, readOnly }: KeyFilterProps) {
-  const hasFilter = key !== undefined;
+export default function KeyFilter({ value, keyTolerance, onChange, readOnly }: KeyFilterProps) {
+  const hasFilter = value !== undefined;
   const [active, setActive] = useState(hasFilter);
-  const [target, setTarget] = useState(key ?? '8A');
+  const [target, setTarget] = useState(value ?? '8A');
   const [tolerance, setTolerance] = useState(keyTolerance ?? 1);
 
   const commit = useCallback(

@@ -180,7 +180,7 @@ export default function FilterBar({
 
         {showKey && (
           <KeyFilter
-            key={key}
+            value={key}
             keyTolerance={keyTolerance}
             onChange={readOnly ? undefined : onKeyChange}
             readOnly={readOnly}
