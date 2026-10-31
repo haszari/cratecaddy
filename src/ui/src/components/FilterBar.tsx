@@ -120,6 +120,13 @@ export default function FilterBar({
 
   return (
     <div className={`FilterBar${collapsed ? ' FilterBar--collapsed' : ''}`}>
+      <button
+        className="FilterBar-collapse"
+        onClick={() => setCollapsed((c) => !c)}
+        title={collapsed ? 'Expand bar' : 'Collapse bar'}
+      >
+        {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
       <div className="FilterBar-navGroup">
         <Link to="/" className="iconButton" title="Home">
           <House size={20} />
@@ -224,14 +231,6 @@ export default function FilterBar({
           )
         )}
       </div>
-
-      <button
-        className="FilterBar-collapse"
-        onClick={() => setCollapsed((c) => !c)}
-        title={collapsed ? 'Expand bar' : 'Collapse bar'}
-      >
-        {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-      </button>
     </div>
   );
 }
