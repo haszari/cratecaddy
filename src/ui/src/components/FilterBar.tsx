@@ -58,7 +58,7 @@ export default function FilterBar({
 }: FilterBarProps) {
   const { filters, toggleFavorite } = useFilters();
   const isApiBuild = useEditLinks();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [searchInput, setSearchInput] = useState(search ?? '');
   const [debouncedSearch] = useDebouncedValue(searchInput, 300);
   const [prevSearch, setPrevSearch] = useState(search);
