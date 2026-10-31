@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ActionIcon, Badge, Group, Select } from '@mantine/core';
 import { Minus, Plus, X } from 'lucide-react';
-import { camelotLabel, indexToNote } from '@cratecaddy-api/musicalKey';
+import { camelotLabel, camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
 
 interface KeyFilterProps {
   musicalKey?: string;
@@ -12,7 +12,7 @@ interface KeyFilterProps {
 
 const KEY_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
   value: camelotLabel(index),
-  label: `${camelotLabel(index)} — ${indexToNote(index)}`,
+  label: `${camelotLabel(index)} — ${camelotToMusicalKey(index)}`,
 }));
 
 export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly }: KeyFilterProps) {
@@ -46,7 +46,7 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
 
   const note = useMemo(() => {
     const idx = KEY_OPTIONS.findIndex((o) => o.value === target);
-    return idx >= 0 ? indexToNote(idx) : '';
+    return idx >= 0 ? camelotToMusicalKey(idx) : '';
   }, [target]);
 
   if (readOnly) {

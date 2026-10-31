@@ -61,7 +61,7 @@ for (const [flat, sharp] of Object.entries(ENHARMONIC)) {
 const KEY_PATTERN = /^([A-Ga-g])([#b]?)\s*(m)?(?:inor)?$/;
 
 /** Parse a note name (e.g. "F#m", "G", "Abm", "Bbm", "C") into a Camelot index. */
-export function keyToIndex(value: string | undefined | null): number | null {
+export function musicalKeyToCamelot(value: string | undefined | null): number | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -87,7 +87,7 @@ export function parseKey(value: string | undefined | null): number | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  const byNote = keyToIndex(trimmed);
+  const byNote = musicalKeyToCamelot(trimmed);
   if (byNote !== null) return byNote;
   const label = CAMELOT_LABEL.exec(trimmed);
   if (label) {
@@ -100,7 +100,7 @@ export function parseKey(value: string | undefined | null): number | null {
 }
 
 /** Camelot index -> note name (sharp notation). */
-export function indexToNote(index: number): string {
+export function camelotToMusicalKey(index: number): string {
   const letter = index % 2 === 0 ? 'A' : 'B';
   const number = Math.floor(index / 2) + 1;
   return letter === 'A' ? MINOR_BY_NUMBER[number - 1] : MAJOR_BY_NUMBER[number - 1];

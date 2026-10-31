@@ -26,7 +26,7 @@ import { fileURLToPath } from 'url';
 import { config } from '../src/config/env.js';
 import { SourceFormat, Song } from '../src/models/Song.js';
 import { songService } from '../src/services/songService.js';
-import { keyToIndex } from '../src/helpers/musicalKey.js';
+import { musicalKeyToCamelot } from '../src/helpers/musicalKey.js';
 
 const connectDB = async () => {
   await mongoose.connect(config.mongoUri);
@@ -52,7 +52,7 @@ const parseKeyFromComment = (comment?: string): number | undefined => {
   if (!comment) return undefined;
   const match = comment.match(/musicalKey=([A-G][b#]?(?:m|dim|aug|sus)?)/);
   if (!match) return undefined;
-  const index = keyToIndex(match[1]);
+  const index = musicalKeyToCamelot(match[1]);
   return index ?? undefined;
 };
 

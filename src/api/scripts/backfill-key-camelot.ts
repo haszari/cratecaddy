@@ -11,7 +11,7 @@
  */
 import mongoose from 'mongoose';
 import { config } from '../src/config/env.js';
-import { keyToIndex } from '../src/helpers/musicalKey.js';
+import { musicalKeyToCamelot } from '../src/helpers/musicalKey.js';
 
 async function main() {
   await mongoose.connect(config.mongoUri);
@@ -26,7 +26,7 @@ async function main() {
 
   for await (const doc of cursor) {
     scanned++;
-    const index = keyToIndex(doc.key);
+    const index = musicalKeyToCamelot(doc.key);
     const update: Record<string, unknown> = {};
     if (index === null) {
       if (doc.keyCamelot !== undefined && doc.keyCamelot !== null) {

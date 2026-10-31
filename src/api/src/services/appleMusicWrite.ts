@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { ISong } from '../models/Song.js';
-import { indexToNote } from '../helpers/musicalKey.js';
+import { camelotToMusicalKey } from '../helpers/musicalKey.js';
 
 function escapeAppleScript(str: string): string {
   return str.replace(/"/g, '\\"').replace(/\n/g, ' ');
@@ -62,7 +62,7 @@ export async function writeToAppleMusic(song: ISong): Promise<{ success: boolean
   };
   const songKeyNote =
     song.keyCamelot !== undefined && song.keyCamelot !== null
-      ? indexToNote(song.keyCamelot)
+      ? camelotToMusicalKey(song.keyCamelot)
       : '';
   const songKey = songKeyNote ? escapeAppleScript(songKeyNote) : '';
   const isAIFF = song.sources?.some(s => s.format === 'aiff') ?? false;
