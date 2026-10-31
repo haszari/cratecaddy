@@ -13,9 +13,10 @@ const NEXT: Record<string, 'owned' | 'streaming' | undefined> = {
 };
 
 /**
- * Owned / streaming / all selector. Two filled icons (cloud = streaming,
- * handbag = owned) overlapped diagonally. Click cycles All → Owned → Cloud.
- * `all` is the implicit default and is not written to the URL.
+ * Owned / streaming / all selector. Two flat icons — cloud (streaming, top
+ * left) and handbag (owned, bottom right) — fixed in place. The selected
+ * filter is orange, the other is grey; both grey = all. Click cycles
+ * All → Owned → Cloud.
  */
 export default function OwnershipFilter({ value, onChange }: OwnershipFilterProps) {
   const state = value === 'owned' || value === 'streaming' ? value : 'all';
@@ -40,8 +41,8 @@ export default function OwnershipFilter({ value, onChange }: OwnershipFilterProp
             : 'Cloud only'
       }
     >
-      <Cloud size={18} fill="currentColor" className="OwnershipFilter-cloud" />
-      <Handbag size={18} fill="currentColor" className="OwnershipFilter-handbag" />
+      <Cloud size={16} fill="currentColor" stroke="none" className="OwnershipFilter-cloud" />
+      <Handbag size={16} fill="currentColor" stroke="none" className="OwnershipFilter-handbag" />
     </span>
   );
 }

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
-import { camelotLabel, camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
+import { camelotLabel, camelotToMusicalKey, parseKey, keysWithin } from '@cratecaddy-api/musicalKey';
 import './FilterPill.scss';
 
 interface KeyFilterProps {
@@ -16,10 +16,21 @@ const KEY_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
 }));
 
 export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly }: KeyFilterProps) {
-  const hasFilter = musicalKey !== undefined;
-  const [active, setActive] = useState(hasFilter);
+  const [active, setActive] = useState(musicalKey !== undefined);
   const [target, setTarget] = useState(musicalKey ?? '8A');
   const [tolerance, setTolerance] = useState(keyTolerance ?? 1);
+
+  // Sync with the URL-driven prop (e.g. cleared elsewhere).
+  const [prevKey, setPrevKey] = useState(musicalKey);
+  if (prevKey !== musicalKey) {
+    setPrevKey(musicalKey);
+    if (musicalKey === undefined) {
+      setActive(false);
+    } else {
+      setTarget(musicalKey);
+      setActive(true);
+    }
+  }
 
   const commit = useCallback(
     (t: string, tol: number) => {
@@ -49,11 +60,21 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
     return idx >= 0 ? camelotToMusicalKey(idx) : '';
   }, [target]);
 
+  const rangeLabels = useMemo(() => {
+    const idx = parseKey(target);
+    if (idx === null) return null;
+    const allowed = keysWithin(idx, tolerance);
+    return {
+      min: camelotLabel(allowed[0]),
+      max: camelotLabel(allowed[allowed.length - 1]),
+    };
+  }, [target, tolerance]);
+
   if (readOnly) {
-    if (!hasFilter) return null;
+    if (musicalKey === undefined) return null;
     return (
       <span className="FilterPill FilterPill--inactive">
-        <span className="FilterPill-placeholder">{note} ({target}) ±{tolerance}</span>
+        <span className="FilterPill-placeholder">{note} ({target})</span>
       </span>
     );
   }
@@ -87,6 +108,12 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
         <Minus size={14} />
       </button>
 
+      {rangeLabels && <span className="FilterPill-hint FilterPill-hint--min">{rangeLabels.min}</span>}
+
+      <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear key filter">
+        <X size={14} />
+      </button>
+
       <select
         className="FilterPill-select"
         value={target}
@@ -101,12 +128,10 @@ export default function KeyFilter({ musicalKey, keyTolerance, onChange, readOnly
         ))}
       </select>
 
+      {rangeLabels && <span className="FilterPill-hint FilterPill-hint--max">{rangeLabels.max}</span>}
+
       <button className="FilterPill-btn" onClick={() => adjustTolerance(1)} title="Widen key range">
         <Plus size={14} />
-      </button>
-
-      <button className="FilterPill-btn FilterPill-btn--clear" onClick={clear} title="Clear key filter">
-        <X size={14} />
       </button>
     </span>
   );

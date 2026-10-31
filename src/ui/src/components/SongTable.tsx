@@ -66,13 +66,13 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
           <tr>
             <th className="col-heart" />
             <th className="col-sources">Sources</th>
-            <SortableHeader field="artist" title="Artist" icon={<UserRound size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="title" title="Title" icon={<Disc3 size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="rating" title="Rating" icon={<Star size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="bpm" title="Tempo (BPM)" icon={<Drum size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="key" title="Key" icon={<Piano size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="year" title="Year" icon={<Calendar size={16} fill="currentColor" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <th className="col-genres"><Tag size={16} fill="currentColor" /></th>
+            <SortableHeader field="artist" title="Artist" icon={<UserRound size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="title" title="Title" icon={<Disc3 size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="rating" title="Rating" icon={<Star size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="bpm" title="Tempo (BPM)" icon={<Drum size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="key" title="Key" icon={<Piano size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="year" title="Year" icon={<Calendar size={16} fill="currentColor" stroke="none" />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <th className="col-genres"><Tag size={16} fill="currentColor" stroke="none" /></th>
           </tr>
         </thead>
         <tbody>

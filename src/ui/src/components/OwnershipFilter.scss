@@ -1,54 +1,35 @@
+$selected: #f5a623;          // existing orange (rating filter on)
+$disabled: rgba(255, 255, 255, 0.7); // existing grey (rating filter off)
+
 .OwnershipFilter {
   position: relative;
   display: inline-flex;
-  width: 1.9em;
-  height: 1.4em;
+  width: 2em;
+  height: 1.5em;
   cursor: pointer;
   align-items: center;
   justify-content: center;
 
   svg {
     position: absolute;
-    transition: left 0.12s ease, top 0.12s ease;
+    color: $disabled;
   }
 
   .OwnershipFilter-cloud {
     top: 0;
-    left: 0.55em;
-    z-index: 1;
+    left: 0;
   }
 
   .OwnershipFilter-handbag {
-    top: 0.35em;
-    left: 0;
-    z-index: 2;
+    bottom: 0;
+    right: 0;
   }
 
-  // Owned only: handbag brought to front, bottom-left.
-  &--owned {
-    .OwnershipFilter-handbag {
-      z-index: 2;
-      top: 0.1em;
-      left: 0;
-    }
-    .OwnershipFilter-cloud {
-      z-index: 1;
-      top: -0.1em;
-      left: 0.7em;
-    }
+  &--owned .OwnershipFilter-handbag {
+    color: $selected;
   }
 
-  // Cloud only: cloud brought to front, bottom-left.
-  &--streaming {
-    .OwnershipFilter-cloud {
-      z-index: 2;
-      top: 0.1em;
-      left: 0;
-    }
-    .OwnershipFilter-handbag {
-      z-index: 1;
-      top: -0.15em;
-      left: 0.7em;
-    }
+  &--streaming .OwnershipFilter-cloud {
+    color: $selected;
   }
 }
