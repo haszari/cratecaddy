@@ -5,7 +5,7 @@
 
 @media (max-width: 768px) {
   .App {
-    padding-top: 2em;
+    padding: 2em 0 1em;
   }
 }
 
@@ -209,6 +209,10 @@ thead th:last-child {
     display: none;
   }
 
+  .col-heart {
+    display: none;
+  }
+
   table,
   tbody {
     display: block;
@@ -221,7 +225,6 @@ thead th:last-child {
     column-gap: 0.5em;
     row-gap: 0.15em;
     padding: 0.3em 0;
-    padding-left: 0.75em;
   }
 
   tbody td {
