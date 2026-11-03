@@ -40,3 +40,5 @@ Indicate in genre cloud which tags are included/excluded with an affordance (suc
 Helpful text hints when no songs found - e.g. explain current tag filter,Explore,improvement,S,,
 "Song page: Show related, similar or suggested songs to play next (with hints such as nearby tempo and key)",Perform,feature,M,,
 Consolidate scattered hardcoded colours and sizes into CSS design tokens (shared theming layer),Platform,improvement,M,,
+Static site: repeated / infinite reload on homepage,Explore,bug,S
+
