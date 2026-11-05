@@ -2,7 +2,9 @@ import { SourcesIcons } from './SourcesIcons';
 import GenreTagWithCount from './GenreTag';
 import type { Song } from '../types';
 import { Link } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { Heart, UserRound, Disc3, Star, Drum, Piano, Tag, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
+import { camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
+import { useEditLinks } from '../shell/useEditLinks';
 
 export type SortField = 'artist' | 'title' | 'bpm' | 'key' | 'rating' | 'year';
 export type SortDirection = 'asc' | 'desc';
@@ -21,14 +23,16 @@ interface SongTableProps {
 function SortIcon({ sortDirection }: { field: SortField; sortField?: SortField; sortDirection?: SortDirection }) {
   return (
     <span className="SongTable-sort-icon SongTable-sort-icon--active">
-      {sortDirection === 'desc' ? '\u25B2' : '\u25BC'}
+      {sortDirection === 'desc' ? <ChevronDown size={12} strokeWidth={2.5} /> : <ChevronUp size={12} strokeWidth={2.5} />}
     </span>
   );
 }
 
-function SortableHeader({ field, label, sortField, sortDirection, onSortChange }: {
+function SortableHeader({ field, title, icon, align = 'left', sortField, sortDirection, onSortChange }: {
   field: SortField;
-  label: string;
+  title: string;
+  icon: React.ReactNode;
+  align?: 'left' | 'right';
   sortField?: SortField;
   sortDirection?: SortDirection;
   onSortChange?: (field: SortField, direction: SortDirection) => void;
@@ -36,19 +40,24 @@ function SortableHeader({ field, label, sortField, sortDirection, onSortChange }
   const sortButton = (field === sortField) && <SortIcon field={field} sortField={sortField} sortDirection={sortDirection} />;
   return (
     <th
-    className={`col-${field} SongTable-sortable`}
-    onClick={() => {
-      const nextDirection = (field === sortField && sortDirection === 'asc') ? 'desc' : 'asc';
-      onSortChange?.(field, nextDirection);
-    }}
+      className={`col-${field} SongTable-sortable`}
+      onClick={() => {
+        const nextDirection = (field === sortField && sortDirection === 'asc') ? 'desc' : 'asc';
+        onSortChange?.(field, nextDirection);
+      }}
+      title={title}
     >
-      {label}
-      {sortButton}
+      <span className="SongTable-sortable-inner">
+        {align === 'right' && sortButton}
+        {icon}
+        {align === 'left' && sortButton}
+      </span>
     </th>
   );
 }
 
 export default function SongTable({ songs, page, totalPages, totalCount, onPageChange, sortField, sortDirection, onSortChange }: SongTableProps) {
+  const isApiBuild = useEditLinks();
   const showPagination = totalPages !== undefined && totalPages > 1;
 
   const formatRating = (rating: number | undefined) => {
@@ -61,22 +70,25 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
       <table>
         <thead>
           <tr>
-            <th className="col-heart" />
+            {isApiBuild && <th className="col-heart" />}
             <th className="col-sources">Sources</th>
-            <SortableHeader field="artist" label="Artist" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="title" label="Title" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="bpm" label="BPM" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="key" label="Key" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <SortableHeader field="rating" label="Rating" sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
-            <th className="col-genres">Genres</th>
+            <SortableHeader field="artist" title="Artist" align="left" icon={<UserRound size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="title" title="Title" align="left" icon={<Disc3 size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="rating" title="Rating" align="left" icon={<Star size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="bpm" title="Tempo (BPM)" align="right" icon={<Drum size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="key" title="Key" align="left" icon={<Piano size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <SortableHeader field="year" title="Year" align="right" icon={<Calendar size={16} />} sortField={sortField} sortDirection={sortDirection} onSortChange={onSortChange} />
+            <th className="col-genres"><Tag size={16} /></th>
           </tr>
         </thead>
         <tbody>
-            {songs.map((song) => (
+          {songs.map((song) => (
             <tr key={song._id}>
-              <td className="col-heart">
-                {song.favorite === 'starred' && <Heart size={12} />}
-              </td>
+              {isApiBuild && (
+                <td className="col-heart">
+                  {song.favorite === 'starred' && <Heart size={12} />}
+                </td>
+              )}
               <td className="col-sources">
                 <SourcesIcons sources={song.sources} />
               </td>
@@ -89,9 +101,14 @@ export default function SongTable({ songs, page, totalPages, totalCount, onPageC
               <td className="col-title">
                 <Link to={`/song/${song._id}`} className="Song-link">{song.title}</Link>
               </td>
-              <td className="col-bpm">{song.bpm != null ? Math.round(song.bpm) : ''}</td>
-              <td className="col-key">{song.key}</td>
               <td className="col-rating">{formatRating(song.rating)}</td>
+              <td className="col-bpm">{song.bpm != null ? Math.round(song.bpm) : ''}</td>
+              <td className="col-key">
+                {song.keyCamelot !== undefined && song.keyCamelot !== null
+                  ? camelotToMusicalKey(song.keyCamelot)
+                  : ''}
+              </td>
+              <td className="col-year">{song.year ?? ''}</td>
               <td className="col-genres">
                 <div className="genres-cell">
                   {song.genres.map((genre) => (

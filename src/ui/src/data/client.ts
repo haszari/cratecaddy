@@ -3,33 +3,15 @@
  * via the `@data` alias, so hooks and pages never know which one is running.
  */
 import type { Song, PaginatedResponse } from '../types';
-import { KEY } from '@cratecaddy-api/apiParams';
+import { FILTER_PARAM_KEYS, PAGINATION_PARAM_KEYS } from '@cratecaddy-api/apiParams';
 import type { ApiSongParams, ApiGenreStatsParams } from '@cratecaddy-api/apiParams';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 function buildQueryString(params: ApiSongParams): string {
   const parts: string[] = [];
-  const entries: [string, string | number | undefined][] = [
-    [KEY.genreAny, params[KEY.genreAny]],
-    [KEY.genreAll, params[KEY.genreAll]],
-    [KEY.genreNot, params[KEY.genreNot]],
-    [KEY.artistAny, params[KEY.artistAny]],
-    [KEY.artistAll, params[KEY.artistAll]],
-    [KEY.artistNot, params[KEY.artistNot]],
-    [KEY.bpmGte, params[KEY.bpmGte]],
-    [KEY.bpmLte, params[KEY.bpmLte]],
-    [KEY.ratingGte, params[KEY.ratingGte]],
-    [KEY.ratingLte, params[KEY.ratingLte]],
-    [KEY.favorite, params[KEY.favorite]],
-    [KEY.search, params[KEY.search]],
-    ['shuffle', params.shuffle],
-    ['sort', params.sort],
-    ['sortDirection', params.sortDirection],
-    ['page', params.page],
-    ['limit', params.limit],
-  ];
-  for (const [key, val] of entries) {
+  for (const key of [...FILTER_PARAM_KEYS, ...PAGINATION_PARAM_KEYS]) {
+    const val = params[key];
     if (val !== undefined && val !== null && val !== '') {
       parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(val))}`);
     }
@@ -119,7 +101,7 @@ export interface HistoryEntry {
     genres: string[];
     grouping: string[];
     bpm?: number;
-    key?: string;
+    keyCamelot?: number;
     rating?: number;
     year?: number;
     favorite?: 'starred' | 'normal' | 'disliked';

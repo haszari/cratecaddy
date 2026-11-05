@@ -41,7 +41,7 @@ Published at <https://lab.cartoonbeats.com/cratecaddy> from a single-commit `gh-
 
 Run the [smoke tests](./docs/smoke-tests.md) before trusting a build or a publish; the ordered dev → prod → publish sequence is the [release run-through](./docs/smoke-tests.md).
 
-See [plans/20261018-static-site-build.md](./plans/20261018-static-site-build.md) and [CONTEXT.md](./CONTEXT.md) for the Snapshot definition.
+See [plans/20261018-static-site-build.md](./plans/20261018-static-site-build.md) and [CONTEXT.md](./CONTEXT.md) for more details.
 
 ## Development
 
@@ -111,7 +111,7 @@ Import music library metadata from Apple Music.
 - In Apple Music: `File > Library > Export Library` - generates xml file. 
 - `cd src/api && npm run import:applemusic ~/Music/Music/Library.xml` to import xml file.
 
-This will import all song metadata with grouping containing `DJing` or `Listening`. 
+This will import all song metadata with grouping containing `DJing` or `Listening`, and any songs with favourite star/heart. 
 
 ### Import data from djay Pro
 

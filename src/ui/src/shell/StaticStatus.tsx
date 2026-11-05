@@ -66,14 +66,18 @@ export default function StaticStatus() {
   useEffect(() => {
     if (!needRefresh || updateStarted.current) return;
     updateStarted.current = true;
-    setUpdating(true);
-    // Give the message a frame to paint before activating and reloading.
-    window.setTimeout(() => {
+    // Show the message next tick, then activate after a frame to paint.
+    const showTimer = window.setTimeout(() => setUpdating(true), 0);
+    const activateTimer = window.setTimeout(() => {
       updateServiceWorker(true).catch(() => {
         updateStarted.current = false;
         setUpdating(false);
       });
     }, 600);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(activateTimer);
+    };
   }, [needRefresh, updateServiceWorker]);
 
   const version = `${__APP_VERSION__}+${__GIT_COMMIT_SHORT__ || 'unknown'}${__GIT_DIRTY__ ? '-dirty' : ''}`;

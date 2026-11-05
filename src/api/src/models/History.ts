@@ -6,7 +6,7 @@ export interface IHistorySnapshot {
   genres: string[];
   grouping: string[];
   bpm?: number;
-  key?: string;
+  keyCamelot?: number;
   rating?: number;
   year?: number;
   favorite?: 'starred' | 'normal' | 'disliked';
@@ -28,7 +28,7 @@ const snapshotSchema = new Schema<IHistorySnapshot>(
     genres: { type: [String], default: [] },
     grouping: { type: [String], default: [] },
     bpm: Number,
-    key: { type: String, trim: true },
+    keyCamelot: Number,
     rating: Number,
     year: Number,
     favorite: {

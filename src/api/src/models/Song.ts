@@ -12,6 +12,7 @@ export interface ISource {
   bitRate?: number;
   fileType?: string;
   dateModified?: Date;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongoose Mixed (free-form per-source metadata)
   sourceMetadata?: Record<string, any>;
   lastImportDate: Date;
 }
@@ -25,7 +26,7 @@ export interface ISong extends Document {
   grouping: string[];
   bpm?: number;
   year?: number;
-  key?: string; // Musical key (e.g., "Am", "G", "F#m")
+  keyCamelot?: number; // Canonical Camelot index 0..23 (standard wheel); source of truth
   rating?: number; // 0-5 scale (can be fractional)
   favorite?: 'starred' | 'normal' | 'disliked'; // Triage marker
   artistTitleNormalized: string; // Normalized artist + title for fast matching
@@ -117,9 +118,8 @@ const songSchema = new Schema<ISong>(
     year: {
       type: Number,
     },
-    key: {
-      type: String,
-      trim: true,
+    keyCamelot: {
+      type: Number,
       index: true,
     },
     rating: {

@@ -1,0 +1,59 @@
+$fill: var(--cc-accent);
+$grey: var(--cc-grey);
+$white: var(--cc-white);
+
+.OwnershipFilter {
+  position: relative;
+  display: inline-flex;
+  width: 2em;
+  height: 1.6em;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    position: absolute;
+    color: $grey;            // always grey stroke
+    fill: none;
+  }
+
+  .OwnershipFilter-cloud {
+    top: 0;
+    right: 0;
+  }
+
+  .OwnershipFilter-handbag {
+    bottom: 0;
+    left: 0;
+  }
+
+  // Outline copy sits on top; fill copy hides behind until selected.
+  .OwnershipFilter-cloud-outline,
+  .OwnershipFilter-handbag-outline {
+    z-index: 2;
+  }
+
+  .OwnershipFilter-cloud-fill,
+  .OwnershipFilter-handbag-fill {
+    z-index: 1;
+    color: $fill;
+    fill: $fill;
+    opacity: 0;
+  }
+
+  &--streaming .OwnershipFilter-cloud-fill {
+    opacity: 1;
+  }
+
+  &--streaming .OwnershipFilter-cloud-outline {
+    color: $white;
+  }
+
+  &--owned .OwnershipFilter-handbag-fill {
+    opacity: 1;
+  }
+
+  &--owned .OwnershipFilter-handbag-outline {
+    color: $white;
+  }
+}

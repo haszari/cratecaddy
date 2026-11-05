@@ -110,4 +110,5 @@ If a fix seems to need a prod or remote action, stop and ask. Say exactly which 
 - TypeScript ES modules, `tsx` runner for scripts
 - NZ/GB English spelling throughout (favourite, colour, centre, etc.)
 - Names and comments capture design intent: why the thing exists and what it guarantees, not the mechanics of how it works
+- Name variables, functions and types so the meaning is obvious in user/domain terms — prefer `camelotToMusicalKey` over `indexToNote`, `musicalKeyToCamelot` over `keyToIndex`
 - User-facing docs prefer `cratecaddy` commands (`rebuild-prod`, `publish`, `install`, `status`). Repo scripts are implementation detail or first-install fallbacks; mention them only when the CLI cannot be used yet

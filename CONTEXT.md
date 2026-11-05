@@ -10,7 +10,7 @@ A single track in the library. Source of truth: the `Song` MongoDB document.
 
 ### Current values
 
-The top-level fields on Song (`title`, `artist`, `album`, `duration`, `genres`, `bpm`, `key`, `rating`, `year`, `grouping`, `starred`) are the **current effective values** at all times. There is no layered-override or merge-at-read model. Every write — whether from import or manual edit — overwrites these fields directly. Last write wins.
+The top-level fields on Song (`title`, `artist`, `album`, `duration`, `genres`, `bpm`, `keyCamelot`, `rating`, `year`, `grouping`, `starred`) are the **current effective values** at all times. There is no layered-override or merge-at-read model. Every write — whether from import or manual edit — overwrites these fields directly. Last write wins.
 
 ### History
 
@@ -84,7 +84,7 @@ Export is interop with another system. Copying the Library for CrateCaddy's own 
 
 ### Key round-trip
 
-On import, parse the `Comments` field from Apple Music XML for the pattern `musicalKey=([A-G][b#]?(?:m|dim|aug|sus)?)`. If found, populate the Song's `key` field. This allows edits made in Crate Caddy to survive re-imports without data loss.
+On import, parse the `Comments` field from Apple Music XML for the pattern `musicalKey=([A-G][b#]?(?:m|dim|aug|sus)?)`. If found, populate the Song's `keyCamelot` field (canonical Camelot index; see `musicalKey.ts`). This allows edits made in Crate Caddy to survive re-imports without data loss.
 
 ## Top-level source IDs
 
@@ -251,7 +251,7 @@ Genres serve dual purpose (classification + energy-level tags like "Warmup | Pea
   snapshot: {
     title, artist,
     genres, grouping,
-    bpm, key, rating, year, starred
+    bpm, keyCamelot, rating, year, starred
   },
   importMeta?: {           // per-source provenance (heavy)
     fileSize, bitRate, fileType,
@@ -263,7 +263,7 @@ Genres serve dual purpose (classification + energy-level tags like "Warmup | Pea
 ```
 
 - `dateEdited`: semantic timestamp of the write.
-- `snapshot`: all editable fields (title, artist, genres, grouping, bpm, key, rating, year, favorite). Duration and album are on the Song doc but not editable — duration is a physical property of the audio file.
+- `snapshot`: all editable fields (title, artist, genres, grouping, bpm, keyCamelot, rating, year, favorite). Duration and album are on the Song doc but not editable — duration is a physical property of the audio file.
 - `importMeta`: heavy provenance data from imports. Not present for manual edits.
 - Server-side dedup: all history writes go through `createHistoryEntry`, which compares snapshot with the most recent entry (regardless of sourceType). If identical → skip. If same sourceType and <5 min old → update in-place. Otherwise → create new.
 - History UI renders **inline per-entry diff**: each entry shows only the fields that differ from the previous snapshot. First entry shows date+source only (values visible in form above). Genres and grouping tokenized as individual pills. Server prevents duplicate-snapshot entries so UI doesn't need to handle that case.

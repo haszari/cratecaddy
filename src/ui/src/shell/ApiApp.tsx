@@ -1,8 +1,9 @@
 import { BrowserRouter } from 'react-router-dom';
 import BrowseRoutes from './BrowseRoutes';
-import { EditLinksProvider } from './EditLinksContext';
+import { EditLinksProvider } from './editLinksContext';
 import VersionStatus from './VersionStatus';
 import EditMetadata from '../pages/EditMetadata';
+import Favourited from '../pages/Favourited';
 
 /**
  * API-backed shell: full app, including the write surface.
@@ -13,7 +14,12 @@ export default function ApiApp() {
     <BrowserRouter>
       <EditLinksProvider value={true}>
       <div className="App">
-        <BrowseRoutes extraRoutes={[{ path: '/edit-metadata', element: <EditMetadata /> }]} />
+        <BrowseRoutes
+          extraRoutes={[
+            { path: '/favourited', element: <Favourited /> },
+            { path: '/edit-metadata', element: <EditMetadata /> },
+          ]}
+        />
         <VersionStatus />
       </div>
       </EditLinksProvider>

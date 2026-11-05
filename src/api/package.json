@@ -13,6 +13,7 @@
     "import:applemusic": "tsx scripts/import-apple-music.ts",
     "import:djaypro": "tsx scripts/import-djaypro.ts",
     "snapshot": "tsx scripts/snapshot.ts",
+  "backfill:key-camelot": "tsx scripts/backfill-key-camelot.ts",
     "inspect:library": "tsx scripts/inspect-library.ts",
     "check:static-site-matches-app": "tsx scripts/check-static-site-matches-app.ts"
   },
