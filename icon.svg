@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CrateCaddy">
+  <rect width="512" height="512" rx="96" fill="#141414"/>
+  <rect x="96" y="136" width="320" height="240" rx="24" fill="none" stroke="#f08c00" stroke-width="24"/>
+  <path d="M96 216h320M216 136v240" stroke="#f08c00" stroke-width="24"/>
+  <circle cx="356" cy="324" r="40" fill="#4c6ef5"/>
+</svg>
