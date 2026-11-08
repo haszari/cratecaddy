@@ -7,8 +7,15 @@ export const KEY = {
   artistNot: 'artist.not',
   bpmGte: 'bpm.gte',
   bpmLte: 'bpm.lte',
+  bpmEmpty: 'bpm.empty',
   ratingGte: 'rating.gte',
   ratingLte: 'rating.lte',
+  key: 'key',
+  keyTolerance: 'key.tolerance',
+  keyEmpty: 'key.empty',
+  yearGte: 'year.gte',
+  yearLte: 'year.lte',
+  yearEmpty: 'year.empty',
   favorite: 'favorite',
   ownership: 'ownership',
   search: 'search',
@@ -23,8 +30,17 @@ export interface ApiFilterParams {
   [KEY.artistNot]?: string;
   [KEY.bpmGte]?: string;
   [KEY.bpmLte]?: string;
+  [KEY.bpmEmpty]?: string;
   [KEY.ratingGte]?: string;
   [KEY.ratingLte]?: string;
+  /** Target key (note name or Camelot index/label). */
+  [KEY.key]?: string;
+  /** ±N Camelot wheel steps around the target key. */
+  [KEY.keyTolerance]?: string;
+  [KEY.keyEmpty]?: string;
+  [KEY.yearGte]?: string;
+  [KEY.yearLte]?: string;
+  [KEY.yearEmpty]?: string;
   [KEY.favorite]?: string;
   /** `owned` = has a local file source; `streaming` = cloud only. */
   [KEY.ownership]?: string;
@@ -52,9 +68,17 @@ export function buildApiParams(filters: {
   genreNot?: string[];
   bpmGte?: number;
   bpmLte?: number;
+  bpmEmpty?: boolean;
   ratingGte?: number;
   ratingLte?: number;
+  musicalKey?: string;
+  keyTolerance?: number;
+  keyEmpty?: boolean;
+  yearGte?: number;
+  yearLte?: number;
+  yearEmpty?: boolean;
   favoriteActive?: boolean;
+  ownership?: string;
   search?: string;
 }): ApiFilterParams {
   const params: ApiFilterParams = {};
@@ -67,14 +91,38 @@ export function buildApiParams(filters: {
   if (filters.bpmLte !== undefined) {
     params[KEY.bpmLte] = String(filters.bpmLte);
   }
+  if (filters.bpmEmpty) {
+    params[KEY.bpmEmpty] = 'true';
+  }
   if (filters.ratingGte !== undefined) {
     params[KEY.ratingGte] = String(filters.ratingGte);
   }
   if (filters.ratingLte !== undefined) {
     params[KEY.ratingLte] = String(filters.ratingLte);
   }
+  if (filters.musicalKey) {
+    params[KEY.key] = filters.musicalKey;
+  }
+  if (filters.keyTolerance !== undefined) {
+    params[KEY.keyTolerance] = String(filters.keyTolerance);
+  }
+  if (filters.keyEmpty) {
+    params[KEY.keyEmpty] = 'true';
+  }
+  if (filters.yearGte !== undefined) {
+    params[KEY.yearGte] = String(filters.yearGte);
+  }
+  if (filters.yearLte !== undefined) {
+    params[KEY.yearLte] = String(filters.yearLte);
+  }
+  if (filters.yearEmpty) {
+    params[KEY.yearEmpty] = 'true';
+  }
   if (filters.favoriteActive) {
     params[KEY.favorite] = 'true';
+  }
+  if (filters.ownership) {
+    params[KEY.ownership] = filters.ownership;
   }
   if (filters.search) {
     params[KEY.search] = filters.search;

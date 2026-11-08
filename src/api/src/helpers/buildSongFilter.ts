@@ -7,6 +7,7 @@
 import { FilterQuery } from 'mongoose';
 import { ISong } from '../models/Song.js';
 import { KEY, ApiFilterParams } from './apiParams.js';
+import { parseKey, keysWithin } from './musicalKey.js';
 
 export type { ApiFilterParams as SongFilterParams };
 
@@ -163,6 +164,10 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     }
   }
 
+  if (params[KEY.bpmEmpty] === 'true') {
+    conditions.push({ $or: [{ bpm: { $exists: false } }, { bpm: null }] });
+  }
+
   const ratingGte = params[KEY.ratingGte];
   const ratingLte = params[KEY.ratingLte];
   if (ratingGte != null || ratingLte != null) {
@@ -183,6 +188,52 @@ export function buildSongFilter(params: ApiFilterParams): FilterQuery<ISong> {
     if (Object.keys(ratingRange).length > 0) {
       conditions.push({ rating: ratingRange });
     }
+  }
+
+  const keyParam = params[KEY.key];
+  if (keyParam) {
+    const target = parseKey(keyParam);
+    if (target !== null) {
+      const rawTolerance = parseInt(params[KEY.keyTolerance] ?? '0', 10);
+      const tolerance = isNaN(rawTolerance) ? 0 : Math.max(0, Math.min(6, rawTolerance));
+      const allowed = keysWithin(target, tolerance);
+      conditions.push({ keyCamelot: { $in: allowed } });
+    }
+  }
+
+  if (params[KEY.keyEmpty] === 'true') {
+    conditions.push({ $or: [{ keyCamelot: { $exists: false } }, { keyCamelot: null }] });
+  }
+
+  const yearGte = params[KEY.yearGte];
+  const yearLte = params[KEY.yearLte];
+  if (yearGte != null || yearLte != null) {
+    const yearRange: Record<string, number> = {};
+    if (yearGte != null) {
+      const val = parseFloat(yearGte);
+      if (!isNaN(val)) yearRange.$gte = val;
+    }
+    if (yearLte != null) {
+      const val = parseFloat(yearLte);
+      if (!isNaN(val)) yearRange.$lte = val;
+    }
+    if (yearRange.$gte !== undefined && yearRange.$lte !== undefined && yearRange.$gte > yearRange.$lte) {
+      const tmp = yearRange.$gte;
+      yearRange.$gte = yearRange.$lte;
+      yearRange.$lte = tmp;
+    }
+    if (Object.keys(yearRange).length > 0) {
+      conditions.push({
+        $or: [
+          { year: yearRange },
+          { year: { $exists: false } },
+          { year: null },
+        ],
+      });
+    }
+  }
+  if (params[KEY.yearEmpty] === 'true') {
+    conditions.push({ $or: [{ year: { $exists: false } }, { year: null }] });
   }
 
   const favorite = params[KEY.favorite];

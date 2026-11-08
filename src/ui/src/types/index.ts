@@ -25,7 +25,7 @@ export interface Song {
   genres: string[];
   bpm?: number;
   rating?: number;
-  key?: string;
+  keyCamelot?: number;
   year?: number;
   grouping?: string[];
   canonicalAppleMusicId?: string;

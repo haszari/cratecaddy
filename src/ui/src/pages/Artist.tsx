@@ -7,7 +7,7 @@ import BasePageCriteria from '../components/BasePageCriteria';
 import './GenreDetail.scss';
 import SongTable from '../components/SongTable';
 import { buildEditUrl } from '../utils/urlBuilder';
-import { useEditLinks } from '../shell/EditLinksContext';
+import { useEditLinks } from '../shell/useEditLinks';
 import { splitCSV } from '../utils/urlParams';
 import { KEY } from '@cratecaddy-api/apiParams';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -49,13 +49,13 @@ export default function Artist() {
 
   return (
     <div className="GenreDetail">
+      <FilterBar {...filterBarProps} />
+
       <BasePageCriteria
         artists={[decodedArtist]}
         genres={requiredGenres.map((g) => ({ name: g, mode: 'and' }))}
         onRemoveGenre={handleRemoveRequired}
       />
-
-      <FilterBar {...filterBarProps} />
 
       {isLoading && <p>Loading songs...</p>}
       {error && <p className="error-message">Failed to load songs</p>}

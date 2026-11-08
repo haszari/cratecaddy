@@ -1,5 +1,6 @@
 .FilterBar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   padding: 0.5em;
@@ -21,22 +22,27 @@
     flex-shrink: 0;
   }
 
+  .FilterBar-collapse {
+    display: none;
+  }
+
   .FilterBar-excludeGroup {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 0.3em;
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
-    overflow: hidden;
   }
 
   .FilterBar-filterGroup {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
     gap: 0.5em;
-    flex-shrink: 0;
+    flex: 0 1 auto;
   }
 
   .FilterBar-chip {
@@ -73,8 +79,8 @@
     width: 10em;
 
     .mantine-Input-input {
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
+      background: var(--cc-pill-bg);
+      color: var(--cc-pill-fg);
       border: none;
       border-radius: 0.5em;
       height: 2.5em;
@@ -83,19 +89,72 @@
       padding-right: 0;
       font-size: 0.8em;
 
+      &:placeholder-shown {
+        opacity: 0.55;
+      }
+
       &::placeholder {
-        color: #999;
+        color: var(--cc-pill-hint);
       }
     }
 
     .mantine-Input-section {
       padding-right: 0.35em;
-      color: #666;
+      color: var(--cc-muted);
     }
   }
 
   .FilterBar-search-static {
     font-size: 0.8em;
     color: #999;
+  }
+}
+
+@media (max-width: 1024px) {
+  .FilterBar {
+    justify-content: center;
+    padding-top: 0;
+    row-gap: 0.25em;
+  }
+
+  .FilterBar .FilterBar-collapse {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 0 100%;
+    width: auto;
+    height: 1em;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    outline: none;
+    color: var(--cc-grey);
+
+    &:hover svg {
+      color: var(--cc-orange);
+    }
+  }
+
+  .FilterBar.FilterBar--collapsed {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .FilterBar .FilterBar-navGroup,
+  .FilterBar .FilterBar-excludeGroup,
+  .FilterBar .FilterBar-filterGroup {
+    justify-content: center;
+    flex: 1 0 100%;
+  }
+
+  .FilterBar .FilterBar-navGroup {
+    flex-wrap: wrap;
+  }
+
+  .FilterBar.FilterBar--collapsed .FilterBar-navGroup,
+  .FilterBar.FilterBar--collapsed .FilterBar-excludeGroup,
+  .FilterBar.FilterBar--collapsed .FilterBar-filterGroup {
+    display: none;
   }
 }

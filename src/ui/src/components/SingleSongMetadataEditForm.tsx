@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { updateSongMetadata, writeToAppleMusic, fetchGenreStats, fetchSongHistory } from '@data';
 import { decomposeGenres, reassembleGenres } from '../hooks/useGenreDecomposition';
+import { musicalKeyToCamelot, camelotToMusicalKey } from '@cratecaddy-api/musicalKey';
 import type { PaginatedResponse, Song } from '../types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -38,7 +39,7 @@ interface SnapshotData {
   genres: string[];
   grouping: string[];
   bpm: number | null;
-  key: string;
+  keyCamelot?: number;
   year: number | null;
   rating: number;
 }
@@ -51,7 +52,10 @@ interface SingleSongMetadataEditFormProps {
 export default function SingleSongMetadataEditForm({ song, onDirtyChange }: SingleSongMetadataEditFormProps) {
   const queryClient = useQueryClient();
   const init = useMemo(() => decomposeGenres(song.genres), [song.genres]);
-  const initKey = useMemo(() => parseKeyField(song.key), [song.key]);
+  const initKey = useMemo(
+    () => parseKeyField(song.keyCamelot != null ? camelotToMusicalKey(song.keyCamelot) : undefined),
+    [song.keyCamelot],
+  );
 
   const [artist, setArtist] = useState(song.artist);
   const [title, setTitle] = useState(song.title);
@@ -82,7 +86,7 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
     genres: song.genres,
     grouping: song.grouping ?? [],
     bpm: song.bpm ?? null,
-    key: song.key ?? '',
+    keyCamelot: song.keyCamelot,
     year: song.year ?? null,
     rating: song.rating ?? 0,
   });
@@ -93,7 +97,7 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
     JSON.stringify(reassembleGenres(stage, setField, locationNz, listening, styles)) !== JSON.stringify(initialSnapshot.genres) ||
     JSON.stringify(grouping) !== JSON.stringify(initialSnapshot.grouping) ||
     (bpm ?? null) !== initialSnapshot.bpm ||
-    formatKeyField(keyRoot, keyMinor) !== initialSnapshot.key ||
+    (musicalKeyToCamelot(formatKeyField(keyRoot, keyMinor)) ?? undefined) !== initialSnapshot.keyCamelot ||
     (year ?? null) !== initialSnapshot.year ||
     rating !== initialSnapshot.rating
   );
@@ -120,7 +124,7 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
       genres: reassembleGenres(f.stage, f.setField, f.locationNz, f.listening, f.styles),
       grouping: f.grouping,
       bpm: f.bpm ?? null,
-      key: formatKeyField(f.keyRoot, f.keyMinor),
+      keyCamelot: musicalKeyToCamelot(formatKeyField(f.keyRoot, f.keyMinor)) ?? undefined,
       year: f.year ?? null,
       rating: f.rating,
     });
@@ -165,7 +169,7 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
         genres,
         grouping,
         bpm: bpm ?? undefined,
-        key: key || undefined,
+        keyCamelot: musicalKeyToCamelot(key) ?? undefined,
         year: year ?? undefined,
         rating: rating > 0 ? rating : undefined,
       });
@@ -200,7 +204,7 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
         genres,
         grouping: f.grouping,
         bpm: f.bpm ?? undefined,
-        key: key || undefined,
+        keyCamelot: musicalKeyToCamelot(key) ?? undefined,
         year: f.year ?? undefined,
         rating: f.rating > 0 ? f.rating : undefined,
       });
@@ -361,7 +365,7 @@ export default function SingleSongMetadataEditForm({ song, onDirtyChange }: Sing
         genres,
         grouping: f.grouping,
         bpm: f.bpm ?? undefined,
-        key: key || undefined,
+        keyCamelot: musicalKeyToCamelot(key) ?? undefined,
         year: f.year ?? undefined,
         rating: f.rating > 0 ? f.rating : undefined,
       });
