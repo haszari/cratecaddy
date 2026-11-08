@@ -141,3 +141,7 @@ Experimental import from Rekordbox that includes musical key data. As above, can
   - **MongoDB** - Document database running in Docker, stores song metadata with indexed genre arrays
 - **Docker** - Only MongoDB runs in Docker; the API runs on the host (macOS) so it can call `osascript` for write round-trips to Apple Music
 
+## Development / contributing
+
+- Raw bug, improvement and feature ideas: [ideas.csv](./ideas.csv)
+
